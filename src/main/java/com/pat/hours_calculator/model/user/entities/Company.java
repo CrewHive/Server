@@ -14,18 +14,28 @@ public class Company {
     @Column(nullable = false)
     private Long id;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+
     @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private Set<User> users = new LinkedHashSet<>();
-
-    public Company() {
+    public String getName() {
+        return name;
     }
 
-    public Company(String name) {
+    public void setName(String name) {
         this.name = name;
     }
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Set<User> users = new LinkedHashSet<>();
 
     public Set<User> getUsers() {
         return users;
@@ -35,11 +45,11 @@ public class Company {
         this.users = users;
     }
 
-    public String getName() {
-        return name;
+    public Company() {
     }
 
-    public Long getId() {
-        return id;
+    public Company(String name) {
+        this.name = name;
     }
+
 }

@@ -26,8 +26,8 @@ public class JwtService {
 
         try {
 
-            PrivateKey privateKey = PemUtils.loadPrivateKey("C:\\Users\\Admin\\Desktop\\Server\\src\\main\\resources\\static\\private.pem");
-            PublicKey publicKey = PemUtils.loadPublicKey("C:\\Users\\Admin\\Desktop\\Server\\src\\main\\resources\\static\\public.pem");
+            PrivateKey privateKey = PemUtils.loadPrivateKey("/static/private.pem");
+            PublicKey publicKey = PemUtils.loadPublicKey("/static/public.pem");
 
         } catch (Exception e) {
             e.printStackTrace();//todo: handle better the exception
@@ -56,7 +56,7 @@ public class JwtService {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            
+
         } catch (ExpiredJwtException e) {
 
             System.out.println("Token scaduto il: " + e.getClaims().getExpiration());

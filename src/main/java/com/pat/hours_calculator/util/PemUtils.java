@@ -15,6 +15,7 @@ public class PemUtils {
 
         try (InputStream is = PemUtils.class.getResourceAsStream(path)) {
 
+            System.out.println(is);
             if(is == null) {
                 throw new IllegalArgumentException("File not found: " + path);
             }
