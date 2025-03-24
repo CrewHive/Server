@@ -30,7 +30,8 @@ public class JwtService {
             PublicKey publicKey = PemUtils.loadPublicKey("/static/public.pem");
 
         } catch (Exception e) {
-            e.printStackTrace();//todo: handle better the exception
+
+            throw new IllegalStateException("Cannot load private key", e);
         }
     }
 
@@ -59,18 +60,15 @@ public class JwtService {
 
         } catch (ExpiredJwtException e) {
 
-            System.out.println("Token scaduto il: " + e.getClaims().getExpiration());
-            throw e;
+            throw new RuntimeException("Token expired on" + e.getClaims().getExpiration() + ". Login again to get a new token");
 
         } catch (SignatureException e) {
 
-            System.out.println("Firma del token non valida.");
-            throw e;
+            throw new RuntimeException("Token's signature is not valid. Login again to get a new token");
 
         } catch (Exception e) {
 
-            System.out.println("Errore durante la validazione del token.");
-            throw e;
+            throw new RuntimeException("Token is not valid. Login again to get a new token");
         }
     }
 

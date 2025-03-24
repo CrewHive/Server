@@ -1,0 +1,38 @@
+package com.pat.hours_calculator.service;
+
+
+import com.pat.hours_calculator.dto.AuthRequestDTO;
+import com.pat.hours_calculator.dto.AuthResponseDTO;
+import com.pat.hours_calculator.dto.UserDTO;
+import com.pat.hours_calculator.model.user.entities.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AuthService {
+
+    private final UserService userService;
+    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+
+    @Autowired
+    public AuthService(UserService userService, JwtService jwtService, RefreshTokenService refreshTokenService) {
+        this.userService = userService;
+        this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
+    }
+
+    public AuthResponseDTO login(AuthRequestDTO request) {
+
+        UserDTO userDTO = userService.getUserByEmail(request.getEmail());
+
+        if(!userService.validatePassword(userDTO)) throw new BadCredentialsException("Invalid password");
+
+        User user = userService.getUserByIdIdentity(userDTO.getUserId());
+
+        return new AuthResponseDTO(jwtService.generateToken(user), refreshTokenService.generateRefreshToken(user));
+
+    }
+}
+

@@ -1,25 +1,29 @@
 package com.pat.hours_calculator.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class AuthRequestDTO {
 
-    private String username;
+    @NotBlank(message = "Username cannot be blank")
+    private String email;
 
+    @NotBlank(message = "Password cannot be blank")
     private String password;
 
     public AuthRequestDTO() {
     }
 
-    public AuthRequestDTO(String username, String password) {
-        this.username = username;
+    public AuthRequestDTO(String email, String password) {
+        this.email = email;
         this.password = password;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String username) {
+        this.email = username;
     }
 
     public String getPassword() {

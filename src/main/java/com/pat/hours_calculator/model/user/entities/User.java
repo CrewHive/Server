@@ -105,5 +105,7 @@ public class User {
         this.email = email;
         this.username = username;
         this.password = password;
+        this.role = role;
+        this.company = company;
     }
 }
