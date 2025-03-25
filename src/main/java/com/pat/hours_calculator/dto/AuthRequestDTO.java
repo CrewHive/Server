@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class AuthRequestDTO {
 
-    @NotBlank(message = "Username cannot be blank")
+    @NotBlank(message = "Email cannot be blank")
     private String email;
 
     @NotBlank(message = "Password cannot be blank")

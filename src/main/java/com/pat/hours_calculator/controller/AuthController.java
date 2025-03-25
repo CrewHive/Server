@@ -25,21 +25,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequestDTO request) {
 
-        try {
-
-            AuthResponseDTO response = authService.login(request);
-
-            if(response == null) {
-
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            return ResponseEntity.ok(response);
-
-        } catch(Exception e) {
-
-            return ResponseEntity.badRequest().build();
-        }
+        AuthResponseDTO response = authService.login(request);
+        return ResponseEntity.ok(response);
 
     }
 }

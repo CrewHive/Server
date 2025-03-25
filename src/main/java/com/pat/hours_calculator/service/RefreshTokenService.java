@@ -1,6 +1,7 @@
 package com.pat.hours_calculator.service;
 
 import com.pat.hours_calculator.dto.UserDTO;
+import com.pat.hours_calculator.exception.custom.ResourceNotFoundException;
 import com.pat.hours_calculator.model.user.entities.User;
 import com.pat.hours_calculator.model.auth.entities.RefreshToken;
 import com.pat.hours_calculator.repository.RefreshTokenRepository;
@@ -37,14 +38,14 @@ public class RefreshTokenService {
 
     public boolean isExpired(String token){
 
-        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new EntityNotFoundException("Token not found"));
+        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
 
         return rt.getExpirationDate().isBefore(LocalDate.now());
     }
 
     public String rotateRefreshToken(String token) throws Exception {
 
-        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new EntityNotFoundException("Token not found"));
+        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
 
         rt.setToken(UUID.randomUUID().toString());
         rt.setExpirationDate(LocalDate.now().plusDays(15));

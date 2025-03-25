@@ -1,5 +1,6 @@
 package com.pat.hours_calculator.service;
 
+import com.pat.hours_calculator.exception.custom.InvalidTokenException;
 import com.pat.hours_calculator.model.user.entities.User;
 import com.pat.hours_calculator.util.PemUtils;
 import io.jsonwebtoken.Claims;
@@ -60,15 +61,15 @@ public class JwtService {
 
         } catch (ExpiredJwtException e) {
 
-            throw new RuntimeException("Token expired on" + e.getClaims().getExpiration() + ". Login again to get a new token");
+            throw new InvalidTokenException("Token expired on" + e.getClaims().getExpiration() + ". Login again to get a new token");
 
         } catch (SignatureException e) {
 
-            throw new RuntimeException("Token's signature is not valid. Login again to get a new token");
+            throw new InvalidTokenException("Token's signature is not valid. Login again to get a new token");
 
         } catch (Exception e) {
 
-            throw new RuntimeException("Token is not valid. Login again to get a new token");
+            throw new InvalidTokenException("Token is not valid. Login again to get a new token");
         }
     }
 
