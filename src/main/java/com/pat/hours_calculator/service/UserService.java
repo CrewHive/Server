@@ -1,8 +1,12 @@
 package com.pat.hours_calculator.service;
 
+import com.pat.hours_calculator.dto.RegistrationDTO;
 import com.pat.hours_calculator.dto.UserDTO;
+import com.pat.hours_calculator.exception.custom.ResourceAlreadyExistsException;
 import com.pat.hours_calculator.exception.custom.ResourceNotFoundException;
+import com.pat.hours_calculator.model.user.entities.Company;
 import com.pat.hours_calculator.model.user.entities.User;
+import com.pat.hours_calculator.repository.CompanyRepository;
 import com.pat.hours_calculator.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,12 +19,15 @@ public class UserService {
 
     private PasswordEncoder passwordEncoder;
 
+    private CompanyRepository companyRepository;
+
     public UserService() {}
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CompanyRepository companyRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.companyRepository = companyRepository;
     }
 
     public UserDTO getUserByEmail(String email) {
@@ -47,5 +54,20 @@ public class UserService {
         User user = userRepository.findById(dto.getUserId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return passwordEncoder.matches(user.getPassword(), user.getPassword());
+    }
+
+    public void register(RegistrationDTO rDTO) {
+
+        Company companyName = companyRepository.findByName(rDTO.getCompanyName()).orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
+        String password = passwordEncoder.encode(rDTO.getPassword());
+
+        if (userRepository.existsByEmail(rDTO.getEmail())) {throw new ResourceAlreadyExistsException("Email already exists");}
+
+        if (userRepository.existsByUsername(rDTO.getUsername())) {throw new ResourceAlreadyExistsException("Username already exists");}
+
+        User user = new User(rDTO.getEmail(), rDTO.getUsername(), password, rDTO.getRole(), companyName);
+
+        userRepository.save(user);
     }
 }

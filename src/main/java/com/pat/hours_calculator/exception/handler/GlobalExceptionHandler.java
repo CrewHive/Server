@@ -1,6 +1,7 @@
 package com.pat.hours_calculator.exception.handler;
 
 import com.pat.hours_calculator.exception.custom.InvalidTokenException;
+import com.pat.hours_calculator.exception.custom.ResourceAlreadyExistsException;
 import com.pat.hours_calculator.exception.custom.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -49,6 +50,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException ex) {
 
         return ResponseEntity.status(401).body(Map.of("status", 401, "error", ex.getMessage()));
+    }
+
+
+    // Resource already exists
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
+        return ResponseEntity.status(500).body(Map.of("status", 401, "error", ex.getMessage()));
     }
 
 
