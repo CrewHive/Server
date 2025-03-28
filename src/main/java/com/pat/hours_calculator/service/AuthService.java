@@ -25,7 +25,7 @@ public class AuthService {
 
     public AuthResponseDTO login(AuthRequestDTO request) {
 
-        UserDTO userDTO = userService.getUserByEmail(request.getEmail());
+        UserDTO userDTO = userService.getUserDTOByUsername(request.getUsername());
 
         if(!userService.validatePassword(userDTO)) throw new BadCredentialsException("Invalid password");
 

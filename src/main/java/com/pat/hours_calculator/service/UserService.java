@@ -30,18 +30,18 @@ public class UserService {
         this.companyRepository = companyRepository;
     }
 
-    public UserDTO getUserByEmail(String email) {
+    public UserDTO getUserDTOByUsername(String username) {
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
 
-        return new UserDTO(user.getUserId(), user.getEmail(), user.getUsername(), user.getCompany().getName());
+        return new UserDTO(user.getUser_id(), user.getEmail(), user.getUsername(), user.getCompany().getName());
     }
 
-    public UserDTO getUserById(Long id) {
+    public UserDTO getUserDTOById(Long id) {
 
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        return new UserDTO(user.getUserId(), user.getEmail(), user.getUsername(), user.getCompany().getName());
+        return new UserDTO(user.getUser_id(), user.getEmail(), user.getUsername(), user.getCompany().getName());
     }
 
     public User getUserByIdIdentity(Long id) {
@@ -62,11 +62,9 @@ public class UserService {
 
         String password = passwordEncoder.encode(rDTO.getPassword());
 
-        if (userRepository.existsByEmail(rDTO.getEmail())) {throw new ResourceAlreadyExistsException("Email already exists");}
-
         if (userRepository.existsByUsername(rDTO.getUsername())) {throw new ResourceAlreadyExistsException("Username already exists");}
 
-        User user = new User(rDTO.getEmail(), rDTO.getUsername(), password, rDTO.getRole(), companyName);
+        User user = new User(rDTO.getUsername(), password, rDTO.getRole(), companyName);
 
         userRepository.save(user);
     }

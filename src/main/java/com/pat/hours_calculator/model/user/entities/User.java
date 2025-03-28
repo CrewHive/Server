@@ -3,12 +3,16 @@ package com.pat.hours_calculator.model.user.entities;
 
 import com.pat.hours_calculator.model.worked_hours.entities.Shift;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
 public class User {
 
     @Id
@@ -16,89 +20,40 @@ public class User {
     @Column(name = "user_id", nullable = false)
     private Long user_id;
 
-    public Long getUserId() {
-        return user_id;
-    }
-
-    public void setUserId(Long user_id) {
-        this.user_id = user_id;
-    }
-
-
-    @Column(name="email", nullable = false, unique = true)
+    @Column(name="email", unique = true)
     private String email;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
 
     @Column(name="username", nullable = false, unique = true)
     private String username;
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-
     @Column(name="password", nullable = false)
     private String password;
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Shift> shifts = new ArrayList<>();
 
-    public List<Shift> getShifts() {
-        return shifts;
-    }
-
-    public void setShifts(List<Shift> shifts) {
-        this.shifts = shifts;
-    }
-
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
+    @JoinColumn(name = "company_id")
     private Company company;
-
-    public Company getCompany() {
-        return company;
-    }
-
-    public void setCompany(Company company) {
-        this.company = company;
-    }
-
 
     @Column(name = "role", nullable = false)
     private String role;
 
-    public String getRole() {
-        return role;
+    public User() {
     }
 
-    public void setRole(String role) {
+    public User(String username, String email, String password, String role) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
         this.role = role;
     }
 
-
-    public User() {
+    public User(String username, String password, String role, Company company) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.company = company;
     }
 
     public User(String email, String username, String password, String role, Company company) {

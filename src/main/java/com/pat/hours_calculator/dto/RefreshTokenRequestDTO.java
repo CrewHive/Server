@@ -1,5 +1,11 @@
 package com.pat.hours_calculator.dto;
 
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class RefreshTokenRequestDTO {
 
     private String refreshToken;
@@ -11,11 +17,4 @@ public class RefreshTokenRequestDTO {
         this.refreshToken = refreshToken;
     }
 
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
 }

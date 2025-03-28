@@ -3,10 +3,14 @@ package com.pat.hours_calculator.model.worked_hours.entities;
 import com.pat.hours_calculator.model.user.entities.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.OffsetTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "shift")
 public class Shift {
@@ -41,34 +45,6 @@ public class Shift {
         this.endShift = endShift;
         this.shiftDate = shiftDate;
         this.user = user;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public LocalDate getShiftDate() {
-        return shiftDate;
-    }
-
-    public OffsetTime getEndShift() {
-        return endShift;
-    }
-
-    public OffsetTime getStartShift() {
-        return startShift;
-    }
-
-    public Long getShiftId() {
-        return shift_id;
-    }
-
-    public void setShiftId(Long id) {
-        this.shift_id = id;
     }
 
 }

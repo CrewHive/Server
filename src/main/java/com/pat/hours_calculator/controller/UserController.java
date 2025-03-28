@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/user")
 public class UserController {
 
-
     private final UserService userService;
 
     @Autowired
@@ -22,15 +21,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        UserDTO user = userService.getUserById(id);
+        UserDTO user = userService.getUserDTOById(id);
         return ResponseEntity.ok(user);
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegistrationDTO rDTO) {
-
-        userService.register(rDTO);
-
-        return ResponseEntity.ok().build();
     }
 }
