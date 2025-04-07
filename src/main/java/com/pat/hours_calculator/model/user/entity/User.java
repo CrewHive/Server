@@ -2,10 +2,13 @@ package com.pat.hours_calculator.model.user.entity;
 
 
 import com.pat.hours_calculator.model.company.entity.Company;
+import com.pat.hours_calculator.model.json.ContractJSON;
 import com.pat.hours_calculator.model.worked_hours.entities.Shift;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,10 @@ public class User {
     @Column(name = "role", nullable = false)
     private String role;
 
+    @Type(JsonType.class)
+    @Column(name = "contract", nullable = false, columnDefinition = "jsonb")
+    private ContractJSON contract;
+
     public User() {
     }
 
@@ -57,11 +64,12 @@ public class User {
         this.company = company;
     }
 
-    public User(String email, String username, String password, String role, Company company) {
+    public User(String email, String username, String password, String role, Company company, ContractJSON contract) {
         this.email = email;
         this.username = username;
         this.password = password;
         this.role = role;
         this.company = company;
+        this.contract = contract;
     }
 }

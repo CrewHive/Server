@@ -29,7 +29,7 @@ public class Company {
     private String address;
 
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<User> users = new LinkedHashSet<>();
 
     @Enumerated
@@ -39,8 +39,10 @@ public class Company {
     public Company() {
     }
 
-    public Company(String name) {
+    public Company(String name, String address, CompanyType companyType) {
         this.name = name;
+        this.address = address;
+        this.companyType = companyType;
     }
 
 }
