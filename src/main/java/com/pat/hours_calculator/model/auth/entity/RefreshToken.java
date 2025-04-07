@@ -1,7 +1,7 @@
-package com.pat.hours_calculator.model.auth.entities;
+package com.pat.hours_calculator.model.auth.entity;
 
 
-import com.pat.hours_calculator.model.user.entities.User;
+import com.pat.hours_calculator.model.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

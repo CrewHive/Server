@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 
 @Getter
 @Setter
-public class Contract {
+public class ContractJSON {
 
     private Long id;
     private String name;

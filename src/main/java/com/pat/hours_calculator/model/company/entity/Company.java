@@ -1,5 +1,7 @@
-package com.pat.hours_calculator.model.user.entities;
+package com.pat.hours_calculator.model.company.entity;
 
+import com.pat.hours_calculator.model.user.entity.User;
+import com.pat.hours_calculator.model.util.CompanyType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +32,9 @@ public class Company {
     @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Set<User> users = new LinkedHashSet<>();
 
+    @Enumerated
+    @Column(name = "company_type", nullable = false)
+    private CompanyType companyType;
 
     public Company() {
     }

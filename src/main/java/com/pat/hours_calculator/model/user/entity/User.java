@@ -1,6 +1,7 @@
-package com.pat.hours_calculator.model.user.entities;
+package com.pat.hours_calculator.model.user.entity;
 
 
+import com.pat.hours_calculator.model.company.entity.Company;
 import com.pat.hours_calculator.model.worked_hours.entities.Shift;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.pat.hours_calculator.model.user;
+package com.pat.hours_calculator.model.json.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

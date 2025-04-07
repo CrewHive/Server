@@ -1,6 +1,6 @@
 package com.pat.hours_calculator.repository;
 
-import com.pat.hours_calculator.model.user.entities.User;
+import com.pat.hours_calculator.model.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -4,7 +4,7 @@ package com.pat.hours_calculator.service;
 import com.pat.hours_calculator.dto.AuthRequestDTO;
 import com.pat.hours_calculator.dto.AuthResponseDTO;
 import com.pat.hours_calculator.dto.UserDTO;
-import com.pat.hours_calculator.model.user.entities.User;
+import com.pat.hours_calculator.model.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;

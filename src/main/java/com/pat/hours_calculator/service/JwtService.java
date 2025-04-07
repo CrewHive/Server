@@ -1,7 +1,7 @@
 package com.pat.hours_calculator.service;
 
 import com.pat.hours_calculator.exception.custom.InvalidTokenException;
-import com.pat.hours_calculator.model.user.entities.User;
+import com.pat.hours_calculator.model.user.entity.User;
 import com.pat.hours_calculator.util.PemUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -32,7 +32,7 @@ public class JwtService {
 
         } catch (Exception e) {
 
-            throw new IllegalStateException("Cannot load private key", e);
+            throw new IllegalStateException("Cannot load signature's keys", e);
         }
     }
 
@@ -40,7 +40,7 @@ public class JwtService {
     public String generateToken(User user) {
 
         return Jwts.builder()
-                .setSubject(String.valueOf(user.getUserId()))
+                .setSubject(String.valueOf(user.getUser_id()))
                 .claim("role", user.getRole())
                 .claim("username", user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))

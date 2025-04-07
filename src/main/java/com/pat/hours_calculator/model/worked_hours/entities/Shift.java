@@ -1,6 +1,6 @@
 package com.pat.hours_calculator.model.worked_hours.entities;
 
-import com.pat.hours_calculator.model.user.entities.User;
+import com.pat.hours_calculator.model.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

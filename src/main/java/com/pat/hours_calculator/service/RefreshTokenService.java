@@ -1,11 +1,9 @@
 package com.pat.hours_calculator.service;
 
-import com.pat.hours_calculator.dto.UserDTO;
 import com.pat.hours_calculator.exception.custom.ResourceNotFoundException;
-import com.pat.hours_calculator.model.user.entities.User;
-import com.pat.hours_calculator.model.auth.entities.RefreshToken;
+import com.pat.hours_calculator.model.user.entity.User;
+import com.pat.hours_calculator.model.auth.entity.RefreshToken;
 import com.pat.hours_calculator.repository.RefreshTokenRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
