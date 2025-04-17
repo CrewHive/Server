@@ -24,7 +24,6 @@ public class Shift {
     @Column(name = "start_shift", nullable = false)
     private OffsetTime startShift;
 
-
     @NotNull(message = "End shift time is required")
     @Column(name = "end_shift", nullable = false)
     private OffsetTime endShift;
@@ -33,6 +32,15 @@ public class Shift {
     @Column(name = "shift_date", nullable = false)
     private LocalDate shiftDate;
 
+    @Column(name = "break_time", nullable = false)
+    private int breakTime;
+
+    @Column(name = "worked_hours", nullable = false)
+    private float workedHours;
+
+    @Column(name = "extra_hours", nullable = false)
+    private float extraHours;
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -40,10 +48,13 @@ public class Shift {
     public Shift() {
     }
 
-    public Shift(OffsetTime startShift, OffsetTime endShift, LocalDate shiftDate, User user) {
+    public Shift(OffsetTime startShift, OffsetTime endShift, LocalDate shiftDate, int breakTime, float extraHours , User user) {
         this.startShift = startShift;
         this.endShift = endShift;
         this.shiftDate = shiftDate;
+        this.breakTime = breakTime;
+        this.workedHours =  (endShift.getHour() + (float)endShift.getMinute() / 60 + (float)endShift.getSecond() / 3600) - (startShift.getHour() + (float)startShift.getMinute() / 60 + (float)startShift.getSecond() / 3600);
+        this.extraHours = extraHours;
         this.user = user;
     }
 

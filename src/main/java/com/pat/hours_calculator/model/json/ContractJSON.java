@@ -4,16 +4,16 @@ import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 public class ContractJSON {
 
-    private String startDate;
-    private String endDate;
-    private String hoursPerWeek;
-    private boolean indefinite;
-    private String startTime;
+    private LocalDate startDate;
     @Nullable
-    private String endTime;
+    private LocalDate endDate;
+    private int hoursPerWeek;
+    private boolean indefinite;
 
 }
