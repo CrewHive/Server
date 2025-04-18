@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Address {
+public class AddressJSON {
 
     private String street;
     private String city;

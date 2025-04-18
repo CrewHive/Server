@@ -1,6 +1,6 @@
 package com.pat.hours_calculator.model.company.entity;
 
-import com.pat.hours_calculator.dto.json.Address;
+import com.pat.hours_calculator.dto.json.AddressJSON;
 import com.pat.hours_calculator.model.user.entity.User;
 import com.pat.hours_calculator.model.util.CompanyType;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
@@ -31,7 +31,7 @@ public class Company {
     @NotNull(message = "Address is required")
     @Type(JsonType.class)
     @Column(name = "address", nullable = false, columnDefinition = "jsonb")
-    private Address address;
+    private AddressJSON addressJSON;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<User> users = new LinkedHashSet<>();
@@ -44,9 +44,9 @@ public class Company {
     public Company() {
     }
 
-    public Company(String name, Address address, CompanyType companyType) {
+    public Company(String name, AddressJSON addressJSON, CompanyType companyType) {
         this.name = name;
-        this.address = address;
+        this.addressJSON = addressJSON;
         this.companyType = companyType;
     }
 
