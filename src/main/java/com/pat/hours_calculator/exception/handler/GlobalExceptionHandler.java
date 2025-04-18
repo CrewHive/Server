@@ -3,6 +3,7 @@ package com.pat.hours_calculator.exception.handler;
 import com.pat.hours_calculator.exception.custom.InvalidTokenException;
 import com.pat.hours_calculator.exception.custom.ResourceAlreadyExistsException;
 import com.pat.hours_calculator.exception.custom.ResourceNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -25,6 +27,7 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage());
         });
 
+        log.error("Validation error: {}", errors);
         return ResponseEntity.status(400).body(Map.of("status", 400, "errors", errors));
     }
 
@@ -33,6 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleParsingException(HttpMessageNotReadableException ex) {
 
+        log.error("Parsing error: {}", ex.getMessage());
         return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
     }
 
@@ -41,6 +45,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
 
+        log.error("Resource not found: {}", ex.getMessage());
         return ResponseEntity.status(404).body(Map.of("status", 404, "error", ex.getMessage()));
     }
 
@@ -49,6 +54,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException ex) {
 
+        log.error("Bad credentials: {}", ex.getMessage());
         return ResponseEntity.status(401).body(Map.of("status", 401, "error", ex.getMessage()));
     }
 
@@ -56,6 +62,8 @@ public class GlobalExceptionHandler {
     // Resource already exists
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
+
+        log.error("Resource already exists: {}", ex.getMessage());
         return ResponseEntity.status(500).body(Map.of("status", 401, "error", ex.getMessage()));
     }
 
@@ -64,6 +72,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidTokenException(InvalidTokenException ex) {
 
+        log.error("Invalid token: {}", ex.getMessage());
         return ResponseEntity.status(400).body(Map.of("status", 400, "error", ex.getMessage()));
     }
 
@@ -73,6 +82,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalStateException(IllegalStateException ex) {
 
+        log.error("Illegal state: {}", ex.getMessage());
         return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
     }
 
@@ -81,6 +91,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
 
+        log.error("Runtime error: {}", ex.getMessage());
         return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
     }
 
@@ -89,6 +100,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
 
+        log.error("Generic error: {}", ex.getMessage());
         return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
     }
 }
