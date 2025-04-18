@@ -3,7 +3,7 @@ package com.pat.hours_calculator.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
-import com.pat.hours_calculator.model.json.ContractJSON;
+import com.pat.hours_calculator.dto.json.ContractJSON;
 
 @Setter
 @Getter

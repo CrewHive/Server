@@ -2,7 +2,7 @@ package com.pat.hours_calculator.model.user.entity;
 
 
 import com.pat.hours_calculator.model.company.entity.Company;
-import com.pat.hours_calculator.model.json.ContractJSON;
+import com.pat.hours_calculator.dto.json.ContractJSON;
 import com.pat.hours_calculator.model.worked_hours.entities.Shift;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
@@ -23,7 +23,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", nullable = false)
-    private Long user_id;
+    private Long userId;
 
     @NotNull(message = "Email is required")
     @Column(name="email", unique = true)
@@ -49,6 +49,7 @@ public class User {
     @Column(name = "role", nullable = false)
     private String role;
 
+    @NotNull(message = "Contract is required")
     @Type(JsonType.class)
     @Column(name = "contract", nullable = false, columnDefinition = "jsonb")
     private ContractJSON contract;

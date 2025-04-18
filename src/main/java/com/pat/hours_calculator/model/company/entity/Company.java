@@ -1,10 +1,14 @@
 package com.pat.hours_calculator.model.company.entity;
 
+import com.pat.hours_calculator.dto.json.Address;
 import com.pat.hours_calculator.model.user.entity.User;
 import com.pat.hours_calculator.model.util.CompanyType;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -20,18 +24,19 @@ public class Company {
     @Column(nullable = false)
     private Long id;
 
-
+    @NotNull(message = "Name is required")
     @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-
-    @Column(name = "address", nullable = false)
-    private String address;
-
+    @NotNull(message = "Address is required")
+    @Type(JsonType.class)
+    @Column(name = "address", nullable = false, columnDefinition = "jsonb")
+    private Address address;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<User> users = new LinkedHashSet<>();
 
+    @NotNull(message = "Company type is required")
     @Enumerated
     @Column(name = "company_type", nullable = false)
     private CompanyType companyType;
@@ -39,7 +44,7 @@ public class Company {
     public Company() {
     }
 
-    public Company(String name, String address, CompanyType companyType) {
+    public Company(String name, Address address, CompanyType companyType) {
         this.name = name;
         this.address = address;
         this.companyType = companyType;
