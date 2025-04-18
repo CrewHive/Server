@@ -64,7 +64,7 @@ public class UserService {
 
         if (userRepository.existsByUsername(rDTO.getUsername())) {throw new ResourceAlreadyExistsException("Username already exists");}
 
-        User user = new User(rDTO.getUsername(), password, rDTO.getRole(), companyName);
+        User user = new User(rDTO.getUsername(), rDTO.getEmail(), password, rDTO.getRole(), companyName, rDTO.getContract());
 
         userRepository.save(user);
     }

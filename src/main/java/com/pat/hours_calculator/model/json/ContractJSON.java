@@ -1,24 +1,19 @@
 package com.pat.hours_calculator.model.json;
 
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Getter
 @Setter
 public class ContractJSON {
 
-    private Long id;
-    private String name;
-    private String description;
-    private String startDate;
-    private String endDate;
-    private String hoursPerWeek;
-    private String hoursPerDay;
-    private String daysPerWeek;
-    private String startTime;
-    private String endTime;
-    private Timestamp breakTime;
+    private LocalDate startDate;
+    @Nullable
+    private LocalDate endDate;
+    private int hoursPerWeek;
+    private boolean indefinite;
 
 }
