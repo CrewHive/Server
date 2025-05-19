@@ -4,6 +4,7 @@ package com.pat.hours_calculator.controller;
 import com.pat.hours_calculator.dto.AuthRequestDTO;
 import com.pat.hours_calculator.dto.AuthResponseDTO;
 import com.pat.hours_calculator.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO request) {
 
         AuthResponseDTO response = authService.login(request);
 

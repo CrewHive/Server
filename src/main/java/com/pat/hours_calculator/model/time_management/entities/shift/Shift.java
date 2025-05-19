@@ -1,14 +1,17 @@
-package com.pat.hours_calculator.model.worked_hours.entities;
+package com.pat.hours_calculator.model.time_management.entities.shift;
 
 import com.pat.hours_calculator.model.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.OffsetTime;
 
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -20,15 +23,12 @@ public class Shift {
     @Column(name = "shift_id", nullable = false)
     private Long shift_id;
 
-    @NotNull(message = "Start shift time is required")
     @Column(name = "start_shift", nullable = false)
     private OffsetTime startShift;
 
-    @NotNull(message = "End shift time is required")
     @Column(name = "end_shift", nullable = false)
     private OffsetTime endShift;
 
-    @NotNull(message = "Shift date is required")
     @Column(name = "shift_date", nullable = false)
     private LocalDate shiftDate;
 
@@ -45,8 +45,6 @@ public class Shift {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public Shift() {
-    }
 
     public Shift(OffsetTime startShift, OffsetTime endShift, LocalDate shiftDate, int breakTime, float extraHours , User user) {
         this.startShift = startShift;

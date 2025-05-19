@@ -1,11 +1,15 @@
 package com.pat.hours_calculator.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class AuthRequestDTO {
 
     @NotBlank(message = "Username cannot be blank")
@@ -13,13 +17,5 @@ public class AuthRequestDTO {
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
-
-    public AuthRequestDTO() {
-    }
-
-    public AuthRequestDTO(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
 
 }

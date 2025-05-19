@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserDTO {
 
+    //todo: check if it needs the @NotNull annotation because for now you don't receive it in the request
     private Long userId;
     private String email;
     private String username;

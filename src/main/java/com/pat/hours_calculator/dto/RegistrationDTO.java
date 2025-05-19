@@ -1,12 +1,16 @@
 package com.pat.hours_calculator.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import com.pat.hours_calculator.dto.json.ContractJSON;
 
 @Setter
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegistrationDTO {
 
     @NotBlank(message="Username cannot be blank")
@@ -26,16 +30,4 @@ public class RegistrationDTO {
 
     @NotBlank(message="Contract must exists")
     private ContractJSON contract;
-
-    public RegistrationDTO() {
-    }
-
-    public RegistrationDTO(String username, String email, String password, String role, String companyName, ContractJSON contract) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.companyName = companyName;
-        this.contract = contract;
-    }
 }

@@ -2,6 +2,7 @@ package com.pat.hours_calculator.controller;
 
 import com.pat.hours_calculator.dto.RegistrationDTO;
 import com.pat.hours_calculator.service.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class ManagerController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegistrationDTO rDTO) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationDTO rDTO) {
 
         userService.register(rDTO);
 

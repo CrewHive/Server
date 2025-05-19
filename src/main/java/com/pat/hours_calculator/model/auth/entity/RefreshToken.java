@@ -3,11 +3,15 @@ package com.pat.hours_calculator.model.auth.entity;
 
 import com.pat.hours_calculator.model.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
 @Getter
 @Entity
@@ -31,12 +35,5 @@ public class RefreshToken {
     @Column(name="expiration_date", nullable = false)
     private LocalDate expirationDate;
 
-    public RefreshToken() {
-    }
-
-    public RefreshToken(String token, User user) {
-        this.token = token;
-        this.user = user;
-    }
 
 }
