@@ -1,29 +1,27 @@
-package com.pat.hours_calculator.model.time_management.entities.shift;
+package com.pat.hours_calculator.model.time_management.entities.shift.shiftworked;
 
 import com.pat.hours_calculator.model.user.entity.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 
 @NoArgsConstructor
 @Getter
 @Setter
 @Entity
-@Table(name = "shift", indexes = {
-        @Index(name = "idx_shift_user_id", columnList = "user_id"),
-        @Index(name = "idx_shift_start_shift", columnList = "start_shift"),
-        @Index(name = "idx_shift_end_shift", columnList = "end_shift"),
-        @Index(name = "idx_shift_date", columnList = "date"),
+@Table(name = "shift_worked", indexes = {
+        @Index(name = "idx_shift_worked_user_id", columnList = "user_id"),
+        @Index(name = "idx_shift_worked_start_shift", columnList = "start_shift"),
+        @Index(name = "idx_shift_worked_end_shift", columnList = "end_shift"),
+        @Index(name = "idx_shift_worked_date", columnList = "date"),
 })
-public class Shift {
+public class ShiftWorked {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "shift_id", nullable = false)
+    @Column(name = "shift_worked_id", nullable = false)
     @Setter(AccessLevel.NONE)
     private Long shift_id;
 
@@ -33,7 +31,7 @@ public class Shift {
     @Column(name = "end_shift", nullable = false)
     private OffsetDateTime endShift;
 
-    @Column(name = "date", nullable = false)
+    @Column(name = "shift_date", nullable = false)
     private LocalDate date;
 
     @Column(name = "break_time", nullable = false)
@@ -49,11 +47,11 @@ public class Shift {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public Shift(OffsetDateTime startShift,
-                 OffsetDateTime endShift,
-                 int breakTime,
-                 float extraHours,
-                 User user) {
+    public ShiftWorked(OffsetDateTime startShift,
+                       OffsetDateTime endShift,
+                       int breakTime,
+                       float extraHours,
+                       User user) {
         this.startShift = startShift;
         this.endShift = endShift;
         this.date = startShift.toLocalDate();

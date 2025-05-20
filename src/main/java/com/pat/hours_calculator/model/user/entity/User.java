@@ -3,12 +3,11 @@ package com.pat.hours_calculator.model.user.entity;
 
 import com.pat.hours_calculator.model.company.entity.Company;
 import com.pat.hours_calculator.dto.json.ContractJSON;
-import com.pat.hours_calculator.model.time_management.entities.event.PersonalEvent;
 import com.pat.hours_calculator.model.time_management.entities.event.PersonalEventUsers;
-import com.pat.hours_calculator.model.time_management.entities.shift.Shift;
+import com.pat.hours_calculator.model.time_management.entities.shift.shiftworked.ShiftWorked;
+import com.pat.hours_calculator.model.time_management.entities.shift.shiftprogrammed.ShiftProgrammed;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,7 +46,7 @@ public class User {
     private String password;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Shift> shifts = new ArrayList<>();
+    private List<ShiftWorked> shiftWorked = new ArrayList<>();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
@@ -65,6 +64,10 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
     private Set<PersonalEventUsers> personalEventLinks = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("start ASC")
+    private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
 
     public User(String username, String email, String password, String role, Company company, ContractJSON contract) {
         this.email = email;
