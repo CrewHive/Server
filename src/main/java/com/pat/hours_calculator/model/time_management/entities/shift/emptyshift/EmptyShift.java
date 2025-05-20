@@ -41,7 +41,7 @@ public class EmptyShift {
     private Integer orderNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
 }

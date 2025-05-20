@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 @Table(name = "shift_programmed", indexes = {
         @Index(name = "idx_shiftprogrammed_company_id", columnList = "company_id"),
         @Index(name = "idx_shiftprogrammed_user_id", columnList = "user_id"),
-        @Index(name = "idx_shiftprogrammed_date", columnList = "date"),
+        @Index(name = "idx_shiftprogrammed_date", columnList = "shift_date"),
         @Index(name = "idx_shiftprogrammed", columnList = "start_shift")
 })
 public class ShiftProgrammed {

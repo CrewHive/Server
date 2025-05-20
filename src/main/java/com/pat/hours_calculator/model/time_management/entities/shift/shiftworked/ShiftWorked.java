@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
         @Index(name = "idx_shift_worked_user_id", columnList = "user_id"),
         @Index(name = "idx_shift_worked_start_shift", columnList = "start_shift"),
         @Index(name = "idx_shift_worked_end_shift", columnList = "end_shift"),
-        @Index(name = "idx_shift_worked_date", columnList = "date"),
+        @Index(name = "idx_shift_worked_date", columnList = "shift_date"),
 })
 public class ShiftWorked {
 
