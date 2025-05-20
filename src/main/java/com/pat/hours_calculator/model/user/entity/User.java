@@ -3,31 +3,40 @@ package com.pat.hours_calculator.model.user.entity;
 
 import com.pat.hours_calculator.model.company.entity.Company;
 import com.pat.hours_calculator.dto.json.ContractJSON;
-import com.pat.hours_calculator.model.time_management.entities.shift.Shift;
+import com.pat.hours_calculator.model.time_management.entities.event.PersonalEventUsers;
+import com.pat.hours_calculator.model.time_management.entities.shift.shiftworked.ShiftWorked;
+import com.pat.hours_calculator.model.time_management.entities.shift.shiftprogrammed.ShiftProgrammed;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @NoArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_user_username", columnList = "username"),
+        @Index(name = "idx_user_company_id", columnList = "company_id")
+})
 @Getter
 @Setter
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @Column(name="email", unique = true)
+    @Setter(AccessLevel.NONE)
     private String email;
 
     @Column(name="username", nullable = false, unique = true)
@@ -37,7 +46,7 @@ public class User {
     private String password;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Shift> shifts = new ArrayList<>();
+    private List<ShiftWorked> shiftWorked = new ArrayList<>();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
@@ -53,6 +62,12 @@ public class User {
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
+    private Set<PersonalEventUsers> personalEventLinks = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("start ASC")
+    private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
 
     public User(String username, String email, String password, String role, Company company, ContractJSON contract) {
         this.email = email;
