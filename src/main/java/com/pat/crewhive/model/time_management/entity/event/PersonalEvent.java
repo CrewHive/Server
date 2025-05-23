@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.time_management.entities.event;
+package com.pat.crewhive.model.time_management.entity.event;
 
 
 import com.pat.crewhive.model.user.entity.User;
@@ -56,8 +56,7 @@ public class PersonalEvent {
 
     @OneToMany(mappedBy = "personalEvent", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PersonalEventUsers> eventUsers = new LinkedHashSet<>();
-
-
+    
     private void addUser(User u) {
         PersonalEventUsers link = new PersonalEventUsers(u, this);
         this.eventUsers.add(link);

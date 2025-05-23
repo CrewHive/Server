@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.time_management.entities.shift.emptyshift;
+package com.pat.crewhive.model.time_management.entity.shift.emptyshift;
 
 
 import com.pat.crewhive.model.company.entity.Company;

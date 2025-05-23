@@ -3,6 +3,10 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.AuthRequestDTO;
 import com.pat.crewhive.dto.RegistrationDTO;
 import com.pat.crewhive.dto.UserDTO;
+import com.pat.crewhive.model.time_management.entity.event.PersonalEvent;
+import com.pat.crewhive.model.user.entity.role.Role;
+import com.pat.crewhive.model.user.entity.role.UserRole;
+import com.pat.crewhive.repository.RoleRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.model.company.entity.Company;
@@ -24,22 +28,25 @@ public class UserService {
 
     private CompanyRepository companyRepository;
 
+    private RoleRepository roleRepository;
+
     public UserService() {}
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CompanyRepository companyRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CompanyRepository companyRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.companyRepository = companyRepository;
+        this.roleRepository = roleRepository;
     }
 
-    public UserDTO getUserDTOById(Long id) {
+    public User getUserById(Long id) {
 
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         log.info("User found with id: {}", user.getUserId());
 
-        return new UserDTO(user.getUserId(), user.getUsername(), user.getEmail(), user.getRole(), user.getContract(), user.getCompany().getName());
+        return user;
     }
 
     public User getUserByUsername(String username) {
@@ -73,6 +80,7 @@ public class UserService {
         return match;
     }
 
+    //todo: assolutamente da rivedere
     public void register(RegistrationDTO rDTO) {
 
         Company companyName = companyRepository.findByName(rDTO.getCompanyName()).orElseThrow(() -> new ResourceNotFoundException("Company not found"));
@@ -87,7 +95,11 @@ public class UserService {
             throw new ResourceAlreadyExistsException("Username already exists");
         }
 
-        User user = new User(rDTO.getUsername(), rDTO.getEmail(), password, rDTO.getRole(), companyName, rDTO.getContract());
+        User user = new User(rDTO.getUsername(), rDTO.getEmail(), password, companyName, rDTO.getContract());
+        Role role = roleRepository.findByRoleName(rDTO.getRole()).orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+
+        UserRole userRole = new UserRole(user, role);
+        user.setRole(userRole);
 
         log.info("User created with id: {}", user.getUserId());
 

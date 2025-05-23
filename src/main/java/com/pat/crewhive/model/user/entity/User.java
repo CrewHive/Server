@@ -3,9 +3,11 @@ package com.pat.crewhive.model.user.entity;
 
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.dto.json.ContractJSON;
-import com.pat.crewhive.model.time_management.entities.event.PersonalEventUsers;
-import com.pat.crewhive.model.time_management.entities.shift.shiftworked.ShiftWorked;
-import com.pat.crewhive.model.time_management.entities.shift.shiftprogrammed.ShiftProgrammed;
+import com.pat.crewhive.model.time_management.entity.event.PersonalEventUsers;
+import com.pat.crewhive.model.time_management.entity.shift.shiftworked.ShiftWorked;
+import com.pat.crewhive.model.time_management.entity.shift.shiftprogrammed.ShiftProgrammed;
+import com.pat.crewhive.model.user.entity.role.Role;
+import com.pat.crewhive.model.user.entity.role.UserRole;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -52,9 +54,6 @@ public class User {
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @Column(name = "role", nullable = false)
-    private String role;
-
     @Type(JsonType.class)
     @Column(name = "contract", nullable = false, columnDefinition = "jsonb")
     private ContractJSON contract;
@@ -62,18 +61,20 @@ public class User {
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.DETACH, CascadeType.PERSIST})
     private Set<PersonalEventUsers> personalEventLinks = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("start ASC")
     private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
 
-    public User(String username, String email, String password, String role, Company company, ContractJSON contract) {
+    @OneToOne(mappedBy = "user", cascade = {CascadeType.REMOVE, CascadeType.PERSIST}, optional = false, orphanRemoval = true)
+    private UserRole role;
+
+    public User(String username, String email, String password, Company company, ContractJSON contract) {
         this.email = email;
         this.username = username;
         this.password = password;
-        this.role = role;
         this.company = company;
         this.contract = contract;
         this.isWorking = false;

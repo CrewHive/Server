@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.time_management.entities.shift.shiftprogrammed;
+package com.pat.crewhive.model.time_management.entity.shift.shiftprogrammed;
 
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;

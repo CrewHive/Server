@@ -1,6 +1,7 @@
 package com.pat.crewhive.security.filter;
 
 import com.pat.crewhive.dto.UserDTO;
+import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.service.JwtService;
 import com.pat.crewhive.service.UserService;
@@ -55,14 +56,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long userId = Long.valueOf(claims.getSubject());
 
                 // 3) carica il DTO utente
-                UserDTO userDto = userService.getUserDTOById(userId);
+                User user = userService.getUserById(userId);
 
                 // 4) costruisci l’Authentication
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                userDto,
+                                user,
                                 null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + userDto.getRole()))
+                                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
