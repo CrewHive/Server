@@ -1,6 +1,6 @@
 package com.pat.crewhive.service;
 
-import com.pat.crewhive.exception.custom.InvalidTokenException;
+import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.util.PemUtils;
 import io.jsonwebtoken.Claims;

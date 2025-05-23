@@ -1,9 +1,10 @@
 package com.pat.crewhive.service;
 
+import com.pat.crewhive.dto.AuthRequestDTO;
 import com.pat.crewhive.dto.RegistrationDTO;
 import com.pat.crewhive.dto.UserDTO;
-import com.pat.crewhive.exception.custom.ResourceAlreadyExistsException;
-import com.pat.crewhive.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
@@ -32,22 +33,22 @@ public class UserService {
         this.companyRepository = companyRepository;
     }
 
-    public UserDTO getUserDTOByUsername(String username) {
-
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
-
-        log.info("User found with username: {}", user.getUsername());
-
-        return new UserDTO(user.getUserId(), user.getEmail(), user.getUsername(), user.getRole(), user.getContract(), user.getCompany().getName());
-    }
-
     public UserDTO getUserDTOById(Long id) {
 
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         log.info("User found with id: {}", user.getUserId());
 
-        return new UserDTO(user.getUserId(), user.getEmail(), user.getUsername(), user.getRole(), user.getContract(), user.getCompany().getName());
+        return new UserDTO(user.getUserId(), user.getUsername(), user.getEmail(), user.getRole(), user.getContract(), user.getCompany().getName());
+    }
+
+    public User getUserByUsername(String username) {
+
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+
+        log.info("User found with username: {}", user.getUsername());
+
+        return user;
     }
 
     public User getUserByIdIdentity(Long id) {
@@ -59,13 +60,13 @@ public class UserService {
         return user;
     }
 
-    public boolean validatePassword(UserDTO dto) {
+    public boolean validatePassword(AuthRequestDTO dto) {
 
-        User user = userRepository.findById(dto.getUserId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByUsername(dto.getUsername()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         log.info("User found with id: {}", user.getUserId());
 
-        boolean match = passwordEncoder.matches(user.getPassword(), user.getPassword());
+        boolean match = passwordEncoder.matches(dto.getPassword(), user.getPassword());
 
         log.info("Password match: {}", match);
 

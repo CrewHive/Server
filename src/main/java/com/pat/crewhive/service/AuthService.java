@@ -27,9 +27,7 @@ public class AuthService {
 
     public AuthResponseDTO login(AuthRequestDTO request) {
 
-        UserDTO userDTO = userService.getUserDTOByUsername(request.getUsername());
-
-        if(!userService.validatePassword(userDTO)) {
+        if(!userService.validatePassword(request)) {
 
             log.error("Invalid password for user: {}", request.getUsername());
             log.error("Invalid password: {}", request.getPassword());
@@ -37,7 +35,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid password");
         }
 
-        User user = userService.getUserByIdIdentity(userDTO.getUserId());
+        User user = userService.getUserByUsername(request.getUsername());
 
         return new AuthResponseDTO(jwtService.generateToken(user), refreshTokenService.generateRefreshToken(user));
 

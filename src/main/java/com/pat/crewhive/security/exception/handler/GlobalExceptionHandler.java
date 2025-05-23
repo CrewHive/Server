@@ -1,8 +1,9 @@
-package com.pat.crewhive.exception.handler;
+package com.pat.crewhive.security.exception.handler;
 
-import com.pat.crewhive.exception.custom.InvalidTokenException;
-import com.pat.crewhive.exception.custom.ResourceAlreadyExistsException;
-import com.pat.crewhive.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.security.exception.custom.InvalidTokenException;
+import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
+import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -93,6 +94,14 @@ public class GlobalExceptionHandler {
 
         log.error("Runtime error: {}", ex.getMessage());
         return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
+    }
+
+    // JwtAuthenticationException
+    @ExceptionHandler(JwtAuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleJwtAuthenticationException(JwtAuthenticationException ex) {
+
+        log.error("JWT authentication error: {}", ex.getMessage());
+        return ResponseEntity.status(401).body(Map.of("status", 401, "error", ex.getMessage()));
     }
 
 

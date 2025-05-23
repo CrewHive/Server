@@ -20,13 +20,5 @@ public class UserController {
                 this.userService = userService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
 
-        UserDTO user = userService.getUserDTOById(id);
-
-        log.info("User with id {} retrieved successfully", id);
-
-        return ResponseEntity.ok(user);
-    }
 }

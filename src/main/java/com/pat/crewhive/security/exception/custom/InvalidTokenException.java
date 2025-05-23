@@ -1,4 +1,4 @@
-package com.pat.crewhive.exception.custom;
+package com.pat.crewhive.security.exception.custom;
 
 public class InvalidTokenException extends RuntimeException {
 
