@@ -24,7 +24,7 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="com.pat.hours_calculator" level="DEBUG" additivity="false">
+    <logger name="com.pat.crewhive" level="DEBUG" additivity="false">
         <appender-ref ref="CALCULATOR_FILE" />
     </logger>
 </configuration>

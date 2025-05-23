@@ -1,9 +1,9 @@
-2025-05-20 19:22:23.469 [main] INFO  c.p.h.HoursCalculatorApplication - Starting HoursCalculatorApplication using Java 23.0.2 with PID 18400 (C:\Users\Admin\Desktop\CrewHive\Server\target\classes started by Admin in C:\Users\Admin\Desktop\CrewHive\Server)
-2025-05-20 19:22:23.470 [main] DEBUG c.p.h.HoursCalculatorApplication - Running with Spring Boot v3.4.3, Spring v6.2.3
-2025-05-20 19:22:23.471 [main] INFO  c.p.h.HoursCalculatorApplication - No active profile set, falling back to 1 default profile: "default"
-2025-05-20 19:22:27.082 [main] INFO  c.p.h.service.JwtService - Private Key: sun.security.rsa.RSAPrivateCrtKeyImpl@d164a74a
-2025-05-20 19:22:27.082 [main] INFO  c.p.h.service.JwtService - Public Key: Sun RSA public key, 2048 bits
+2025-05-21 19:24:36.072 [main] INFO  c.p.c.HoursCalculatorApplication - Starting HoursCalculatorApplication using Java 23.0.2 with PID 18992 (C:\Users\Admin\Desktop\CrewHive\Server\target\classes started by Admin in C:\Users\Admin\Desktop\CrewHive\Server)
+2025-05-21 19:24:36.072 [main] DEBUG c.p.c.HoursCalculatorApplication - Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-05-21 19:24:36.073 [main] INFO  c.p.c.HoursCalculatorApplication - No active profile set, falling back to 1 default profile: "default"
+2025-05-21 19:24:39.772 [main] INFO  com.pat.crewhive.service.JwtService - Private Key: sun.security.rsa.RSAPrivateCrtKeyImpl@d164a74a
+2025-05-21 19:24:39.772 [main] INFO  com.pat.crewhive.service.JwtService - Public Key: Sun RSA public key, 2048 bits
   params: null
   modulus: 23080194174833051121415503215860244652616277149034319410561013397483694778295142704790443292352061218639310541605750568842966585088366860498329434519607342682669501483768858294732438560029769752144176143896857316792498153970453463067017981002821877752664937643200850523072717461944432163709772646897163318025719199792123840092932791568406492812791511129401261786169368221294645041793575533638847009994240619939629563745462993416868890619973845061206970932046323422850711419225784621885218946501169306728052675404108698097182453928594904585150708413723457789887801337180910523306058103017145524325972729664568777512279
   public exponent: 65537
-2025-05-20 19:22:27.848 [main] INFO  c.p.h.HoursCalculatorApplication - Started HoursCalculatorApplication in 4.811 seconds (process running for 5.411)
+2025-05-21 19:24:40.577 [main] INFO  c.p.c.HoursCalculatorApplication - Started HoursCalculatorApplication in 4.937 seconds (process running for 5.495)
