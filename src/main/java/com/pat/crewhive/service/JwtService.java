@@ -2,14 +2,13 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.util.PemUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.SignatureException;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.PrivateKey;
@@ -20,28 +19,17 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private PrivateKey privateKey;
+    private final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
-    private PublicKey publicKey;
+    @Autowired
+    public JwtService(PrivateKey privateKey, PublicKey publicKey) {
 
-    @PostConstruct
-    public void initKeys() {
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
 
-        try {
-
-            this.privateKey = PemUtils.loadPrivateKey("/static/private.pem");
-            this.publicKey = PemUtils.loadPublicKey("/static/public.pem");
-
-            log.info("Private Key: {}", privateKey);
-            log.info("Public Key: {}", publicKey);
-
-        } catch (Exception e) {
-
-            log.error("Error loading keys: {}", e.getMessage());
-            throw new IllegalStateException("Cannot load signature's keys", e);
-        }
+        log.info("JWT Service initialized with private and public keys");
     }
-
 
     public String generateToken(User user) {
 

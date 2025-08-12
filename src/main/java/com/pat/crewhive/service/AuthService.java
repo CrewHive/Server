@@ -4,7 +4,6 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.AuthRequestDTO;
 import com.pat.crewhive.dto.AuthResponseDTO;
 import com.pat.crewhive.dto.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.UserDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
