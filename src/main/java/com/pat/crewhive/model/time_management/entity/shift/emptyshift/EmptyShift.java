@@ -25,8 +25,8 @@ public class EmptyShift {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
-    private Long id;
+    @Column(name="empty_shift_id", nullable = false)
+    private Long emptyShiftId;
 
     @Column(name = "shift_name", nullable = false)
     private String shift_name;

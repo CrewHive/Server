@@ -1,11 +1,11 @@
 package com.pat.crewhive.dto;
 
+import com.pat.crewhive.model.user.contract.Contract;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.pat.crewhive.dto.json.ContractJSON;
 
 @Setter
 @Getter
@@ -29,5 +29,5 @@ public class RegistrationDTO {
     private String companyName;
 
     @NotBlank(message="Contract must exists")
-    private ContractJSON contract;
+    private Contract contract;
 }

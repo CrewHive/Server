@@ -16,13 +16,23 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
-public class AuthController {
+public class AuthUserController {
 
     private final AuthService authService;
 
     @Autowired
-    public AuthController(AuthService authService) {
+    public AuthUserController(AuthService authService) {
         this.authService = authService;
+    }
+
+    @PostMapping("/rotate")
+    public ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody AuthRequestDTO request) {
+
+        AuthResponseDTO response = authService.rotate_token(request);
+
+        log.info("Token ok for user: {}", request.getUsername());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -33,6 +43,5 @@ public class AuthController {
         log.info("Login ok for user: {}", request.getUsername());
 
         return ResponseEntity.ok(response);
-
     }
 }

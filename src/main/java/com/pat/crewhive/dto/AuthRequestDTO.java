@@ -1,5 +1,6 @@
 package com.pat.crewhive.dto;
 
+import com.pat.crewhive.model.auth.entity.RefreshToken;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,5 +18,7 @@ public class AuthRequestDTO {
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
+
+    private RefreshToken refreshToken;
 
 }

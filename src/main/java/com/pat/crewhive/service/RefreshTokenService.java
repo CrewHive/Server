@@ -34,7 +34,6 @@ public class RefreshTokenService {
         repo.save(token);
 
         log.info("Generated refresh token for user: {}", user.getUsername());
-        log.info("Token: {}", token.getToken());
         log.info("Expiration date: {}", token.getExpirationDate());
 
         return token.getToken();
@@ -44,7 +43,7 @@ public class RefreshTokenService {
 
         RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
 
-        log.info("Checking expiration for token: {}", token);
+        log.info("Checking expiration");
         log.info("Expiration date: {}", rt.getExpirationDate());
         log.info("Is expired: {}", rt.getExpirationDate().isBefore(LocalDate.now()));
 
@@ -61,10 +60,17 @@ public class RefreshTokenService {
         repo.save(rt);
 
         log.info("Rotated refresh token for user: {}", rt.getUser().getUsername());
-        log.info("New token: {}", rt.getToken());
         log.info("New expiration date: {}", rt.getExpirationDate());
-        log.info("Old token: {}", token);
 
         return rt.getToken();
+    }
+
+    public User getOwner(String token) {
+
+        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
+
+        log.info("Found owner for token: {}", rt.getUser().getUsername());
+
+        return rt.getUser();
     }
 }

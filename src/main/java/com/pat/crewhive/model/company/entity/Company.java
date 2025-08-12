@@ -1,5 +1,6 @@
 package com.pat.crewhive.model.company.entity;
 
+import com.pat.crewhive.dto.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.json.AddressJSON;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.CompanyType;
@@ -38,5 +39,11 @@ public class Company {
     @Enumerated(EnumType.STRING)
     @Column(name = "company_type", nullable = false)
     private CompanyType companyType;
+
+    public Company(CompanyRegistrationDTO registrationDTO) {
+        this.name = registrationDTO.getCompanyName();
+        this.addressJSON = registrationDTO.getAddress();
+        this.companyType = registrationDTO.getCompanyType();
+    }
 
 }

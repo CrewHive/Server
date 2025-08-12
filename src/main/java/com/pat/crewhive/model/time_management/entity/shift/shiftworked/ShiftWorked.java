@@ -23,13 +23,16 @@ public class ShiftWorked {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "shift_worked_id", nullable = false)
     @Setter(AccessLevel.NONE)
-    private Long shift_id;
+    private Long shiftWorkedId;
+
+    @Column(name = "shift_name", nullable = false)
+    private String shiftName;
 
     @Column(name = "start_shift", nullable = false)
-    private OffsetDateTime startShift;
+    private OffsetDateTime start;
 
     @Column(name = "end_shift", nullable = false)
-    private OffsetDateTime endShift;
+    private OffsetDateTime end;
 
     @Column(name = "shift_date", nullable = false)
     private LocalDate date;
@@ -47,16 +50,16 @@ public class ShiftWorked {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public ShiftWorked(OffsetDateTime startShift,
-                       OffsetDateTime endShift,
+    public ShiftWorked(OffsetDateTime start,
+                       OffsetDateTime end,
                        int breakTime,
                        float extraHours,
                        User user) {
-        this.startShift = startShift;
-        this.endShift = endShift;
-        this.date = startShift.toLocalDate();
+        this.start = start;
+        this.end = end;
+        this.date = start.toLocalDate();
         this.breakTime = breakTime;
-        this.workedHours =  (endShift.getHour() + (float)endShift.getMinute() / 60 + (float)endShift.getSecond() / 3600) - (startShift.getHour() + (float)startShift.getMinute() / 60 + (float)startShift.getSecond() / 3600);
+        this.workedHours =  (end.getHour() + (float)end.getMinute() / 60 + (float)end.getSecond() / 3600) - (start.getHour() + (float)start.getMinute() / 60 + (float)start.getSecond() / 3600);
         this.extraHours = extraHours;
         this.user = user;
     }

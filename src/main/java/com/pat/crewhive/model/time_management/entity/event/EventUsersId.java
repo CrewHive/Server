@@ -15,19 +15,19 @@ import java.util.Objects;
 @AllArgsConstructor
 @Getter
 @Setter
-public class PersonalEventUsersId implements Serializable {
+public class EventUsersId implements Serializable {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "personal_event_id", nullable = false)
+    @Column(name = "event_id", nullable = false)
     private Long eventId;
 
     @Override
     public boolean equals(Object o) {
 
         if(this == o) return true;
-        if(!(o instanceof PersonalEventUsersId that)) return false;
+        if(!(o instanceof EventUsersId that)) return false;
 
         return Objects.equals(userId, that.userId) && Objects.equals(eventId, that.eventId);
     }

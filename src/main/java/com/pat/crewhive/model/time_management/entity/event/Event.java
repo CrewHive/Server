@@ -18,19 +18,19 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "personal_event", indexes = {
-        @Index(name = "idx_personalevent_start_event", columnList = "start_event"),
-        @Index(name = "idx_personalevent_end_event", columnList = "end_event"),
-        @Index(name = "idx_personalevent_date", columnList = "date")
+@Table(name = "event", indexes = {
+        @Index(name = "idx_event_start_event", columnList = "start_event"),
+        @Index(name = "idx_event_end_event", columnList = "end_event"),
+        @Index(name = "idx_event_date", columnList = "date")
 })
 
-public class PersonalEvent {
+public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "personal_event_id", nullable = false)
+    @Column(name = "event_id", nullable = false)
     @Setter(AccessLevel.NONE)
-    private Long id;
+    private Long eventId;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -54,22 +54,27 @@ public class PersonalEvent {
     @Column(name = "event_type", nullable = false)
     private EventType eventType;
 
-    @OneToMany(mappedBy = "personalEvent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PersonalEventUsers> eventUsers = new LinkedHashSet<>();
-    
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<EventUsers> users = new LinkedHashSet<>();
+
+    /**
+     *
+     *  Quando viene creato un evento viene chiamata questa funzione
+     *  per aggiungere gli utenti selezionati
+     */
     private void addUser(User u) {
-        PersonalEventUsers link = new PersonalEventUsers(u, this);
-        this.eventUsers.add(link);
-        u.getPersonalEventLinks().add(link);
+        EventUsers link = new EventUsers(u, this);
+        this.users.add(link);
+        u.getPersonalEvents().add(link);
     }
 
     private void removeUser(User u) {
-        this.eventUsers.removeIf(link -> link.getUser().equals(u));
-        u.getPersonalEventLinks().removeIf(link -> link.getPersonalEvent().equals(this));
+        this.users.removeIf(link -> link.getUser().equals(u));
+        u.getPersonalEvents().removeIf(link -> link.getEvent().equals(this));
     }
 
 
-    public PersonalEvent(Set<User> user,
+    public Event(Set<User> user,
                          String name,
                          String description,
                          OffsetDateTime startEvent, OffsetDateTime endEvent,

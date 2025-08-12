@@ -2,8 +2,6 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.dto.AuthRequestDTO;
 import com.pat.crewhive.dto.RegistrationDTO;
-import com.pat.crewhive.dto.UserDTO;
-import com.pat.crewhive.model.time_management.entity.event.PersonalEvent;
 import com.pat.crewhive.model.user.entity.role.Role;
 import com.pat.crewhive.model.user.entity.role.UserRole;
 import com.pat.crewhive.repository.RoleRepository;
@@ -13,10 +11,12 @@ import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
 import com.pat.crewhive.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 @Slf4j
 @Service
@@ -58,15 +58,6 @@ public class UserService {
         return user;
     }
 
-    public User getUserByIdIdentity(Long id) {
-
-        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        log.info("User found with id: {}", user.getUserId());
-
-        return user;
-    }
-
     public boolean validatePassword(AuthRequestDTO dto) {
 
         User user = userRepository.findByUsername(dto.getUsername()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -81,6 +72,7 @@ public class UserService {
     }
 
     //todo: assolutamente da rivedere
+    @Transactional
     public void register(RegistrationDTO rDTO) {
 
         Company companyName = companyRepository.findByName(rDTO.getCompanyName()).orElseThrow(() -> new ResourceNotFoundException("Company not found"));
@@ -95,7 +87,7 @@ public class UserService {
             throw new ResourceAlreadyExistsException("Username already exists");
         }
 
-        User user = new User(rDTO.getUsername(), rDTO.getEmail(), password, companyName, rDTO.getContract());
+        User user = new User(rDTO.getUsername(), rDTO.getEmail(), password, companyName);
         Role role = roleRepository.findByRoleName(rDTO.getRole()).orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         UserRole userRole = new UserRole(user, role);
@@ -105,4 +97,5 @@ public class UserService {
 
         userRepository.save(user);
     }
+
 }

@@ -6,15 +6,15 @@ import com.pat.crewhive.service.JwtService;
 import com.pat.crewhive.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtService jwtService;
@@ -32,28 +32,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. disabilita sessione e form-login
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(
-                        SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .securityContext(AbstractHttpConfigurer::disable)
+                // .securityContext(AbstractHttpConfigurer::disable)  // <— RIMUOVI QUESTA RIGA
 
-                // 2. gestisci le eccezioni
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(restAuthenticationEntryPoint)
-                )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
 
-                // 2. rendi accessibile senza jwt solo login e refresh
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/refresh")
+                        .requestMatchers("/api/auth/login", "/api/auth/rotate") // <— CONTROLLA CHE SIANO QUESTE LE TUE ROTTE
                         .permitAll()
-                        .anyRequest()
-                        .authenticated()
+                        .anyRequest().authenticated()
                 );
 
-        // 3. inserisci il filtro JWT prima di tutti
         http.addFilterBefore(
                 new JwtAuthenticationFilter(jwtService, userService),
                 UsernamePasswordAuthenticationFilter.class

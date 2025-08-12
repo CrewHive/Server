@@ -54,11 +54,9 @@ public final class UserUtils {
     public static UserDTO getCurrentUser() {
         CustomUserDetails cud = getCustomUserDetails();
         return (cud != null ? new UserDTO(
-                cud.getUser().getUserId(),
                 cud.getUser().getEmail(),
                 cud.getUser().getUsername(),
                 cud.getUser().getRole().getRole().getRoleName(),
-                cud.getUser().getContract(),
                 cud.getUser().getCompany().getName()
         ) : null);
     }

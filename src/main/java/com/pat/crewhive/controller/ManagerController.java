@@ -1,6 +1,8 @@
 package com.pat.crewhive.controller;
 
+import com.pat.crewhive.dto.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.RegistrationDTO;
+import com.pat.crewhive.service.AuthService;
 import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ManagerController {
 
     UserService userService;
+    AuthService authService;
 
     @Autowired
-    public ManagerController(UserService userService) {
+    public ManagerController(UserService userService, AuthService authService) {
         this.userService = userService;
+        this.authService = authService;
     }
 
     @PostMapping("/register")
@@ -29,6 +33,16 @@ public class ManagerController {
         userService.register(rDTO);
 
         log.info("User {} registered successfully", rDTO.getUsername());
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/company/register")
+    public ResponseEntity<?> registerCompany(@Valid @RequestBody CompanyRegistrationDTO request) {
+
+        authService.registerCompany(request);
+
+        log.info("Company {} registered successfully", request.getCompanyName());
 
         return ResponseEntity.ok().build();
     }

@@ -2,19 +2,16 @@ package com.pat.crewhive.model.user.entity;
 
 
 import com.pat.crewhive.model.company.entity.Company;
-import com.pat.crewhive.dto.json.ContractJSON;
-import com.pat.crewhive.model.time_management.entity.event.PersonalEventUsers;
+import com.pat.crewhive.model.time_management.entity.event.EventUsers;
 import com.pat.crewhive.model.time_management.entity.shift.shiftworked.ShiftWorked;
 import com.pat.crewhive.model.time_management.entity.shift.shiftprogrammed.ShiftProgrammed;
-import com.pat.crewhive.model.user.entity.role.Role;
+import com.pat.crewhive.model.user.contract.Contract;
 import com.pat.crewhive.model.user.entity.role.UserRole;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -54,15 +51,11 @@ public class User {
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @Type(JsonType.class)
-    @Column(name = "contract", nullable = false, columnDefinition = "jsonb")
-    private ContractJSON contract;
-
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
 
     @OneToMany(mappedBy = "user", cascade = {CascadeType.DETACH, CascadeType.PERSIST})
-    private Set<PersonalEventUsers> personalEventLinks = new LinkedHashSet<>();
+    private Set<EventUsers> personalEvents = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("start ASC")
@@ -71,12 +64,14 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = {CascadeType.REMOVE, CascadeType.PERSIST}, optional = false, orphanRemoval = true)
     private UserRole role;
 
-    public User(String username, String email, String password, Company company, ContractJSON contract) {
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Contract contract;
+
+    public User(String username, String email, String password, Company company) {
         this.email = email;
         this.username = username;
         this.password = password;
         this.company = company;
-        this.contract = contract;
         this.isWorking = false;
     }
 }

@@ -1,6 +1,7 @@
 package com.pat.crewhive.model.user.entity;
 
 import com.pat.crewhive.dto.json.ContractJSON;
+import com.pat.crewhive.model.user.contract.Contract;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -90,7 +91,7 @@ public class CustomUserDetails implements UserDetails {
         return user;
     }
 
-    // Metodi di comodo per accedere al dettaglio dell'entity:
+
     public Long getUserId() {
         return user.getUserId();
     }
@@ -103,7 +104,11 @@ public class CustomUserDetails implements UserDetails {
         return user.getRole().getRole().getRoleName();
     }
 
-    public ContractJSON getContract() {
+    public String getCompany() {
+        return user.getCompany().getName();
+    }
+
+    public Contract getContract() {
         return user.getContract();
     }
 }

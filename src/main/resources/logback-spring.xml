@@ -27,4 +27,7 @@
     <logger name="com.pat.crewhive" level="DEBUG" additivity="false">
         <appender-ref ref="CALCULATOR_FILE" />
     </logger>
+    <logger name="com.pat.crewhive" level="ERROR" additivity="false">
+        <appender-ref ref="CALCULATOR_FILE" />
+    </logger>
 </configuration>

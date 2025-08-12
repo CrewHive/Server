@@ -1,6 +1,6 @@
 package com.pat.crewhive.security.filter;
 
-import com.pat.crewhive.dto.UserDTO;
+import com.pat.crewhive.model.user.entity.CustomUserDetails;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.service.JwtService;
@@ -11,6 +11,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -32,10 +34,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+
         String path = request.getServletPath();
-        // salta login e refresh senza matcher esterni
-        return "/api/auth/login".equals(path)
-                || "/api/auth/refresh".equals(path);
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true; // CORS preflight
+
+        return path.startsWith("/api/auth");
     }
 
 
@@ -46,34 +50,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
+
+        // <— NON rifare il lavoro se già autenticato
+        if (SecurityContextHolder.getContext().getAuthentication() == null
+                && header != null && header.startsWith("Bearer ")) {
+
             String token = header.substring(7);
+
+            log.debug("Processing JWT token");
+
             try {
-                // 1) validateToken ritorna un io.jsonwebtoken.Claims
+
                 Claims claims = jwtService.validateToken(token);
+                String sub = claims.getSubject();
+                if (sub == null) throw new JwtAuthenticationException("Invalid token subject");
 
-                // 2) estrai subject come Long
-                Long userId = Long.valueOf(claims.getSubject());
+                Long userId = Long.parseLong(sub);
 
-                // 3) carica il DTO utente
+                // Carica dal DB
                 User user = userService.getUserById(userId);
+                CustomUserDetails userDetails = new CustomUserDetails(user);
 
-                // 4) costruisci l’Authentication
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                user,
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+                                userDetails, null, userDetails.getAuthorities()
                         );
+
+                // <— aggiungi dettagli della request
+                authentication.setDetails(
+                        new org.springframework.security.web.authentication.WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (JwtException ex) {
+
                 SecurityContextHolder.clearContext();
+                log.error("JWT validation error: {}", ex.getMessage());
                 throw new JwtAuthenticationException(ex.getMessage());
 
             } catch (RuntimeException ex) {
+
                 SecurityContextHolder.clearContext();
+                log.error("Internal authentication error: {}", ex.getMessage());
                 throw new JwtAuthenticationException("Errore interno di autenticazione");
             }
         }
