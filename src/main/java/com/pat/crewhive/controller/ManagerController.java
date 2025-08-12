@@ -27,15 +27,6 @@ public class ManagerController {
         this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationDTO rDTO) {
-
-        userService.register(rDTO);
-
-        log.info("User {} registered successfully", rDTO.getUsername());
-
-        return ResponseEntity.ok().build();
-    }
 
     @PostMapping("/company/register")
     public ResponseEntity<?> registerCompany(@Valid @RequestBody CompanyRegistrationDTO request) {

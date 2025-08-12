@@ -75,27 +75,7 @@ public class UserService {
     @Transactional
     public void register(RegistrationDTO rDTO) {
 
-        Company companyName = companyRepository.findByName(rDTO.getCompanyName()).orElseThrow(() -> new ResourceNotFoundException("Company not found"));
 
-        log.info("Company found with name: {}", companyName.getName());
-
-        String password = passwordEncoder.encode(rDTO.getPassword());
-
-        if (userRepository.existsByUsername(rDTO.getUsername())) {
-
-            log.error("Username already exists: {}", rDTO.getUsername());
-            throw new ResourceAlreadyExistsException("Username already exists");
-        }
-
-        User user = new User(rDTO.getUsername(), rDTO.getEmail(), password, companyName);
-        Role role = roleRepository.findByRoleName(rDTO.getRole()).orElseThrow(() -> new ResourceNotFoundException("Role not found"));
-
-        UserRole userRole = new UserRole(user, role);
-        user.setRole(userRole);
-
-        log.info("User created with id: {}", user.getUserId());
-
-        userRepository.save(user);
     }
 
 }

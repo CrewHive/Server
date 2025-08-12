@@ -1,10 +1,12 @@
 package com.pat.crewhive.controller;
 
 
+import com.pat.crewhive.dto.RegistrationDTO;
 import com.pat.crewhive.dto.UserDTO;
 import com.pat.crewhive.model.user.entity.CustomUserDetails;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.service.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

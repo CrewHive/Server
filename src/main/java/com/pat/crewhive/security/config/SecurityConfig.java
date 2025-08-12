@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/rotate") // <— CONTROLLA CHE SIANO QUESTE LE TUE ROTTE
+                        .requestMatchers("/api/auth/login", "/api/auth/rotate", "/api/auth/register") // <— CONTROLLA CHE SIANO QUESTE LE TUE ROTTE
                         .permitAll()
                         .anyRequest().authenticated()
                 );
