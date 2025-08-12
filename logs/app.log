@@ -1,0 +1,1 @@
+2025-08-12 13:15:24.552 [http-nio-8080-exec-5] ERROR c.p.c.s.e.h.GlobalExceptionHandler - Parsing error: JSON parse error: Unexpected character ('"' (code 34)): was expecting comma to separate Object entries
