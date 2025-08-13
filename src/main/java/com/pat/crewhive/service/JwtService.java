@@ -31,6 +31,12 @@ public class JwtService {
         log.info("JWT Service initialized with private and public keys");
     }
 
+    /**
+     * Generates a JWT token for the given user.
+     *
+     * @param user the user for whom the token is generated
+     * @return the generated JWT token
+     */
     public String generateToken(User user) {
 
         String jwt = Jwts.builder()
@@ -46,6 +52,13 @@ public class JwtService {
         return jwt;
     }
 
+    /**
+     * Validates the given JWT token and returns the claims if valid.
+     *
+     * @param token the JWT token to validate
+     * @return the claims contained in the token
+     * @throws InvalidTokenException if the token is invalid or expired
+     */
     public Claims validateToken(String token) {
 
         try {

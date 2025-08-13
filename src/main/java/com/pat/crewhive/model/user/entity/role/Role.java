@@ -26,10 +26,10 @@ public class Role {
     @Column(name = "role_name", nullable = false, unique = true)
     private String roleName;
 
-    @OneToMany(mappedBy = "role", cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRole> users = new LinkedHashSet<>();
 
-    @ManyToOne(cascade = CascadeType.REMOVE, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 

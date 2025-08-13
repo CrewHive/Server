@@ -1,7 +1,7 @@
-package com.pat.crewhive.model.user.entity;
+package com.pat.crewhive.model.user.wrapper;
 
-import com.pat.crewhive.dto.json.ContractJSON;
 import com.pat.crewhive.model.user.contract.Contract;
+import com.pat.crewhive.model.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

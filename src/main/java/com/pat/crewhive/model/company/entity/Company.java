@@ -33,7 +33,7 @@ public class Company {
     @Column(name = "address", nullable = false, columnDefinition = "jsonb")
     private AddressJSON addressJSON;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     private Set<User> users = new LinkedHashSet<>();
 
     @Enumerated(EnumType.STRING)

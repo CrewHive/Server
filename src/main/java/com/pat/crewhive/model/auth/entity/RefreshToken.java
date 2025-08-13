@@ -23,12 +23,10 @@ public class RefreshToken {
     @Column(name = "refresh_token_id", nullable = false)
     private Long refreshTokenId;
 
-
     @Column(name = "token", nullable = false)
     private String token;
 
-
-    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 

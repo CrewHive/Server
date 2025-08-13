@@ -25,7 +25,7 @@ public class Contract {
     @Column(name = "contract", nullable = false, columnDefinition = "jsonb")
     private ContractJSON contract;
 
-    @OneToOne(cascade = CascadeType.PERSIST, optional = false, orphanRemoval = true)
+    @OneToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

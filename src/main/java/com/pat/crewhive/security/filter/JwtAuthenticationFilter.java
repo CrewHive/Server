@@ -1,6 +1,6 @@
 package com.pat.crewhive.security.filter;
 
-import com.pat.crewhive.model.user.entity.CustomUserDetails;
+import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.service.JwtService;
@@ -13,12 +13,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

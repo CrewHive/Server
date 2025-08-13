@@ -21,6 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "users", indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
         @Index(name = "idx_user_username", columnList = "username"),
         @Index(name = "idx_user_company_id", columnList = "company_id")
 })
@@ -35,7 +36,6 @@ public class User {
     private Long userId;
 
     @Column(name="email", unique = true)
-    @Setter(AccessLevel.NONE)
     private String email;
 
     @Column(name="username", nullable = false, unique = true)
@@ -44,27 +44,29 @@ public class User {
     @Column(name="password", nullable = false)
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ShiftWorked> shiftWorked = new ArrayList<>();
-
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
 
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
 
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.DETACH, CascadeType.PERSIST})
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<EventUsers> personalEvents = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+
+    //todo se salvo dal lato user lascia all se uso lato shift usa remove uguale per i programmed
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ShiftWorked> shiftWorked = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("start ASC")
     private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = {CascadeType.REMOVE, CascadeType.PERSIST}, optional = false, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
     private UserRole role;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Contract contract;
 
     public User(String username, String email, String password, Company company) {

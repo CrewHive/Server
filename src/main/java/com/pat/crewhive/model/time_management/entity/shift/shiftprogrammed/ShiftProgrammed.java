@@ -36,8 +36,8 @@ public class ShiftProgrammed {
     @Column(name = "shift_date", nullable = false)
     private LocalDate date;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     public ShiftProgrammed(OffsetDateTime start,

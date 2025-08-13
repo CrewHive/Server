@@ -1,7 +1,7 @@
 package com.pat.crewhive.security.util;
 
 import com.pat.crewhive.dto.UserDTO;
-import com.pat.crewhive.model.user.entity.CustomUserDetails;
+import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -10,14 +10,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 public final class UserUtils {
 
-    private UserUtils() {
-        // costruttore privato per impedire istanziazione
-    }
+    private UserUtils() {}
 
     /**
      * Restituisce l'Authentication correntemente in SecurityContext, o null se non autenticato.
      */
     public static Authentication getAuthentication() {
+
         return SecurityContextHolder.getContext().getAuthentication();
     }
 
@@ -25,7 +24,9 @@ public final class UserUtils {
      * Ritorna true se c'è un utente autenticato (e non anonimo).
      */
     public static boolean isAuthenticated() {
+
         Authentication auth = getAuthentication();
+
         return auth != null
                 && auth.isAuthenticated()
                 && !(auth.getPrincipal() instanceof String && auth.getPrincipal().equals("anonymousUser"));
@@ -36,14 +37,15 @@ public final class UserUtils {
      * @return il CustomUserDetails o null se non autenticato o se il principal non è di questo tipo
      */
     public static CustomUserDetails getCustomUserDetails() {
+
         Authentication auth = getAuthentication();
-        if (auth == null || !isAuthenticated()) {
-            return null;
-        }
+
+        if (auth == null || !isAuthenticated()) return null;
+
         Object principal = auth.getPrincipal();
-        if (principal instanceof CustomUserDetails) {
-            return (CustomUserDetails) principal;
-        }
+
+        if (principal instanceof CustomUserDetails) return (CustomUserDetails) principal;
+
         return null;
     }
 
@@ -52,7 +54,9 @@ public final class UserUtils {
      * @return UserDTO o null se non autenticato
      */
     public static UserDTO getCurrentUser() {
+
         CustomUserDetails cud = getCustomUserDetails();
+
         return (cud != null ? new UserDTO(
                 cud.getUser().getEmail(),
                 cud.getUser().getUsername(),
@@ -65,7 +69,9 @@ public final class UserUtils {
      * Id dell'utente corrente, o null se non autenticato.
      */
     public static Long getCurrentUserId() {
+
         CustomUserDetails cud = getCustomUserDetails();
+
         return (cud != null ? cud.getUser().getUserId() : null);
     }
 
@@ -73,7 +79,9 @@ public final class UserUtils {
      * Username dell'utente corrente, o null se non autenticato.
      */
     public static String getCurrentUsername() {
+
         CustomUserDetails cud = getCustomUserDetails();
+
         return (cud != null ? cud.getUsername() : null);
     }
 
@@ -81,7 +89,9 @@ public final class UserUtils {
      * Role (singolo) dell'utente corrente, o null se non autenticato.
      */
     public static String getCurrentUserRole() {
+
         CustomUserDetails cud = getCustomUserDetails();
+
         return (cud != null ? cud.getUser().getRole().getRole().getRoleName() : null);
     }
 
@@ -89,8 +99,11 @@ public final class UserUtils {
      * Controlla se l'utente corrente ha il role specificato.
      */
     public static boolean hasRole(String role) {
+
         CustomUserDetails cud = getCustomUserDetails();
+
         if (cud == null) return false;
+
         return cud.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
     }

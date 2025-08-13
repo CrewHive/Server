@@ -36,10 +36,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                // .securityContext(AbstractHttpConfigurer::disable)  // <— RIMUOVI QUESTA RIGA
-
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
-
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/rotate", "/api/auth/register") // <— CONTROLLA CHE SIANO QUESTE LE TUE ROTTE
                         .permitAll()

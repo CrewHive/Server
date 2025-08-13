@@ -26,7 +26,7 @@ public class UserRole {
     @MapsId("userId")
     private User user;
 
-    @ManyToOne(cascade = CascadeType.PERSIST, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "role_id", nullable = false)
     @MapsId("roleId")
     private Role role;

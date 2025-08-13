@@ -2,20 +2,16 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.dto.AuthRequestDTO;
 import com.pat.crewhive.dto.RegistrationDTO;
-import com.pat.crewhive.model.user.entity.role.Role;
-import com.pat.crewhive.model.user.entity.role.UserRole;
 import com.pat.crewhive.repository.RoleRepository;
-import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
-import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
 import com.pat.crewhive.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Slf4j
@@ -40,6 +36,13 @@ public class UserService {
         this.roleRepository = roleRepository;
     }
 
+    /**
+     * Retrieves a user by their ID.
+     *
+     * @param id the ID of the user to retrieve
+     * @return the User object if found
+     * @throws ResourceNotFoundException if no user is found with the given ID
+     */
     public User getUserById(Long id) {
 
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -49,6 +52,13 @@ public class UserService {
         return user;
     }
 
+    /**
+     * Retrieves a user by their username.
+     *
+     * @param username the username of the user to retrieve
+     * @return the User object if found
+     * @throws ResourceNotFoundException if no user is found with the given username
+     */
     public User getUserByUsername(String username) {
 
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
@@ -58,6 +68,13 @@ public class UserService {
         return user;
     }
 
+    /**
+     * Validates the user's password against the stored password.
+     *
+     * @param dto the AuthRequestDTO containing username and password
+     * @return true if the password matches, false otherwise
+     * @throws ResourceNotFoundException if no user is found with the given username
+     */
     public boolean validatePassword(AuthRequestDTO dto) {
 
         User user = userRepository.findByUsername(dto.getUsername()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
