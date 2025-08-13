@@ -1,0 +1,2 @@
+2025-08-13 19:20:50.580 [http-nio-8080-exec-7] ERROR c.pat.crewhive.service.UserService - User not found with username: Miao
+2025-08-13 19:20:50.586 [http-nio-8080-exec-7] ERROR c.pat.crewhive.service.UserService - User not found with email: miao@gmail.com

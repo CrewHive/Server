@@ -69,11 +69,10 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Contract contract;
 
-    public User(String username, String email, String password, Company company) {
+    public User(String username, String email, String password) {
         this.email = email;
         this.username = username;
         this.password = password;
-        this.company = company;
         this.isWorking = false;
     }
 }

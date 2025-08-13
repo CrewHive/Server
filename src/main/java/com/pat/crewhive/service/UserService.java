@@ -13,23 +13,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 
 @Slf4j
 @Service
 public class UserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    private CompanyRepository companyRepository;
+    private final CompanyRepository companyRepository;
 
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
 
-    public UserService() {}
 
-    @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CompanyRepository companyRepository, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       CompanyRepository companyRepository,
+                       RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.companyRepository = companyRepository;
@@ -59,13 +62,41 @@ public class UserService {
      * @return the User object if found
      * @throws ResourceNotFoundException if no user is found with the given username
      */
-    public User getUserByUsername(String username) {
+    public User getUserByUsername(String username) throws  ResourceNotFoundException {
 
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+        Optional<User> user = userRepository.findByUsername(username);
 
-        log.info("User found with username: {}", user.getUsername());
+        if (user.isEmpty()) {
 
-        return user;
+            log.error("User not found with username: {}", username);
+            return null;
+        }
+
+        log.info("User found with username: {}", user.get().getUsername());
+
+        return user.get();
+    }
+
+    /**
+     * Retrieves a user by their email.
+     *
+     * @param email the email of the user to retrieve
+     * @return the User object if found
+     * @throws ResourceNotFoundException if no user is found with the given email
+     */
+    public User getUserByEmail(String email) {
+
+        Optional<User> user = userRepository.findByEmail(email);
+
+        if (user.isEmpty()) {
+
+            log.error("User not found with email: {}", email);
+            return null;
+        }
+
+        log.info("User found with email: {}", user.get().getEmail());
+
+        return user.get();
     }
 
     /**
@@ -88,11 +119,15 @@ public class UserService {
         return match;
     }
 
-    //todo: assolutamente da rivedere
-    @Transactional
-    public void register(RegistrationDTO rDTO) {
+    /**
+     * Encodes the password using the configured PasswordEncoder.
+     *
+     * @param password the raw password to encode
+     * @return the encoded password
+     */
+    public String encodePassword(String password) {
 
+        return passwordEncoder.encode(password);
 
     }
-
 }

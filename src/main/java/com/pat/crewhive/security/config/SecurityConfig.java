@@ -21,6 +21,8 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
+import static org.springframework.http.HttpMethod.POST;
+
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -59,8 +61,9 @@ public class SecurityConfig {
 
                 // Autorizzazioni
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/rotate", "/api/auth/register")
-                        .permitAll()
+                        .requestMatchers(POST, "/api/auth/login").permitAll()
+                        .requestMatchers(POST, "/api/auth/register").permitAll()
+                        .requestMatchers(POST, "/api/auth/rotate").permitAll()
                         .anyRequest().authenticated()
                 )
 
@@ -68,11 +71,9 @@ public class SecurityConfig {
                 .headers(headers -> headers
 
                         // CSP minimal per API-only (nessun contenuto attivo restituito)
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("""
-                        default-src 'none';
-                        base-uri 'self';
-                        frame-ancestors 'none';
-                        """))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+                        ))
                         // X-Content-Type-Options: nosniff
                         .contentTypeOptions(cto -> {})
                         .referrerPolicy(rp -> rp.policy(ReferrerPolicy.NO_REFERRER))

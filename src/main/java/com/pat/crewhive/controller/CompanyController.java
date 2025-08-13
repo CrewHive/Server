@@ -1,13 +1,9 @@
 package com.pat.crewhive.controller;
 
 import com.pat.crewhive.dto.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.RegistrationDTO;
-import com.pat.crewhive.service.AuthService;
 import com.pat.crewhive.service.CompanyService;
-import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,19 +12,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/manager")
-public class ManagerController {
+@RequestMapping("/company")
+public class CompanyController {
 
-    UserService userService;
-    AuthService authService;
-    CompanyService companyService;
+    private final CompanyService companyService;
 
-    @Autowired
-    public ManagerController(UserService userService, AuthService authService, CompanyService companyService) {
+    public CompanyController(CompanyService companyService) {
         this.companyService = companyService;
-        this.userService = userService;
-        this.authService = authService;
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<?> registerCompany(@Valid @RequestBody CompanyRegistrationDTO request) {
 
+        companyService.registerCompany(request);
+
+        log.info("Company {} registered successfully", request.getCompanyName());
+
+        return ResponseEntity.ok().build();
+    }
 }

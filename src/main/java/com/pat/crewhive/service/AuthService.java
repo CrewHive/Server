@@ -1,17 +1,17 @@
 package com.pat.crewhive.service;
 
 
-import com.pat.crewhive.dto.AuthRequestDTO;
-import com.pat.crewhive.dto.AuthResponseDTO;
-import com.pat.crewhive.dto.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.LogoutDTO;
+import com.pat.crewhive.dto.*;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
+import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,16 +22,25 @@ import java.beans.Transient;
 public class AuthService {
 
     private final UserService userService;
+    private final UserRepository userRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final CompanyRepository companyRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthService(UserService userService, JwtService jwtService, RefreshTokenService refreshTokenService, CompanyRepository companyRepository) {
+    public AuthService(UserService userService,
+                       JwtService jwtService,
+                       RefreshTokenService refreshTokenService,
+                       CompanyRepository companyRepository,
+                       PasswordEncoder passwordEncoder,
+                       UserRepository userRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.companyRepository = companyRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
     }
 
 
@@ -58,6 +67,35 @@ public class AuthService {
     }
 
     /**
+     * Registers a new user with the provided details.
+     *
+     * @param request The registration request containing username, email, and password.
+     * @throws BadCredentialsException if the username or email already exists.
+     */
+    public void register(RegistrationDTO request) {
+
+        if (userService.getUserByUsername(request.getUsername()) != null) {
+
+            log.error("User already exists: {}", request.getUsername());
+            throw new BadCredentialsException("User already exists");
+        }
+
+        if (userService.getUserByEmail(request.getEmail()) != null) {
+
+            log.error("Email already registered: {}", request.getEmail());
+            throw new BadCredentialsException("Email already registered");
+        }
+
+        String encodedPassword = userService.encodePassword(request.getPassword());
+
+        User newUser = new User(request.getUsername(), request.getEmail(), encodedPassword);
+
+        userRepository.save(newUser);
+
+        log.info("User registered successfully: {}", request.getUsername());
+    }
+
+    /**
      * Rotates the refresh token for a user.
      *
      * @param request The request containing the refresh token and username.
@@ -81,21 +119,6 @@ public class AuthService {
                 jwtService.generateToken(owner),
                 refreshTokenService.rotateRefreshToken(rt)
         );
-    }
-
-    /**
-     * Registers a new company.
-     *
-     * @param request The company registration request containing company details.
-     */
-    //todo consider putting this in a separate service
-    @Transactional
-    public void registerCompany(CompanyRegistrationDTO request) {
-
-        Company company = new Company(request);
-        companyRepository.save(company);
-
-        log.info("Registered company: {}", company.getName());
     }
 
     /**

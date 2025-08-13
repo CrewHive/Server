@@ -23,7 +23,8 @@ public class JwtService {
     private final PublicKey publicKey;
 
     @Autowired
-    public JwtService(PrivateKey privateKey, PublicKey publicKey) {
+    public JwtService(PrivateKey privateKey,
+                      PublicKey publicKey) {
 
         this.privateKey = privateKey;
         this.publicKey = publicKey;
