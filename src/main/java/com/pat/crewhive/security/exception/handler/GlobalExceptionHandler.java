@@ -5,13 +5,16 @@ import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,97 +22,99 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // @Valid
+    private ProblemDetail base(HttpStatus status, String title, String detail, String errorCode) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
+        pd.setTitle(title);
+        pd.setType(URI.create("about:blank")); // o pagina di documentazione errori
+        pd.setProperty("timestamp", OffsetDateTime.now().toString());
+        pd.setProperty("errorCode", errorCode);
+        return pd;
+    }
+
+    /**
+     * Aggiunge il percorso della richiesta al ProblemDetail.
+     * @param pd Il ProblemDetail da modificare.
+     * @param path Il percorso della richiesta.
+     * @return Il ProblemDetail aggiornato con il percorso.
+     */
+    private ProblemDetail withPath(ProblemDetail pd, String path) {
+        pd.setProperty("path", path);
+        return pd;
+    }
+
+    // 400 - Validazione Bean Validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex) {
-        Map<String, Object> errors = new HashMap<>();
+    public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(err -> errors.put(err.getField(), err.getDefaultMessage()));
 
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errors.put(error.getField(), error.getDefaultMessage());
-        });
-
-        log.error("Validation error: {}", errors);
-        return ResponseEntity.status(400).body(Map.of("status", 400, "errors", errors));
+        log.warn("Validation error: {}", errors);
+        ProblemDetail pd = base(HttpStatus.BAD_REQUEST, "Validation failed", "One or more fields are invalid", "VAL_400");
+        pd.setProperty("errors", errors);
+        return pd;
     }
 
-
-    // Problemi di parsing JSON con Jackson
+    // 400 - JSON malformato / payload non leggibile
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> handleParsingException(HttpMessageNotReadableException ex) {
-
-        log.error("Parsing error: {}", ex.getMessage());
-        return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
+    public ProblemDetail handleParsingException(HttpMessageNotReadableException ex) {
+        log.warn("Parsing error: {}", ex.getMessage());
+        return base(HttpStatus.BAD_REQUEST, "Malformed JSON request", "Body could not be parsed", "JSON_400");
     }
 
-
-    // Token or Resource not found
+    // 404 - Risorsa non trovata
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
-
-        log.error("Resource not found: {}", ex.getMessage());
-        return ResponseEntity.status(404).body(Map.of("status", 404, "error", ex.getMessage()));
+    public ProblemDetail handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.info("Resource not found: {}", ex.getMessage());
+        return base(HttpStatus.NOT_FOUND, "Resource not found", "The requested resource does not exist", "RES_404");
     }
 
-
-    // BadCredentialsException
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException ex) {
-
-        log.error("Bad credentials: {}", ex.getMessage());
-        return ResponseEntity.status(401).body(Map.of("status", 401, "error", ex.getMessage()));
-    }
-
-
-    // Resource already exists
+    // 409 - Conflitto (già esiste)
     @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
-
-        log.error("Resource already exists: {}", ex.getMessage());
-        return ResponseEntity.status(500).body(Map.of("status", 401, "error", ex.getMessage()));
+    public ProblemDetail handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
+        log.info("Resource already exists: {}", ex.getMessage());
+        return base(HttpStatus.CONFLICT, "Resource already exists", "A resource with the same identifier already exists", "RES_409");
     }
 
+    // 401 - Credenziali errate
+    @ExceptionHandler(BadCredentialsException.class)
+    public ProblemDetail handleBadCredentialsException(BadCredentialsException ex) {
+        log.info("Bad credentials: {}", ex.getMessage());
+        return base(HttpStatus.UNAUTHORIZED, "Invalid username or password", "Unauthorized", "AUTH_401_BAD_CREDENTIALS");
+    }
 
-    // InvalidTokenException
+    // 401 - Token invalido
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidTokenException(InvalidTokenException ex) {
-
-        log.error("Invalid token: {}", ex.getMessage());
-        return ResponseEntity.status(400).body(Map.of("status", 400, "error", ex.getMessage()));
+    public ProblemDetail handleInvalidTokenException(InvalidTokenException ex) {
+        log.info("Invalid token: {}", ex.getMessage());
+        return base(HttpStatus.UNAUTHORIZED, "Invalid token", "Unauthorized", "AUTH_401_INVALID_TOKEN");
     }
 
-
-
-    // IllegalStateException
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalStateException(IllegalStateException ex) {
-
-        log.error("Illegal state: {}", ex.getMessage());
-        return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
-    }
-
-
-    // RuntimeException
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
-
-        log.error("Runtime error: {}", ex.getMessage());
-        return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
-    }
-
-    // JwtAuthenticationException
+    // 401 - JWT auth error generico
     @ExceptionHandler(JwtAuthenticationException.class)
-    public ResponseEntity<Map<String, Object>> handleJwtAuthenticationException(JwtAuthenticationException ex) {
-
-        log.error("JWT authentication error: {}", ex.getMessage());
-        return ResponseEntity.status(401).body(Map.of("status", 401, "error", ex.getMessage()));
+    public ProblemDetail handleJwtAuthenticationException(JwtAuthenticationException ex) {
+        log.info("JWT authentication error: {}", ex.getMessage());
+        return base(HttpStatus.UNAUTHORIZED, "Unauthorized", "JWT authentication failed", "AUTH_401_JWT");
     }
 
+    // 500 - Stati illegali
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail handleIllegalStateException(IllegalStateException ex) {
+        log.error("Illegal state: {}", ex.getMessage(), ex);
+        return base(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", "An unexpected error occurred", "GEN_500_ILLSTATE");
+    }
 
-    // Generic Exception
+    // 500 - Runtime
+    @ExceptionHandler(RuntimeException.class)
+    public ProblemDetail handleRuntimeException(RuntimeException ex) {
+        log.error("Runtime error: {}", ex.getMessage(), ex);
+        return base(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", "An unexpected error occurred", "GEN_500_RUNTIME");
+    }
+
+    // 500 - Fallback
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-
-        log.error("Generic error: {}", ex.getMessage());
-        return ResponseEntity.status(500).body(Map.of("status", 500, "error", ex.getMessage()));
+    public ProblemDetail handleGenericException(Exception ex) {
+        log.error("Generic error: {}", ex.getMessage(), ex);
+        return base(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", "An unexpected error occurred", "GEN_500");
     }
 }
