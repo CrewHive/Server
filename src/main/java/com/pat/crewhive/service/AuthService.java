@@ -29,22 +29,17 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
-    private final CompanyRepository companyRepository;
-    private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     public AuthService(UserService userService,
                        JwtService jwtService,
                        RefreshTokenService refreshTokenService,
-                       CompanyRepository companyRepository,
-                       PasswordEncoder passwordEncoder,
-                       UserRepository userRepository, RefreshTokenRepository refreshTokenRepository) {
+                       UserRepository userRepository,
+                       RefreshTokenRepository refreshTokenRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
-        this.companyRepository = companyRepository;
-        this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
     }
@@ -56,6 +51,7 @@ public class AuthService {
      * @param request The authentication request containing username and password.
      * @return AuthResponseDTO containing JWT and Refresh Token.
      */
+    @Transactional(readOnly = true)
     public AuthResponseDTO login(AuthRequestDTO request) {
 
         User user = userService.getUserByUsername(request.getUsername());
@@ -78,6 +74,7 @@ public class AuthService {
      * @param request The registration request containing username, email, and password.
      * @throws BadCredentialsException if the username or email already exists.
      */
+    @Transactional
     public void register(RegistrationDTO request) {
 
         //todo crea controlli su username e email
@@ -110,6 +107,7 @@ public class AuthService {
         if (token == null || token.isBlank()) {
             throw new InvalidTokenException("Invalid refresh token");
         }
+
         try { UUID.fromString(token); }
         catch (IllegalArgumentException e) { throw new InvalidTokenException("Invalid refresh token"); }
 
