@@ -33,17 +33,19 @@ public class JwtService {
     }
 
     /**
-     * Generates a JWT token for the given user.
+     * Generates a JWT token for the given user details.
      *
-     * @param user the user for whom the token is generated
-     * @return the generated JWT token
+     * @param userId   the ID of the user
+     * @param username the username of the user
+     * @param role     the role of the user
+     * @return a JWT token as a String
      */
-    public String generateToken(User user) {
+    public String generateToken(Long userId, String username, String role) {
 
         String jwt = Jwts.builder()
-                .setSubject(String.valueOf(user.getUserId()))
-                .claim("role", user.getRole())
-                .claim("username", user.getUsername())
+                .setSubject(String.valueOf(userId))
+                .claim("role", role)
+                .claim("username", username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10))
                 .signWith(privateKey, SignatureAlgorithm.RS256)

@@ -2,9 +2,11 @@ package com.pat.crewhive.service;
 
 
 import com.pat.crewhive.dto.*;
+import com.pat.crewhive.model.auth.entity.RefreshToken;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
+import com.pat.crewhive.repository.RefreshTokenRepository;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import lombok.NoArgsConstructor;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.beans.Transient;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -27,6 +31,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     public AuthService(UserService userService,
@@ -34,13 +39,14 @@ public class AuthService {
                        RefreshTokenService refreshTokenService,
                        CompanyRepository companyRepository,
                        PasswordEncoder passwordEncoder,
-                       UserRepository userRepository) {
+                       UserRepository userRepository, RefreshTokenRepository refreshTokenRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.companyRepository = companyRepository;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
 
@@ -61,7 +67,7 @@ public class AuthService {
         }
 
         return new AuthResponseDTO(
-                jwtService.generateToken(user),
+                jwtService.generateToken(user.getUserId(), user.getUsername(), user.getRole().getRole().getRoleName()),
                 refreshTokenService.generateRefreshToken(user)
         );
     }
@@ -74,11 +80,8 @@ public class AuthService {
      */
     public void register(RegistrationDTO request) {
 
-        if (userService.getUserByUsername(request.getUsername()) != null) {
-
-            log.error("User already exists: {}", request.getUsername());
-            throw new BadCredentialsException("User already exists");
-        }
+        //todo crea controlli su username e email
+        userService.getUserByUsername(request.getUsername());
 
         if (userService.getUserByEmail(request.getEmail()) != null) {
 
@@ -98,27 +101,43 @@ public class AuthService {
     /**
      * Rotates the refresh token for a user.
      *
-     * @param request The request containing the refresh token and username.
+     * @param token The request containing the string of the Refresh Token.
      * @return AuthResponseDTO containing new JWT and Refresh Token.
      */
-    public AuthResponseDTO rotate_token(AuthRequestDTO request) {
+    @Transactional
+    public AuthResponseDTO rotate_token(String token) {
 
-        String rt = (request.getRefreshToken() != null) ? request.getRefreshToken().getToken() : null;
+        if (token == null || token.isBlank()) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+        try { UUID.fromString(token); }
+        catch (IllegalArgumentException e) { throw new InvalidTokenException("Invalid refresh token"); }
 
-        if (rt == null || refreshTokenService.isExpired(rt)) {
-            throw new InvalidTokenException("Refresh Token expired or missing");
+
+        RefreshToken rt = refreshTokenRepository
+                .findByTokenWithUserAndRole(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+
+
+        if (refreshTokenService.isExpired(rt)) {
+            throw new InvalidTokenException("Invalid refresh token");
         }
 
-        User owner = refreshTokenService.getOwner(rt);
-
-        if (owner == null || !owner.getUsername().equals(request.getUsername())) {
-            throw new InvalidTokenException("Refresh Token does not belong to user");
+        User owner = rt.getUser();
+        if (owner == null || owner.getUserId() == null) {
+            throw new InvalidTokenException("Invalid refresh token");
         }
 
-        return new AuthResponseDTO(
-                jwtService.generateToken(owner),
-                refreshTokenService.rotateRefreshToken(rt)
-        );
+        Long userId = owner.getUserId();
+        String role = owner.getRole().getRole().getRoleName();
+        String username = owner.getUsername();
+
+        String newAccessToken = jwtService.generateToken(userId, role, username);
+
+        String newRefreshToken = refreshTokenService.rotateRefreshToken(rt);
+
+        log.info("Refresh rotated for userId={}", userId);
+        return new AuthResponseDTO(newAccessToken, newRefreshToken);
     }
 
     /**
@@ -126,9 +145,12 @@ public class AuthService {
      *
      * @param request The logout request containing the refresh token and username.
      */
+    @Transactional
     public void logout(LogoutDTO request) {
 
-        String rt = request.getRefreshToken() != null ? request.getRefreshToken() : null;
+        if (request.getRefreshToken() == null || request.getRefreshToken().isBlank()) throw new InvalidTokenException("Refresh Token is missing");
+
+        RefreshToken rt = refreshTokenService.getRefreshToken(request.getRefreshToken());
 
         if (rt == null || refreshTokenService.isExpired(rt)) {
 

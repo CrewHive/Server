@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -47,14 +48,41 @@ public class RefreshTokenService {
     }
 
     /**
+     * Retrieves the refresh token for the given token string.
+     *
+     * @param token The refresh token string to retrieve.
+     * @return The RefreshToken object if found.
+     * @throws ResourceNotFoundException if the token is not found.
+     */
+    public RefreshToken getRefreshToken(String token) {
+
+        Optional<RefreshToken> rt = repo.findByToken(token);
+
+        if (rt.isEmpty()) {
+
+            log.error("Refresh token not found for token: {}", token);
+            throw new ResourceNotFoundException("Refresh token not found");
+        }
+
+        log.info("Found refresh token for user: {}", rt.get().getUser().getUsername());
+        log.info("Expiration date: {}", rt.get().getExpirationDate());
+
+        return rt.get();
+    }
+
+    /**
      * Checks if the given refresh token is expired.
      *
-     * @param token The refresh token to check.
+     * @param rt The refresh token to check.
      * @return true if the token is expired, false otherwise.
      */
-    public boolean isExpired(String token) {
+    public boolean isExpired(RefreshToken rt) {
 
-        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
+        if (rt == null) {
+
+            log.error("Refresh token is null");
+            throw new ResourceNotFoundException("Refresh token not found");
+        }
 
         log.info("Checking expiration");
         log.info("Expiration date: {}", rt.getExpirationDate());
@@ -66,12 +94,10 @@ public class RefreshTokenService {
     /**
      * Rotates the given refresh token by generating a new token and updating the expiration date.
      *
-     * @param token The refresh token to rotate.
+     * @param rt The refresh token to rotate.
      * @return The new refresh token as a String.
      */
-    public String rotateRefreshToken(String token) {
-
-        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
+    public String rotateRefreshToken(RefreshToken rt) {
 
         rt.setToken(UUID.randomUUID().toString());
         rt.setExpirationDate(LocalDate.now().plusDays(15));
@@ -87,12 +113,16 @@ public class RefreshTokenService {
     /**
      * Retrieves the owner of the given refresh token.
      *
-     * @param token The refresh token to check.
+     * @param rt The refresh token to check.
      * @return The User who owns the refresh token.
      */
-    public User getOwner(String token) {
+    public User getOwner(RefreshToken rt) {
 
-        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
+        if (rt == null || rt.getUser() == null) {
+
+            log.error("Refresh token or user is null");
+            throw new ResourceNotFoundException("Refresh token or user not found");
+        }
 
         log.info("Found owner for token: {}", rt.getUser().getUsername());
 
@@ -102,11 +132,15 @@ public class RefreshTokenService {
     /**
      * Invalidates the given refresh token by deleting it from the repository.
      *
-     * @param token The refresh token to invalidate.
+     * @param rt The refresh token to invalidate.
      */
-    public void invalidateRefreshToken(String token) {
+    public void invalidateRefreshToken(RefreshToken rt) {
 
-        RefreshToken rt = repo.findByToken(token).orElseThrow(() -> new ResourceNotFoundException("Token not found"));
+        if (rt == null) {
+
+            log.error("Refresh token is null");
+            throw new ResourceNotFoundException("Refresh token not found");
+        }
 
         repo.delete(rt);
 

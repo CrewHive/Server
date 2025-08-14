@@ -1,10 +1,7 @@
 package com.pat.crewhive.controller;
 
 
-import com.pat.crewhive.dto.AuthRequestDTO;
-import com.pat.crewhive.dto.AuthResponseDTO;
-import com.pat.crewhive.dto.LogoutDTO;
-import com.pat.crewhive.dto.RegistrationDTO;
+import com.pat.crewhive.dto.*;
 import com.pat.crewhive.service.AuthService;
 import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;
@@ -28,11 +25,11 @@ public class AuthUserController {
     }
 
     @PostMapping("/rotate")
-    public ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody AuthRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody RotateRequestDTO request) {
 
-        AuthResponseDTO response = authService.rotate_token(request);
+        AuthResponseDTO response = authService.rotate_token(request.getRefreshToken());
 
-        log.info("Token ok for user: {}", request.getUsername());
+        log.info("Token ok for user:");
 
         return ResponseEntity.ok(response);
     }

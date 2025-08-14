@@ -3,6 +3,7 @@ package com.pat.crewhive.controller;
 
 import com.pat.crewhive.dto.UserDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.service.RoleService;
 import com.pat.crewhive.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final RoleService roleService;
 
-    @Autowired
-    public UserController(UserService userService) {
-                this.userService = userService;
+    public UserController(UserService userService, RoleService roleService) {
+
+        this.roleService = roleService;
+        this.userService = userService;
     }
 
     @GetMapping("/me")
