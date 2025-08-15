@@ -15,8 +15,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CompanyRegistrationDTO {
 
-    //todo: controlla per CompanyType e AddressJSON
-
     @NotBlank(message = "Company name cannot be blank")
     private String companyName;
 

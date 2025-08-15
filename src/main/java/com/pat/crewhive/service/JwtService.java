@@ -40,7 +40,9 @@ public class JwtService {
      * @param role     the role of the user
      * @return a JWT token as a String
      */
-    public String generateToken(Long userId, String username, String role) {
+    public String generateToken(Long userId,
+                                String username,
+                                String role) {
 
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))

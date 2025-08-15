@@ -27,6 +27,7 @@ public class UserService {
      *
      * @param id the ID of the user to retrieve
      * @return the User object if found
+     * @throws ResourceNotFoundException if the user is not found
      */
     @Transactional(readOnly = true)
     public User getUserById(Long id) {
@@ -39,6 +40,7 @@ public class UserService {
      *
      * @param username the username of the user to retrieve
      * @return the User object if found
+     * @throws ResourceNotFoundException if the user is not found
      */
     @Transactional(readOnly = true)
     public User getUserByUsername(String username) {
@@ -51,6 +53,7 @@ public class UserService {
      *
      * @param email the email of the user to retrieve
      * @return the User object if found
+     * @throws ResourceNotFoundException if the user is not found
      */
     @Transactional(readOnly = true)
     public User getUserByEmail(String email) {

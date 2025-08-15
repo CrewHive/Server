@@ -56,18 +56,13 @@ public class RefreshTokenService {
      */
     public RefreshToken getRefreshToken(String token) {
 
-        Optional<RefreshToken> rt = repo.findByToken(token);
+        RefreshToken rt = repo.findByToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
 
-        if (rt.isEmpty()) {
+        log.info("Found refresh token for user: {}", rt.getUser().getUsername());
+        log.info("Expiration date: {}", rt.getExpirationDate());
 
-            log.error("Refresh token not found for token: {}", token);
-            throw new ResourceNotFoundException("Refresh token not found");
-        }
-
-        log.info("Found refresh token for user: {}", rt.get().getUser().getUsername());
-        log.info("Expiration date: {}", rt.get().getExpirationDate());
-
-        return rt.get();
+        return rt;
     }
 
     /**
@@ -75,13 +70,14 @@ public class RefreshTokenService {
      *
      * @param rt The refresh token to check.
      * @return true if the token is expired, false otherwise.
+     * @throws  IllegalArgumentException if the token is null.
      */
     public boolean isExpired(RefreshToken rt) {
 
         if (rt == null) {
 
             log.error("Refresh token is null");
-            throw new ResourceNotFoundException("Refresh token not found");
+            throw new IllegalArgumentException("Refresh token is not valid");
         }
 
         log.info("Checking expiration");
@@ -96,8 +92,15 @@ public class RefreshTokenService {
      *
      * @param rt The refresh token to rotate.
      * @return The new refresh token as a String.
+     * @throws IllegalArgumentException if the refresh token is null.
      */
     public String rotateRefreshToken(RefreshToken rt) {
+
+        if (rt == null) {
+
+            log.error("Refresh token is null");
+            throw new IllegalArgumentException("Refresh token is not valid");
+        }
 
         rt.setToken(UUID.randomUUID().toString());
         rt.setExpirationDate(LocalDate.now().plusDays(15));
@@ -115,13 +118,14 @@ public class RefreshTokenService {
      *
      * @param rt The refresh token to check.
      * @return The User who owns the refresh token.
+     * @throws IllegalArgumentException if the refresh token or user is null.
      */
     public User getOwner(RefreshToken rt) {
 
         if (rt == null || rt.getUser() == null) {
 
             log.error("Refresh token or user is null");
-            throw new ResourceNotFoundException("Refresh token or user not found");
+            throw new IllegalArgumentException("Refresh token or user is not valid");
         }
 
         log.info("Found owner for token: {}", rt.getUser().getUsername());
@@ -131,15 +135,15 @@ public class RefreshTokenService {
 
     /**
      * Invalidates the given refresh token by deleting it from the repository.
-     *
      * @param rt The refresh token to invalidate.
+     * @throws IllegalArgumentException If the refresh token is null.
      */
     public void invalidateRefreshToken(RefreshToken rt) {
 
         if (rt == null) {
 
             log.error("Refresh token is null");
-            throw new ResourceNotFoundException("Refresh token not found");
+            throw new IllegalArgumentException("Refresh token not found");
         }
 
         repo.delete(rt);

@@ -50,6 +50,7 @@ public class AuthService {
      *
      * @param request The authentication request containing username and password.
      * @return AuthResponseDTO containing JWT and Refresh Token.
+     * @throws BadCredentialsException if the username or password is invalid.
      */
     @Transactional(readOnly = true)
     public AuthResponseDTO login(AuthRequestDTO request) {
@@ -100,6 +101,7 @@ public class AuthService {
      *
      * @param token The request containing the string of the Refresh Token.
      * @return AuthResponseDTO containing new JWT and Refresh Token.
+     * @throws InvalidTokenException if the refresh token is invalid or expired.
      */
     @Transactional
     public AuthResponseDTO rotate_token(String token) {
@@ -142,6 +144,7 @@ public class AuthService {
      * Logs out a user by invalidating their refresh token.
      *
      * @param request The logout request containing the refresh token and username.
+     * @throws InvalidTokenException if the refresh token is invalid or does not belong to the user.
      */
     @Transactional
     public void logout(LogoutDTO request) {
