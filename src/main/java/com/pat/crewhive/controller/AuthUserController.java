@@ -1,19 +1,14 @@
 package com.pat.crewhive.controller;
 
 
-import com.pat.crewhive.dto.AuthRequestDTO;
-import com.pat.crewhive.dto.AuthResponseDTO;
-import com.pat.crewhive.dto.RegistrationDTO;
+import com.pat.crewhive.dto.*;
 import com.pat.crewhive.service.AuthService;
 import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -30,19 +25,19 @@ public class AuthUserController {
     }
 
     @PostMapping("/rotate")
-    public ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody AuthRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody RotateRequestDTO request) {
 
-        AuthResponseDTO response = authService.rotate_token(request);
+        AuthResponseDTO response = authService.rotate_token(request.getRefreshToken());
 
-        log.info("Token ok for user: {}", request.getUsername());
+        log.info("Token ok for user:");
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationDTO rDTO) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO) {
 
-        userService.register(rDTO);
+        authService.register(rDTO);
 
         log.info("User {} registered successfully", rDTO.getUsername());
 
@@ -58,4 +53,5 @@ public class AuthUserController {
 
         return ResponseEntity.ok(response);
     }
+
 }

@@ -2,14 +2,13 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.util.PemUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.SignatureException;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.PrivateKey;
@@ -20,35 +19,35 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private PrivateKey privateKey;
+    private final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
-    private PublicKey publicKey;
+    @Autowired
+    public JwtService(PrivateKey privateKey,
+                      PublicKey publicKey) {
 
-    @PostConstruct
-    public void initKeys() {
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
 
-        try {
-
-            this.privateKey = PemUtils.loadPrivateKey("/static/private.pem");
-            this.publicKey = PemUtils.loadPublicKey("/static/public.pem");
-
-            log.info("Private Key: {}", privateKey);
-            log.info("Public Key: {}", publicKey);
-
-        } catch (Exception e) {
-
-            log.error("Error loading keys: {}", e.getMessage());
-            throw new IllegalStateException("Cannot load signature's keys", e);
-        }
+        log.info("JWT Service initialized with private and public keys");
     }
 
-
-    public String generateToken(User user) {
+    /**
+     * Generates a JWT token for the given user details.
+     *
+     * @param userId   the ID of the user
+     * @param username the username of the user
+     * @param role     the role of the user
+     * @return a JWT token as a String
+     */
+    public String generateToken(Long userId,
+                                String username,
+                                String role) {
 
         String jwt = Jwts.builder()
-                .setSubject(String.valueOf(user.getUserId()))
-                .claim("role", user.getRole())
-                .claim("username", user.getUsername())
+                .setSubject(String.valueOf(userId))
+                .claim("role", role)
+                .claim("username", username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
@@ -58,6 +57,13 @@ public class JwtService {
         return jwt;
     }
 
+    /**
+     * Validates the given JWT token and returns the claims if valid.
+     *
+     * @param token the JWT token to validate
+     * @return the claims contained in the token
+     * @throws InvalidTokenException if the token is invalid or expired
+     */
     public Claims validateToken(String token) {
 
         try {

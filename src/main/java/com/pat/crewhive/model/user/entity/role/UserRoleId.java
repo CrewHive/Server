@@ -16,6 +16,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Embeddable
+//todo al momento non è necessario, ma potrebbe essere utile in futuro se per ogni utente ci fossero più ruoli
 public class UserRoleId implements Serializable {
 
     @Column(name = "user_id", nullable = false)

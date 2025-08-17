@@ -24,7 +24,7 @@ public class Company {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "company_id", nullable = false)
     @Setter(AccessLevel.NONE)
-    private Long id;
+    private Long companyId;
 
     @Column(name = "name", nullable = false, unique = true)
     private String name;
@@ -33,7 +33,7 @@ public class Company {
     @Column(name = "address", nullable = false, columnDefinition = "jsonb")
     private AddressJSON addressJSON;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     private Set<User> users = new LinkedHashSet<>();
 
     @Enumerated(EnumType.STRING)

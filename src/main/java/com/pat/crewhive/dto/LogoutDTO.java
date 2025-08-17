@@ -1,6 +1,7 @@
 package com.pat.crewhive.dto;
 
-import com.pat.crewhive.model.user.contract.Contract;
+
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,10 +11,11 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDTO {
+public class LogoutDTO {
 
-    private String email;
+    @NotBlank(message = "Username cannot be blank")
     private String username;
-    private String role;
-    private Long companyId;
+
+    @NotBlank(message = "Refresh token cannot be blank")
+    private String refreshToken;
 }

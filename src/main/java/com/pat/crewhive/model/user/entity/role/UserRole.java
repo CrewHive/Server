@@ -18,25 +18,29 @@ import lombok.Setter;
 })
 public class UserRole {
 
-    @EmbeddedId
-    private UserRoleId id;
+    @Id
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @OneToOne(optional = false, orphanRemoval = true)
-    @JoinColumn(name = "user_id", nullable = false)
-    @MapsId("userId")
+    @OneToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @MapsId
     private User user;
 
-    @ManyToOne(cascade = CascadeType.PERSIST, optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
-    @MapsId("roleId")
     private Role role;
 
     public UserRole(User user, Role role) {
         this.user = user;
         this.role = role;
-        this.id = new UserRoleId(user.getUserId(), role.getRoleId());
     }
 
-
-
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserRole)) return false;
+        UserRole other = (UserRole) o;
+        return userId != null && userId.equals(other.userId);
+    }
+    @Override public int hashCode() { return 31; }
 }
