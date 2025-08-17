@@ -3,22 +3,18 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.dto.*;
 import com.pat.crewhive.model.auth.entity.RefreshToken;
-import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.repository.CompanyRepository;
+import com.pat.crewhive.model.user.entity.role.Role;
+import com.pat.crewhive.model.user.entity.role.UserRole;
 import com.pat.crewhive.repository.RefreshTokenRepository;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.beans.Transient;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -29,19 +25,19 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RoleService roleService;
 
     @Autowired
     public AuthService(UserService userService,
                        JwtService jwtService,
                        RefreshTokenService refreshTokenService,
                        UserRepository userRepository,
-                       RefreshTokenRepository refreshTokenRepository) {
+                       RoleService roleService) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
+        this.roleService = roleService;
     }
 
 
@@ -52,7 +48,7 @@ public class AuthService {
      * @return AuthResponseDTO containing JWT and Refresh Token.
      * @throws BadCredentialsException if the username or password is invalid.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponseDTO login(AuthRequestDTO request) {
 
         User user = userService.getUserByUsername(request.getUsername());
@@ -61,6 +57,13 @@ public class AuthService {
             log.error("Invalid password for user: {}", request.getUsername());
 
             throw new BadCredentialsException("Invalid credentials");
+        }
+
+        RefreshToken rt = refreshTokenService.getRefreshTokenByUser(user);
+
+        if (rt != null) {
+
+            refreshTokenService.invalidateRefreshToken(rt);
         }
 
         return new AuthResponseDTO(
@@ -78,10 +81,13 @@ public class AuthService {
     @Transactional
     public void register(RegistrationDTO request) {
 
-        //todo crea controlli su username e email
-        userService.getUserByUsername(request.getUsername());
+        if (userRepository.existsByUsername(request.getUsername())) {
 
-        if (userService.getUserByEmail(request.getEmail()) != null) {
+            log.error("Username already registered: {}", request.getUsername());
+            throw new BadCredentialsException("Username already registered");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
 
             log.error("Email already registered: {}", request.getEmail());
             throw new BadCredentialsException("Email already registered");
@@ -90,6 +96,10 @@ public class AuthService {
         String encodedPassword = userService.encodePassword(request.getPassword());
 
         User newUser = new User(request.getUsername(), request.getEmail(), encodedPassword);
+
+        Role role = roleService.getOrCreateGlobalRoleUser();
+
+        newUser.setRole(new UserRole(newUser, role));
 
         userRepository.save(newUser);
 
@@ -113,11 +123,7 @@ public class AuthService {
         try { UUID.fromString(token); }
         catch (IllegalArgumentException e) { throw new InvalidTokenException("Invalid refresh token"); }
 
-
-        RefreshToken rt = refreshTokenRepository
-                .findByTokenWithUserAndRole(token)
-                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
-
+        RefreshToken rt = refreshTokenService.getRefreshTokenByTokenWithUserAndRole(token);
 
         if (refreshTokenService.isExpired(rt)) {
             throw new InvalidTokenException("Invalid refresh token");

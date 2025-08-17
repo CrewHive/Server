@@ -30,4 +30,11 @@ public class CompanyService {
         companyRepository.save(company);
     }
 
+    @Transactional(readOnly = true)
+    public Company getCompanyById(Long companyId) {
+
+        return companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceAlreadyExistsException("Company with ID " + companyId + " does not exist."));
+    }
+
 }

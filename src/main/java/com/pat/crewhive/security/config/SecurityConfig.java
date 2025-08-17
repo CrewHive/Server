@@ -21,6 +21,7 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
+import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
@@ -64,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers(POST, "/api/auth/login").permitAll()
                         .requestMatchers(POST, "/api/auth/register").permitAll()
                         .requestMatchers(POST, "/api/auth/rotate").permitAll()
+                        .requestMatchers(POST, "/api/auth/company/register").permitAll()
                         .anyRequest().authenticated()
                 )
 
@@ -92,7 +94,7 @@ public class SecurityConfig {
 
         // JWT filter
         http.addFilterBefore(
-                new JwtAuthenticationFilter(jwtService, userService),
+                new JwtAuthenticationFilter(jwtService),
                 UsernamePasswordAuthenticationFilter.class
         );
 

@@ -6,6 +6,7 @@ import com.pat.crewhive.model.time_management.entity.event.EventUsers;
 import com.pat.crewhive.model.time_management.entity.shift.shiftworked.ShiftWorked;
 import com.pat.crewhive.model.time_management.entity.shift.shiftprogrammed.ShiftProgrammed;
 import com.pat.crewhive.model.user.contract.Contract;
+import com.pat.crewhive.model.user.entity.role.Role;
 import com.pat.crewhive.model.user.entity.role.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

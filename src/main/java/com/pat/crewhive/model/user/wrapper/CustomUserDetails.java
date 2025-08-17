@@ -1,7 +1,7 @@
 package com.pat.crewhive.model.user.wrapper;
 
+import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.contract.Contract;
-import com.pat.crewhive.model.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,15 +10,52 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * CustomUserDetails implementa UserDetails e adatta la tua entity User
+ * CustomUserDetails implementa UserDetails e adatta i dati utente
  * al modello di Spring Security.
+ *
+ * In questa versione non dipende più da entità JPA lazy,
+ * ma conserva solo i valori base presi dal JWT.
  */
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    private final Long userId;
+    private final String username;
+    private final String password;     // opzionale: puoi lasciarlo null nei contesti JWT
+    private final String email;
+    private final String role;         // es. "USER" → verrà trasformato in "ROLE_USER"
+    private final Long companyId;      // id azienda se disponibile
+    private final boolean working;     // opzionale, per controllare abilitazione
 
-    public CustomUserDetails(User user) {
-        this.user = user;
+    private final List<GrantedAuthority> authorities;
+
+    /**
+     * Costruisce un CustomUserDetails a partire dai claim del token.
+     */
+    public CustomUserDetails(Long userId,
+                             String username,
+                             String email,
+                             String role,
+                             Long companyId,
+                             boolean working) {
+        this.userId = userId;
+        this.username = username;
+        this.email = email;
+        this.role = role;
+        this.companyId = companyId;
+        this.working = working;
+        this.password = null; // non serve in JWT stateless
+
+        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+    }
+
+    /**
+     * Factory method comodo per costruire da claim.
+     */
+    public static CustomUserDetails fromClaims(Long userId,
+                                               String username,
+                                               String role,
+                                               Long companyId) {
+        return new CustomUserDetails(userId, username, null, role, companyId, true);
     }
 
     /**
@@ -26,30 +63,28 @@ public class CustomUserDetails implements UserDetails {
      */
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return username;
     }
 
     /**
-     * La password (già codificata in BCrypt) dell'utente.
+     * La password (non necessaria in contesto JWT).
      */
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
 
     /**
      * Le authority (ruoli) con cui l'utente è autenticato.
-     * Qui trasformiamo il campo role (es. "ADMIN") in "ROLE_ADMIN".
+     * Qui trasformiamo il campo role (es. "USER") in "ROLE_USER".
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String role = user.getRole().getRole().getRoleName();
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        return authorities;
     }
 
     /**
      * Indica se l'account non è scaduto.
-     * Se volessi, potresti ricavare la scadenza da user.getContract().
      */
     @Override
     public boolean isAccountNonExpired() {
@@ -58,7 +93,6 @@ public class CustomUserDetails implements UserDetails {
 
     /**
      * Indica se l'account non è bloccato.
-     * Potresti estendere la tua entity aggiungendo un flag "locked".
      */
     @Override
     public boolean isAccountNonLocked() {
@@ -76,40 +110,28 @@ public class CustomUserDetails implements UserDetails {
     /**
      * Indica se l'utente è abilitato.
      * Se vuoi disabilitare l'accesso a chi non è in servizio, puoi fare:
-     *   return user.isWorking();
+     *   return working;
      */
     @Override
     public boolean isEnabled() {
-        return true;
-    }
-
-    /**
-     * Permette di accedere direttamente all'entity sottostante per
-     * operazioni di business (ad es. getCompany(), getContract()...).
-     */
-    public User getUser() {
-        return user;
+        return working;
     }
 
 
     public Long getUserId() {
-        return user.getUserId();
+        return userId;
     }
 
     public String getEmail() {
-        return user.getEmail();
+        return email;
     }
 
     public String getRole() {
-        return user.getRole().getRole().getRoleName();
+        return role;
     }
 
-    public String getCompany() {
-        return user.getCompany().getName();
+    public Long getCompanyId() {
+        return companyId;
     }
 
-    public Contract getContract() {
-        return user.getContract();
-    }
 }
-

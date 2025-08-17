@@ -10,7 +10,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 public final class UserUtils {
 
-    private UserUtils() {}
+
+    private UserUtils() {
+    }
+
 
     /**
      * Restituisce l'Authentication correntemente in SecurityContext, o null se non autenticato.
@@ -58,10 +61,10 @@ public final class UserUtils {
         CustomUserDetails cud = getCustomUserDetails();
 
         return (cud != null ? new UserDTO(
-                cud.getUser().getEmail(),
-                cud.getUser().getUsername(),
-                cud.getUser().getRole().getRole().getRoleName(),
-                cud.getUser().getCompany().getName()
+                cud.getEmail(),
+                cud.getUsername(),
+                cud.getRole(),
+                cud.getCompanyId()
         ) : null);
     }
 
@@ -72,7 +75,7 @@ public final class UserUtils {
 
         CustomUserDetails cud = getCustomUserDetails();
 
-        return (cud != null ? cud.getUser().getUserId() : null);
+        return (cud != null ? cud.getUserId() : null);
     }
 
     /**
@@ -92,7 +95,7 @@ public final class UserUtils {
 
         CustomUserDetails cud = getCustomUserDetails();
 
-        return (cud != null ? cud.getUser().getRole().getRole().getRoleName() : null);
+        return (cud != null ? cud.getRole() : null);
     }
 
     /**

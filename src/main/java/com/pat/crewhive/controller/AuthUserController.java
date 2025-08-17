@@ -54,12 +54,4 @@ public class AuthUserController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/logout")
-    public ResponseEntity<?> logout(@Valid @RequestBody LogoutDTO request) {
-
-        authService.logout(request);
-        log.info("Logout ok for user: {}", request.getUsername());
-
-        return ResponseEntity.ok().build();
-    }
 }

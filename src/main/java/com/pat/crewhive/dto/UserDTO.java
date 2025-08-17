@@ -15,5 +15,5 @@ public class UserDTO {
     private String email;
     private String username;
     private String role;
-    private String companyName;
+    private Long companyId;
 }

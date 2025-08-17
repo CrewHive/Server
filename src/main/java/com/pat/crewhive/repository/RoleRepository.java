@@ -1,14 +1,22 @@
 package com.pat.crewhive.repository;
 
+import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.role.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
-    Optional<Role> findByRoleName(String name);
+    boolean existsByRoleNameIgnoreCaseAndCompany(String roleName, Company company);
 
-    boolean existsByRoleName(String name);
+    Optional<Role> findByRoleNameIgnoreCaseAndCompany(String roleName, Company company);
+
+    Optional<Role> findByRoleNameIgnoreCaseAndCompanyIsNull(String roleName);
+
+    boolean existsByRoleNameIgnoreCaseAndCompanyIsNull(String roleName);
+
+    List<Role> findAllByCompany_CompanyId(Long companyId);
 
 }

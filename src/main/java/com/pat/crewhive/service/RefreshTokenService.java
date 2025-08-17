@@ -7,6 +7,7 @@ import com.pat.crewhive.repository.RefreshTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -30,6 +31,7 @@ public class RefreshTokenService {
      * @param user The user for whom the refresh token is generated.
      * @return The generated refresh token as a String.
      */
+    @Transactional
     public String generateRefreshToken(User user) {
 
         repo.deleteByUser(user);
@@ -54,9 +56,50 @@ public class RefreshTokenService {
      * @return The RefreshToken object if found.
      * @throws ResourceNotFoundException if the token is not found.
      */
+    @Transactional(readOnly = true)
     public RefreshToken getRefreshToken(String token) {
 
         RefreshToken rt = repo.findByToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
+
+        log.info("Found refresh token for user: {}", rt.getUser().getUsername());
+        log.info("Expiration date: {}", rt.getExpirationDate());
+
+        return rt;
+    }
+
+    /**
+     * Retrieves the refresh token for the given user.
+     *
+     * @param user The user for whom the refresh token is retrieved.
+     * @return The RefreshToken object if found.
+     * @throws ResourceNotFoundException if the refresh token is not found for the user.
+     */
+    @Transactional(readOnly = true)
+    public RefreshToken getRefreshTokenByUser(User user) {
+
+        Optional<RefreshToken> rt = repo.findByUser(user);
+
+        if (rt.isEmpty() ) return null;
+        if (isExpired(rt.get())) return null;
+
+        log.info("Found refresh token for user: {}", rt.get().getUser().getUsername());
+        log.info("Expiration date: {}", rt.get().getExpirationDate());
+
+        return rt.get();
+    }
+
+    /**
+     * Retrieves the refresh token for the given token string, including user and role information.
+     *
+     * @param token The refresh token string to retrieve.
+     * @return The RefreshToken object if found, with user and role information.
+     * @throws ResourceNotFoundException if the token is not found.
+     */
+    @Transactional(readOnly = true)
+    public RefreshToken getRefreshTokenByTokenWithUserAndRole(String token) {
+
+        RefreshToken rt = repo.findByTokenWithUserAndRole(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
 
         log.info("Found refresh token for user: {}", rt.getUser().getUsername());
@@ -72,6 +115,7 @@ public class RefreshTokenService {
      * @return true if the token is expired, false otherwise.
      * @throws  IllegalArgumentException if the token is null.
      */
+    @Transactional(readOnly = true)
     public boolean isExpired(RefreshToken rt) {
 
         if (rt == null) {
@@ -94,6 +138,7 @@ public class RefreshTokenService {
      * @return The new refresh token as a String.
      * @throws IllegalArgumentException if the refresh token is null.
      */
+    @Transactional
     public String rotateRefreshToken(RefreshToken rt) {
 
         if (rt == null) {
@@ -120,6 +165,7 @@ public class RefreshTokenService {
      * @return The User who owns the refresh token.
      * @throws IllegalArgumentException if the refresh token or user is null.
      */
+    @Transactional(readOnly = true)
     public User getOwner(RefreshToken rt) {
 
         if (rt == null || rt.getUser() == null) {
@@ -138,6 +184,7 @@ public class RefreshTokenService {
      * @param rt The refresh token to invalidate.
      * @throws IllegalArgumentException If the refresh token is null.
      */
+    @Transactional
     public void invalidateRefreshToken(RefreshToken rt) {
 
         if (rt == null) {

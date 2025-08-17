@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/company")
+@RequestMapping("/api/auth/company")
 public class CompanyController {
 
     private final CompanyService companyService;

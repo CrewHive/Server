@@ -1,5 +1,6 @@
 package com.pat.crewhive.service;
 
+import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.user.entity.role.Role;
 import com.pat.crewhive.model.user.entity.role.UserRole;
@@ -15,11 +16,14 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final UserService userService;
+    private final CompanyService companyService;
 
     public RoleService(RoleRepository roleRepository,
-                       UserService userService) {
+                       UserService userService,
+                       CompanyService companyService) {
         this.roleRepository = roleRepository;
         this.userService = userService;
+        this.companyService = companyService;
     }
 
     /**
@@ -28,17 +32,21 @@ public class RoleService {
      * @param roleName the name of the role to be created
      */
     @Transactional
-    public void createRole(String roleName) {
+    public void createRole(String roleName, Long companyId) {
 
         String normalizedRole = normalizeRole(roleName);
 
-        if (roleRepository.existsByRoleName(normalizedRole)) {
+        Company company = companyService.getCompanyById(companyId);
+
+        if (roleRepository.existsByRoleNameIgnoreCaseAndCompany(normalizedRole, company)) {
 
             log.error("Role {} already exists", roleName);
             throw new IllegalArgumentException("Role already exists");
         }
 
-        roleRepository.save(new Role(normalizedRole));
+        Role newRole = new Role(normalizedRole, company);
+
+        roleRepository.save(newRole);
         log.info("Role {} created successfully", roleName);
     }
 
@@ -49,11 +57,13 @@ public class RoleService {
      * @param newRole  the new role to be assigned to the user
      */
     @Transactional
-    public void updateUserRole(Long targetId, String newRole) {
+    public void updateUserRole(Long targetId, String newRole, Long companyId) {
 
         String normalizedRole = normalizeRole(newRole);
 
-        Role role = roleRepository.findByRoleName(normalizedRole)
+        Company company = companyService.getCompanyById(companyId);
+
+        Role role = roleRepository.findByRoleNameIgnoreCaseAndCompany(normalizedRole, company)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         User targetUser = userService.getUserById(targetId);
@@ -73,6 +83,18 @@ public class RoleService {
 
             current.setRole(role);
         }
+    }
+
+    /**
+     * Retrieves or creates a global role for users.
+     *
+     * @return the global role for users
+     */
+    @Transactional
+    public Role getOrCreateGlobalRoleUser() {
+        String name = "ROLE_USER";
+        return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
+                .orElseGet(() -> roleRepository.save(new Role(name, null)));
     }
 
     private String normalizeRole(String raw) {
