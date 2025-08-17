@@ -1,7 +1,10 @@
 package com.pat.crewhive.controller;
 
 
-import com.pat.crewhive.dto.*;
+import com.pat.crewhive.dto.Auth.AuthRequestDTO;
+import com.pat.crewhive.dto.Auth.AuthResponseDTO;
+import com.pat.crewhive.dto.Auth.RegistrationDTO;
+import com.pat.crewhive.dto.Auth.RotateRequestDTO;
 import com.pat.crewhive.service.AuthService;
 import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;

@@ -1,6 +1,6 @@
 package com.pat.crewhive.controller;
 
-import com.pat.crewhive.dto.UpdateUserRoleDTO;
+import com.pat.crewhive.dto.Manager.UpdateUserRoleDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.service.CompanyService;
 import com.pat.crewhive.service.RoleService;

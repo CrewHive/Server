@@ -1,8 +1,8 @@
 package com.pat.crewhive.controller;
 
 
-import com.pat.crewhive.dto.LogoutDTO;
-import com.pat.crewhive.dto.UserDTO;
+import com.pat.crewhive.dto.User.LogoutDTO;
+import com.pat.crewhive.dto.User.UserDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.service.AuthService;
 import com.pat.crewhive.service.CompanyService;

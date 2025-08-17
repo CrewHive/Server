@@ -1,6 +1,5 @@
-package com.pat.crewhive.dto;
+package com.pat.crewhive.dto.Auth;
 
-import com.pat.crewhive.model.user.contract.Contract;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

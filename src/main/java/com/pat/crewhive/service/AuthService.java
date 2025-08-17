@@ -1,12 +1,14 @@
 package com.pat.crewhive.service;
 
 
-import com.pat.crewhive.dto.*;
+import com.pat.crewhive.dto.Auth.AuthRequestDTO;
+import com.pat.crewhive.dto.Auth.AuthResponseDTO;
+import com.pat.crewhive.dto.Auth.RegistrationDTO;
+import com.pat.crewhive.dto.User.LogoutDTO;
 import com.pat.crewhive.model.auth.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.user.entity.role.Role;
 import com.pat.crewhive.model.user.entity.role.UserRole;
-import com.pat.crewhive.repository.RefreshTokenRepository;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import lombok.extern.slf4j.Slf4j;

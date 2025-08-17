@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto;
+package com.pat.crewhive.dto.User;
 
 
 import jakarta.validation.constraints.NotBlank;
@@ -9,10 +9,13 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
-public class RotateRequestDTO {
+@NoArgsConstructor
+public class LogoutDTO {
 
-    @NotBlank(message = "Refresh token must not be blank")
+    @NotBlank(message = "Username cannot be blank")
+    private String username;
+
+    @NotBlank(message = "Refresh token cannot be blank")
     private String refreshToken;
 }

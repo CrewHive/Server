@@ -34,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return uri.equals("/api/auth/login")
                 || uri.equals("/api/auth/register")
                 || uri.equals("/api/auth/rotate")
-                || uri.equals("/api/auth/company/register")
                 || uri.startsWith("/actuator/health")
                 || uri.equals("/error");
         // NOTA: /api/auth/logout NON è escluso → il filtro gira e autentica

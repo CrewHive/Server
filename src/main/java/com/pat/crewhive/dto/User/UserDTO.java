@@ -1,6 +1,5 @@
-package com.pat.crewhive.dto;
+package com.pat.crewhive.dto.User;
 
-import com.pat.crewhive.model.user.contract.Contract;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,6 +1,6 @@
 package com.pat.crewhive.service;
 
-import com.pat.crewhive.dto.AuthRequestDTO;
+import com.pat.crewhive.dto.Auth.AuthRequestDTO;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
@@ -77,6 +77,17 @@ public class UserService {
         log.info("Password match for userId {}: {}", user.getUserId(), match);
 
         return match;
+    }
+
+    /**
+     * Updates the user information in the database.
+     *
+     * @param user the User object containing updated information
+     * @return the updated User object
+     */
+    @Transactional
+    public User updateUser(User user) {
+        return userRepository.save(user);
     }
 
     /**

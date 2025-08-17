@@ -1,6 +1,5 @@
-package com.pat.crewhive.dto;
+package com.pat.crewhive.dto.Auth;
 
-import com.pat.crewhive.model.auth.entity.RefreshToken;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

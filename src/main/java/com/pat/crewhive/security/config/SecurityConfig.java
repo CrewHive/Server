@@ -65,7 +65,6 @@ public class SecurityConfig {
                         .requestMatchers(POST, "/api/auth/login").permitAll()
                         .requestMatchers(POST, "/api/auth/register").permitAll()
                         .requestMatchers(POST, "/api/auth/rotate").permitAll()
-                        .requestMatchers(POST, "/api/auth/company/register").permitAll()
                         .anyRequest().authenticated()
                 )
 
