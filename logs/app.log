@@ -1,6 +1,0 @@
-2025-08-18 00:27:12.043 [http-nio-8080-exec-4] ERROR com.pat.crewhive.service.JwtService - Token expired on: Thu Aug 14 12:00:44 CEST 2025
-2025-08-18 00:27:12.043 [http-nio-8080-exec-4] ERROR c.p.c.s.f.JwtAuthenticationFilter - Internal auth error: Token expired onThu Aug 14 12:00:44 CEST 2025. Login again to get a new token
-2025-08-18 00:28:16.702 [http-nio-8080-exec-5] ERROR com.pat.crewhive.service.JwtService - Token expired on: Thu Aug 14 12:00:44 CEST 2025
-2025-08-18 00:28:16.703 [http-nio-8080-exec-5] ERROR c.p.c.s.f.JwtAuthenticationFilter - Internal auth error: Token expired onThu Aug 14 12:00:44 CEST 2025. Login again to get a new token
-2025-08-18 00:28:43.743 [http-nio-8080-exec-2] ERROR com.pat.crewhive.service.JwtService - Token expired on: Thu Aug 14 12:00:44 CEST 2025
-2025-08-18 00:28:43.744 [http-nio-8080-exec-2] ERROR c.p.c.s.f.JwtAuthenticationFilter - Internal auth error: Token expired onThu Aug 14 12:00:44 CEST 2025. Login again to get a new token

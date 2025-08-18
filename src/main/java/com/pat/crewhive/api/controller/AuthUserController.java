@@ -1,12 +1,12 @@
-package com.pat.crewhive.controller;
+package com.pat.crewhive.api.controller;
 
 
+import com.pat.crewhive.api.controller.interfaces.AuthUserControllerInterface;
 import com.pat.crewhive.dto.Auth.AuthRequestDTO;
 import com.pat.crewhive.dto.Auth.AuthResponseDTO;
 import com.pat.crewhive.dto.Auth.RegistrationDTO;
 import com.pat.crewhive.dto.Auth.RotateRequestDTO;
 import com.pat.crewhive.service.AuthService;
-import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,17 +16,16 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
-public class AuthUserController {
+public class AuthUserController implements AuthUserControllerInterface {
 
     private final AuthService authService;
-    private final UserService userService;
 
     @Autowired
-    public AuthUserController(AuthService authService, UserService userService) {
+    public AuthUserController(AuthService authService) {
         this.authService = authService;
-        this.userService = userService;
     }
 
+    @Override
     @PostMapping("/rotate")
     public ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody RotateRequestDTO request) {
 
@@ -37,6 +36,7 @@ public class AuthUserController {
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO) {
 
@@ -47,6 +47,7 @@ public class AuthUserController {
         return ResponseEntity.ok().build();
     }
 
+    @Override
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO request) {
 

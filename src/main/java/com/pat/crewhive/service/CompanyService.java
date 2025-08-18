@@ -57,6 +57,7 @@ public class CompanyService {
      * Sets a company for a user.
      *
      * @param request The request containing user ID and company name.
+     * @throws ResourceAlreadyExistsException if the company does not exist.
      */
     @Transactional
     public void setCompany(SetCompanyDTO request) {

@@ -65,20 +65,25 @@ public class SecurityConfig {
                         .requestMatchers(POST, "/api/auth/login").permitAll()
                         .requestMatchers(POST, "/api/auth/register").permitAll()
                         .requestMatchers(POST, "/api/auth/rotate").permitAll()
+                        .requestMatchers("/docs", "/docs/**",
+                                         "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
                 // Headers di sicurezza
                 .headers(headers -> headers
-
-                        // CSP minimal per API-only (nessun contenuto attivo restituito)
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'none'; base-uri 'self'; frame-ancestors 'none';"
-                        ))
-                        // X-Content-Type-Options: nosniff
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(String.join("; ",
+                                "default-src 'self'",
+                                "base-uri 'self'",
+                                "frame-ancestors 'none'",
+                                "img-src 'self' data:",
+                                "script-src 'self'",
+                                "style-src 'self' 'unsafe-inline'",
+                                "font-src 'self' data:",
+                                "connect-src 'self'"
+                        )))
                         .contentTypeOptions(cto -> {})
                         .referrerPolicy(rp -> rp.policy(ReferrerPolicy.NO_REFERRER))
-                        //todo potresti aver bisogno di disabilitare hsts per lo sviluppo locale
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
                                 .maxAgeInSeconds(31536000))
@@ -86,9 +91,11 @@ public class SecurityConfig {
                                 "geolocation=(), microphone=(), camera=()"
                         ))
                         .crossOriginOpenerPolicy(coop -> coop
-                                .policy(org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN))
+                                .policy(org.springframework.security.web.header.writers
+                                        .CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN))
                         .crossOriginResourcePolicy(corp -> corp
-                                .policy(org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN))
+                                .policy(org.springframework.security.web.header.writers
+                                        .CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN))
                 );
 
         // JWT filter
