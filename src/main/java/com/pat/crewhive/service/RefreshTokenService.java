@@ -2,7 +2,7 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.model.auth.entity.RefreshToken;
+import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.repository.RefreshTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

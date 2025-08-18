@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.time_management.entity.event;
+package com.pat.crewhive.model.event;
 
 
 import com.pat.crewhive.model.user.entity.User;

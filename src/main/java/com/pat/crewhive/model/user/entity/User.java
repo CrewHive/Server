@@ -2,12 +2,11 @@ package com.pat.crewhive.model.user.entity;
 
 
 import com.pat.crewhive.model.company.entity.Company;
-import com.pat.crewhive.model.time_management.entity.event.EventUsers;
-import com.pat.crewhive.model.time_management.entity.shift.shiftworked.ShiftWorked;
-import com.pat.crewhive.model.time_management.entity.shift.shiftprogrammed.ShiftProgrammed;
+import com.pat.crewhive.model.event.EventUsers;
+import com.pat.crewhive.model.shift.shiftworked.entity.ShiftWorked;
+import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.user.contract.Contract;
-import com.pat.crewhive.model.user.entity.role.Role;
-import com.pat.crewhive.model.user.entity.role.UserRole;
+import com.pat.crewhive.model.role.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

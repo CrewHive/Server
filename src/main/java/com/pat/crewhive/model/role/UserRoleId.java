@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.user.entity.role;
+package com.pat.crewhive.model.role;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

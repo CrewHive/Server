@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.time_management.entity.shift.shiftprogrammed;
+package com.pat.crewhive.model.shift.shiftprogrammed.entity;
 
 import com.pat.crewhive.model.user.entity.User;
 import jakarta.persistence.*;

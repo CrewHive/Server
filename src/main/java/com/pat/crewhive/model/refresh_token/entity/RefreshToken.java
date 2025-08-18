@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.auth.entity;
+package com.pat.crewhive.model.refresh_token.entity;
 
 
 import com.pat.crewhive.model.user.entity.User;

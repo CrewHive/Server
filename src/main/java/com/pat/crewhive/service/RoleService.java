@@ -2,8 +2,8 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.model.user.entity.role.Role;
-import com.pat.crewhive.model.user.entity.role.UserRole;
+import com.pat.crewhive.model.role.entity.Role;
+import com.pat.crewhive.model.role.UserRole;
 import com.pat.crewhive.repository.RoleRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;

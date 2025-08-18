@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.time_management.entity.event;
+package com.pat.crewhive.model.event;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

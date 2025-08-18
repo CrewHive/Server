@@ -1,6 +1,6 @@
 package com.pat.crewhive.repository;
 
-import com.pat.crewhive.model.auth.entity.RefreshToken;
+import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

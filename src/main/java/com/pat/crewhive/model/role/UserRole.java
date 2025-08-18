@@ -1,6 +1,7 @@
-package com.pat.crewhive.model.user.entity.role;
+package com.pat.crewhive.model.role;
 
 
+import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
