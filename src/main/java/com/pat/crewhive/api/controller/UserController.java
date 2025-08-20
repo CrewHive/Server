@@ -75,4 +75,15 @@ public class UserController implements UserControllerInterface {
 
         return ResponseEntity.ok().build();
     }
+
+    @Override
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal CustomUserDetails cud) {
+
+        log.info("Deleting account for user: {}", cud.getUsername());
+
+        userService.deleteAccount(cud.getUsername());
+
+        return ResponseEntity.ok().build();
+    }
  }

@@ -15,7 +15,10 @@ import java.time.LocalDate;
 @Setter
 @Getter
 @Entity
-@Table(name = "refresh_token")
+@Table(name = "refresh_token", indexes = {
+        @Index(name = "idx_refreshtoken", columnList = "refresh_token_id"),
+        @Index(name = "idx_refreshtoken_user_id", columnList = "user_id")
+})
 public class RefreshToken {
 
     @Id

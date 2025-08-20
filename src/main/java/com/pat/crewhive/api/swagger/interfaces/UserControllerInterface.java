@@ -108,4 +108,26 @@ public interface UserControllerInterface {
     })
     ResponseEntity<?> updatePassword(@AuthenticationPrincipal CustomUserDetails cud,
                                      @RequestBody UpdatePasswordDTO updatePasswordDTO);
+
+
+
+    @Operation(summary = "Delete account",
+            description = "Deletes the account of the currently authenticated user.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Account deleted successfully"),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - User not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+    })
+    ResponseEntity<?> deleteAccount(@AuthenticationPrincipal CustomUserDetails cud);
 }

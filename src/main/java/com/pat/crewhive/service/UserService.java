@@ -14,13 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserService {
 
+    private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
     private final PasswordUtil passwordUtil;
 
     public UserService(UserRepository userRepository,
-                       PasswordUtil passwordUtil) {
+                       PasswordUtil passwordUtil,
+                       RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordUtil = passwordUtil;
+        this.refreshTokenService = refreshTokenService;
     }
 
     /**
@@ -124,6 +127,23 @@ public class UserService {
 
         userRepository.save(user);
         log.info("Updated password for user: {}", username);
+    }
+
+    /**
+     * Deletes a user account.
+     *
+     * @param username the username of the user to delete
+     */
+    @Transactional
+    public void deleteAccount(String username) {
+
+        User user = getUserByUsername(username);
+
+        refreshTokenService.deleteTokenByUser(user);
+
+        userRepository.delete(user);
+
+        log.info("Deleted account for user: {}", username);
     }
 
 }

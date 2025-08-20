@@ -182,7 +182,7 @@ public class RefreshTokenService {
     /**
      * Invalidates the given refresh token by deleting it from the repository.
      * @param rt The refresh token to invalidate.
-     * @throws IllegalArgumentException If the refresh token is null.
+     * @throws ResourceNotFoundException If the refresh token is null.
      */
     @Transactional
     public void invalidateRefreshToken(RefreshToken rt) {
@@ -190,11 +190,25 @@ public class RefreshTokenService {
         if (rt == null) {
 
             log.error("Refresh token is null");
-            throw new IllegalArgumentException("Refresh token not found");
+            throw new ResourceNotFoundException("Refresh token not found");
         }
 
         repo.delete(rt);
 
         log.info("Invalidated refresh token for user: {}", rt.getUser().getUsername());
+    }
+
+
+    /**
+     * Deletes the refresh token associated with the given user.
+     *
+     * @param user The user whose refresh token is to be deleted.
+     */
+    @Transactional
+    public void deleteTokenByUser(User user) {
+
+        repo.deleteByUser(user);
+
+        log.info("Deleted refresh token for user: {}", user.getUsername());
     }
 }
