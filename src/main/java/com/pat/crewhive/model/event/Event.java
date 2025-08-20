@@ -33,16 +33,16 @@ public class Event {
     private Long eventId;
 
     @Column(name = "name", nullable = false)
-    private String name;
+    private String eventName;
 
     @Column(name = "description")
     private String description;
 
     @Column(name = "start_event", nullable = false)
-    private OffsetDateTime startEvent;
+    private OffsetDateTime start;
 
     @Column(name = "end_event", nullable = false)
-    private OffsetDateTime endEvent;
+    private OffsetDateTime end;
 
     @Column(name = "date", nullable = false)
     private LocalDate date;
@@ -84,10 +84,10 @@ public class Event {
         for (User u : user) {
             addUser(u);
         }
-        this.name = name;
+        this.eventName = name;
         this.description = description;
-        this.startEvent = startEvent;
-        this.endEvent = endEvent;
+        this.start = startEvent;
+        this.end = endEvent;
         this.color = color;
         this.eventType = eventType;
         syncDate();
@@ -96,7 +96,7 @@ public class Event {
     @PrePersist
     @PreUpdate
     private void syncDate() {
-        this.date = startEvent.toLocalDate();
+        this.date = start.toLocalDate();
     }
 
 }

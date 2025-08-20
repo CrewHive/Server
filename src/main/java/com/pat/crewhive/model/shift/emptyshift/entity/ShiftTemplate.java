@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalTime;
+import java.time.OffsetTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,7 +21,7 @@ import java.time.LocalTime;
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uc_emptyshift_order_number", columnNames = {"order_number", "company_id"})
 })
-public class EmptyShift {
+public class ShiftTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,13 +32,16 @@ public class EmptyShift {
     private String shift_name;
 
     @Column(name = "start_shift", nullable = false)
-    private LocalTime start;
+    private OffsetTime start;
 
     @Column(name = "end_shift", nullable = false)
-    private LocalTime end;
+    private OffsetTime end;
+    
+    @Column(name = "description", nullable = false)
+    private String description;
 
-    @Column(name = "order_number", nullable = false)
-    private Integer orderNumber;
+    @Column(name = "color", nullable = false)
+    private String color;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
