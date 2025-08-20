@@ -1,7 +1,7 @@
 package com.pat.crewhive.repository;
 
 import com.pat.crewhive.model.company.entity.Company;
-import com.pat.crewhive.model.user.entity.role.Role;
+import com.pat.crewhive.model.role.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

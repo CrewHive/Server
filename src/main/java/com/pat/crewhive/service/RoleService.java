@@ -2,9 +2,10 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.model.user.entity.role.Role;
-import com.pat.crewhive.model.user.entity.role.UserRole;
+import com.pat.crewhive.model.role.entity.Role;
+import com.pat.crewhive.model.role.UserRole;
 import com.pat.crewhive.repository.RoleRepository;
+import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,8 @@ public class RoleService {
      * Creates a new role in the system.
      *
      * @param roleName the name of the role to be created
+     * @param companyId the ID of the company to which the role belongs
+     * @throws ResourceAlreadyExistsException if the role already exists for the given company
      */
     @Transactional
     public void createRole(String roleName, Long companyId) {
@@ -41,7 +44,7 @@ public class RoleService {
         if (roleRepository.existsByRoleNameIgnoreCaseAndCompany(normalizedRole, company)) {
 
             log.error("Role {} already exists", roleName);
-            throw new IllegalArgumentException("Role already exists");
+            throw new ResourceAlreadyExistsException("Role already exists");
         }
 
         Role newRole = new Role(normalizedRole, company);
@@ -55,6 +58,8 @@ public class RoleService {
      *
      * @param targetId the ID of the user whose role is to be updated
      * @param newRole  the new role to be assigned to the user
+     * @param companyId the ID of the company to which the user belongs
+     * @throws ResourceNotFoundException if the role is not found
      */
     @Transactional
     public void updateUserRole(Long targetId, String newRole, Long companyId) {
@@ -67,22 +72,10 @@ public class RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         User targetUser = userService.getUserById(targetId);
-        if (targetUser == null) {
 
-            log.error("User not found with id: {}", targetId);
-            throw new ResourceNotFoundException("User not found");
-        }
-
+        // Posso farlo perché al momento della registrazione viene dato un ruolo di default
         UserRole current = targetUser.getRole();
-        if (current == null) {
-
-            current = new UserRole(targetUser, role);
-            targetUser.setRole(current);
-
-        } else {
-
-            current.setRole(role);
-        }
+        current.setRole(role);
     }
 
     /**
@@ -93,6 +86,18 @@ public class RoleService {
     @Transactional
     public Role getOrCreateGlobalRoleUser() {
         String name = "ROLE_USER";
+        return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
+                .orElseGet(() -> roleRepository.save(new Role(name, null)));
+    }
+
+    /**
+     * Retrieves or creates a global role for managers.
+     *
+     * @return the global role for managers
+     */
+    @Transactional
+    public Role getOrCreateGlobalRoleManager() {
+        String name = "ROLE_MANAGER";
         return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
                 .orElseGet(() -> roleRepository.save(new Role(name, null)));
     }

@@ -1,6 +1,6 @@
 package com.pat.crewhive.security.util;
 
-import com.pat.crewhive.dto.UserDTO;
+import com.pat.crewhive.dto.User.UserDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -103,12 +103,12 @@ public final class UserUtils {
      */
     public static boolean hasRole(String role) {
 
-        CustomUserDetails cud = getCustomUserDetails();
+        var cud = getCustomUserDetails();
 
-        if (cud == null) return false;
+        String normalizedRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
-        return cud.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
+        return cud != null && cud.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(normalizedRole));
     }
 }
 

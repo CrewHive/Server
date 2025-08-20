@@ -1,7 +1,5 @@
 package com.pat.crewhive.model.user.wrapper;
 
-import com.pat.crewhive.model.company.entity.Company;
-import com.pat.crewhive.model.user.contract.Contract;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,7 +43,7 @@ public class CustomUserDetails implements UserDetails {
         this.working = working;
         this.password = null; // non serve in JWT stateless
 
-        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        this.authorities = List.of(new SimpleGrantedAuthority(role));
     }
 
     /**
