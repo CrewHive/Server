@@ -36,7 +36,7 @@ public class ShiftTemplate {
 
     @Column(name = "end_shift", nullable = false)
     private OffsetTime end;
-    
+
     @Column(name = "description", nullable = false)
     private String description;
 

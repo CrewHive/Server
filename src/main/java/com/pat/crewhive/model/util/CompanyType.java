@@ -1,7 +1,17 @@
 package com.pat.crewhive.model.util;
 
 public enum CompanyType {
-    HOSPITAL,
-    BAR,
-    RESTAURANT
+    HOSPITAL("Hospital"),
+    RESTAURANT("Restaurant"),
+    BAR("Bar");
+
+    private final String label;
+
+    CompanyType(String label) {
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
+    }
 }

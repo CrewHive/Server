@@ -1,7 +1,7 @@
 package com.pat.crewhive.api.controller;
 
 
-import com.pat.crewhive.api.controller.interfaces.AuthUserControllerInterface;
+import com.pat.crewhive.api.swagger.interfaces.AuthUserControllerInterface;
 import com.pat.crewhive.dto.Auth.AuthRequestDTO;
 import com.pat.crewhive.dto.Auth.AuthResponseDTO;
 import com.pat.crewhive.dto.Auth.RegistrationDTO;

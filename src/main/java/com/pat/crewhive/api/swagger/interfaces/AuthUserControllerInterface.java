@@ -1,4 +1,4 @@
-package com.pat.crewhive.api.controller.interfaces;
+package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.dto.Auth.AuthRequestDTO;
 import com.pat.crewhive.dto.Auth.AuthResponseDTO;
@@ -29,6 +29,9 @@ public interface AuthUserControllerInterface {
             @ApiResponse(responseCode = "401", description = "Token invalid or expired",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody RotateRequestDTO request);
 
@@ -42,6 +45,12 @@ public interface AuthUserControllerInterface {
             @ApiResponse(responseCode = "401", description = "Bad Request - Invalid registration details",
             content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "409", description = "Conflict - Username or email already exists",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO);
 
@@ -55,6 +64,9 @@ public interface AuthUserControllerInterface {
             @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid username or password",
             content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO request);
 

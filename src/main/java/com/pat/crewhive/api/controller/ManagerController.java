@@ -1,13 +1,9 @@
 package com.pat.crewhive.api.controller;
 
-import com.pat.crewhive.api.controller.interfaces.ManagerControllerInterface;
+import com.pat.crewhive.api.swagger.interfaces.ManagerControllerInterface;
 import com.pat.crewhive.dto.Manager.UpdateUserRoleDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
-import com.pat.crewhive.service.CompanyService;
 import com.pat.crewhive.service.RoleService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +31,7 @@ public class ManagerController implements ManagerControllerInterface {
 
         log.info("Role {} created successfully", roleName);
 
-        return ResponseEntity.ok("Role created successfully");
+        return ResponseEntity.ok().build();
     }
 
     @Override
@@ -49,6 +45,6 @@ public class ManagerController implements ManagerControllerInterface {
 
         log.info("Updated user role for user: {}", cud.getUsername());
 
-        return ResponseEntity.ok("User role updated successfully");
+        return ResponseEntity.ok().build();
     }
 }

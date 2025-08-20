@@ -1,4 +1,4 @@
-package com.pat.crewhive.api.controller.interfaces;
+package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.dto.Manager.UpdateUserRoleDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
@@ -35,6 +35,9 @@ public interface ManagerControllerInterface {
             @ApiResponse(responseCode = "409", description = "Conflict - Role already exists",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<String> createRole(@AuthenticationPrincipal CustomUserDetails cud,
                                       @RequestBody @NotBlank(message = "The role name is required") String roleName);
@@ -51,6 +54,9 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
             @ApiResponse(responseCode = "404", description = "Not Found - User/Role/Company not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })

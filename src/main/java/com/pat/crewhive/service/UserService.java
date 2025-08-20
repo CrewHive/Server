@@ -1,11 +1,12 @@
 package com.pat.crewhive.service;
 
-import com.pat.crewhive.dto.Auth.AuthRequestDTO;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.UserRepository;
+import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.service.utils.PasswordUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,13 +15,24 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordUtil passwordUtil;
 
     public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordUtil passwordUtil) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordUtil = passwordUtil;
     }
+
+    /**
+     * Updates the user information in the database.
+     *
+     * @param user the User object containing updated information
+     */
+    @Transactional
+    public void updateUser(User user) {
+        userRepository.save(user);
+    }
+
 
     /**
      * Retrieves a User by its ID.
@@ -62,41 +74,50 @@ public class UserService {
     }
 
     /**
-     * Validates the user's password against the stored password.
+     * Updates the username of a user.
      *
-     * @param dto the AuthRequestDTO containing username and password
-     * @return true if the password matches, false otherwise
-     */
-    @Transactional(readOnly = true)
-    public boolean validatePassword(AuthRequestDTO dto) {
-
-        User user = getUserByUsername(dto.getUsername());
-
-        boolean match = passwordEncoder.matches(dto.getPassword(), user.getPassword());
-
-        log.info("Password match for userId {}: {}", user.getUserId(), match);
-
-        return match;
-    }
-
-    /**
-     * Updates the user information in the database.
-     *
-     * @param user the User object containing updated information
-     * @return the updated User object
+     * @param newUsername the new username to set
+     * @param oldUsername the current username of the user
+     * @throws ResourceAlreadyExistsException if the new username already exists
      */
     @Transactional
-    public User updateUser(User user) {
-        return userRepository.save(user);
+    public void updateUsername(String newUsername, String oldUsername) {
+
+        if (userRepository.findByUsername(newUsername).isPresent()) {
+            throw new ResourceAlreadyExistsException("Username already exists");
+        }
+
+        User user = getUserByUsername(oldUsername);
+        user.setUsername(newUsername);
+
+        userRepository.save(user);
+        log.info("Updated username from {} to {}", oldUsername, newUsername);
     }
 
     /**
-     * Encodes a raw password using the configured PasswordEncoder.
+     * Updates the user's password.
      *
-     * @param raw the raw password to encode
-     * @return the encoded password
+     * @param newPassword the new password to set
+     * @param oldPassword the current password of the user
+     * @param username    the username of the user
      */
-    public String encodePassword(String raw) {
-        return passwordEncoder.encode(raw);
+    @Transactional
+    public void updatePassword(String newPassword, String oldPassword, String username) {
+
+        User user = getUserByUsername(username);
+
+        if(!passwordUtil.isStrong(newPassword)) {
+            throw new BadCredentialsException("Invalid password");
+        }
+
+        if(passwordUtil.matches(oldPassword, user.getPassword())) {
+            throw new BadCredentialsException("Old password does not match");
+        }
+
+        user.setPassword(passwordUtil.encodePassword(newPassword));
+
+        userRepository.save(user);
+        log.info("Updated password for user: {}", username);
     }
+
 }

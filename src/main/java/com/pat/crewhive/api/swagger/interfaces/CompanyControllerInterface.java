@@ -1,4 +1,4 @@
-package com.pat.crewhive.api.controller.interfaces;
+package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.dto.Company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.Company.SetCompanyDTO;
@@ -31,6 +31,9 @@ public interface CompanyControllerInterface {
             @ApiResponse(responseCode = "409", description = "Conflict - Company already exists",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<?> registerCompany(@Valid @RequestBody CompanyRegistrationDTO request);
 
@@ -48,6 +51,9 @@ public interface CompanyControllerInterface {
             @ApiResponse(responseCode = "404", description = "Not Found - User or company not found",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<?> setCompany(@Valid @RequestBody SetCompanyDTO request);
 }

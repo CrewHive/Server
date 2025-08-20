@@ -5,8 +5,8 @@ import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.event.EventUsers;
 import com.pat.crewhive.model.shift.shiftworked.entity.ShiftWorked;
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
-import com.pat.crewhive.model.user.contract.Contract;
 import com.pat.crewhive.model.role.UserRole;
+import com.pat.crewhive.model.util.ContractType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -54,6 +54,14 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<EventUsers> personalEvents = new LinkedHashSet<>();
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private UserRole role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "contract_type")
+    private ContractType contractType;
+
+
 
     //todo se salvo dal lato user lascia all se uso lato shift usa remove uguale per i programmed
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -63,11 +71,6 @@ public class User {
     @OrderBy("start ASC")
     private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private UserRole role;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Contract contract;
 
     public User(String username, String email, String password) {
         this.email = email;

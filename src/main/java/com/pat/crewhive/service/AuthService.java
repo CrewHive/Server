@@ -11,6 +11,9 @@ import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.role.UserRole;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
+import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.service.utils.EmailUtil;
+import com.pat.crewhive.service.utils.PasswordUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,18 +31,24 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final RoleService roleService;
+    private final PasswordUtil passwordUtil;
+    private final EmailUtil emailUtil;
 
     @Autowired
     public AuthService(UserService userService,
                        JwtService jwtService,
                        RefreshTokenService refreshTokenService,
                        UserRepository userRepository,
-                       RoleService roleService) {
+                       RoleService roleService,
+                       PasswordUtil passwordUtil,
+                       EmailUtil emailUtil) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
         this.roleService = roleService;
+        this.passwordUtil = passwordUtil;
+        this.emailUtil = emailUtil;
     }
 
 
@@ -55,11 +64,13 @@ public class AuthService {
 
         User user = userService.getUserByUsername(request.getUsername());
 
-        if (!userService.validatePassword(request)) {
+        if (passwordUtil.matches(request.getPassword(), user.getPassword())) {
             log.error("Invalid password for user: {}", request.getUsername());
 
             throw new BadCredentialsException("Invalid credentials");
         }
+
+        log.info("User {} authenticated successfully", user.getUsername());
 
         RefreshToken rt = refreshTokenService.getRefreshTokenByUser(user);
 
@@ -78,7 +89,8 @@ public class AuthService {
      * Registers a new user with the provided details.
      *
      * @param request The registration request containing username, email, and password.
-     * @throws BadCredentialsException if the username or email already exists.
+     * @throws BadCredentialsException if the email format is invalid or the password is weak.
+     * @throws ResourceAlreadyExistsException if the username or email already exist.
      */
     @Transactional
     public void register(RegistrationDTO request) {
@@ -86,16 +98,28 @@ public class AuthService {
         if (userRepository.existsByUsername(request.getUsername())) {
 
             log.error("Username already registered: {}", request.getUsername());
-            throw new BadCredentialsException("Username already registered");
+            throw new ResourceAlreadyExistsException("Username already registered");
+        }
+
+        if (!emailUtil.isValidEmail(request.getEmail())) {
+
+            log.error("Invalid email format: {}", request.getEmail());
+            throw new BadCredentialsException("Invalid email format");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
 
             log.error("Email already registered: {}", request.getEmail());
-            throw new BadCredentialsException("Email already registered");
+            throw new ResourceAlreadyExistsException("Email already registered");
         }
 
-        String encodedPassword = userService.encodePassword(request.getPassword());
+        if (!passwordUtil.isStrong(request.getPassword())) {
+
+            log.error("Weak password provided for user: {}", request.getUsername());
+            throw new BadCredentialsException("Weak password provided");
+        }
+
+        String encodedPassword = passwordUtil.encodePassword(request.getPassword());
 
         User newUser = new User(request.getUsername(), request.getEmail(), encodedPassword);
 
