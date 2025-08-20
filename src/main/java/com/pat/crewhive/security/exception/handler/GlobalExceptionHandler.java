@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -53,6 +54,13 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = base(HttpStatus.BAD_REQUEST, "Validation failed", "One or more fields are invalid", "VAL_400");
         pd.setProperty("errors", errors);
         return pd;
+    }
+
+    // 403 - Autorizzazione negata
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ProblemDetail handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+        log.warn("Authorization denied: {}", ex.getMessage());
+        return base(HttpStatus.FORBIDDEN, "Access denied", "You do not have permission to access this resource", "AUTH_403_DENIED");
     }
 
     // 400 - JSON malformato / payload non leggibile

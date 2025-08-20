@@ -33,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Whitelist SOLO per endpoint realmente pubblici
         return uri.equals("/api/auth/login")
                 || uri.equals("/api/auth/register")
+                || uri.equals("/api/auth/register/manager")
                 || uri.equals("/api/auth/rotate")
                 || uri.startsWith("/actuator/health")
                 || uri.equals("/error")

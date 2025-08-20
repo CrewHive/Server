@@ -17,53 +17,93 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Tag(name = "Authentication", description = "Operations related to user authentication")
 public interface AuthUserControllerInterface {
 
+
     @Operation(summary = "Rotate user token",
             description = "Generates a new access token using a refresh token that gets rotated.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token rotated successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = AuthResponseDTO.class))),
+
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
             @ApiResponse(responseCode = "401", description = "Token invalid or expired",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody RotateRequestDTO request);
 
+
+
     @Operation(summary = "Register a new user",
             description = "Registers a new user with the provided registration details.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User registered successfully"),
+
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
             @ApiResponse(responseCode = "401", description = "Bad Request - Invalid registration details",
             content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
             @ApiResponse(responseCode = "409", description = "Conflict - Username or email already exists",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
     ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO);
 
+
+
+    @Operation(summary = "Register a new manager",
+            description = "Registers a new manager with the provided registration details.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Manager registered successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Bad Request - Invalid registration details",
+            content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "409", description = "Conflict - Username or email already exists",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+    })
+    ResponseEntity<?> registerManager(@Valid @RequestBody RegistrationDTO rDTO);
+
+
+
     @Operation(summary = "User login",
             description = "Authenticates a user.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login successful - Returns JWT and Refresh Token"),
+
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
             @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid username or password",
             content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))

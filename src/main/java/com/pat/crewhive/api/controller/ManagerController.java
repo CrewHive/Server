@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ public class ManagerController implements ManagerControllerInterface {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PostMapping("/create-role")
     public ResponseEntity<String> createRole(@AuthenticationPrincipal CustomUserDetails cud,
                                              @RequestBody @NotBlank(message = "The role name is required") String roleName) {
@@ -35,6 +37,7 @@ public class ManagerController implements ManagerControllerInterface {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PatchMapping("/update-role")
     public ResponseEntity<String> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
                                                  @Valid @RequestBody UpdateUserRoleDTO updateUserRoleDTO) {

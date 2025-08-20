@@ -43,7 +43,7 @@ public class CustomUserDetails implements UserDetails {
         this.working = working;
         this.password = null; // non serve in JWT stateless
 
-        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        this.authorities = List.of(new SimpleGrantedAuthority(role));
     }
 
     /**

@@ -107,10 +107,16 @@ public class UserService {
         User user = getUserByUsername(username);
 
         if(!passwordUtil.isStrong(newPassword)) {
+
+            log.info("New password is not strong enough for user: {}", username);
+
             throw new BadCredentialsException("Invalid password");
         }
 
-        if(passwordUtil.matches(oldPassword, user.getPassword())) {
+        if(!passwordUtil.matches(oldPassword, user.getPassword())) {
+
+            log.info("Old password does not match for user: {}", username);
+
             throw new BadCredentialsException("Old password does not match");
         }
 

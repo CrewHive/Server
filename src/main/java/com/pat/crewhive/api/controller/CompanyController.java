@@ -7,6 +7,7 @@ import com.pat.crewhive.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -21,6 +22,7 @@ public class CompanyController implements CompanyControllerInterface {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PostMapping("/register")
     public ResponseEntity<?> registerCompany(@Valid @RequestBody CompanyRegistrationDTO request) {
 
@@ -32,6 +34,7 @@ public class CompanyController implements CompanyControllerInterface {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PutMapping("/set-company")
     public ResponseEntity<?> setCompany(@Valid @RequestBody SetCompanyDTO request) {
 

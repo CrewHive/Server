@@ -64,7 +64,7 @@ public class AuthService {
 
         User user = userService.getUserByUsername(request.getUsername());
 
-        if (passwordUtil.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordUtil.matches(request.getPassword(), user.getPassword())) {
             log.error("Invalid password for user: {}", request.getUsername());
 
             throw new BadCredentialsException("Invalid credentials");
@@ -130,6 +130,53 @@ public class AuthService {
         userRepository.save(newUser);
 
         log.info("User registered successfully: {}", request.getUsername());
+    }
+
+    /**
+     * Registers a new manager with the provided details.
+     *
+     * @param request The registration request containing username, email, and password.
+     * @throws BadCredentialsException if the email format is invalid or the password is weak.
+     * @throws ResourceAlreadyExistsException if the username or email already exist.
+     */
+    @Transactional
+    public void registerManager(RegistrationDTO request) {
+
+        if (userRepository.existsByUsername(request.getUsername())) {
+
+            log.error("Username already registered: {}", request.getUsername());
+            throw new ResourceAlreadyExistsException("Username already registered");
+        }
+
+        if (!emailUtil.isValidEmail(request.getEmail())) {
+
+            log.error("Invalid email format: {}", request.getEmail());
+            throw new BadCredentialsException("Invalid email format");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+
+            log.error("Email already registered: {}", request.getEmail());
+            throw new ResourceAlreadyExistsException("Email already registered");
+        }
+
+        if (!passwordUtil.isStrong(request.getPassword())) {
+
+            log.error("Weak password provided for user: {}", request.getUsername());
+            throw new BadCredentialsException("Weak password provided");
+        }
+
+        String encodedPassword = passwordUtil.encodePassword(request.getPassword());
+
+        User newUser = new User(request.getUsername(), request.getEmail(), encodedPassword);
+
+        Role role = roleService.getOrCreateGlobalRoleManager();
+
+        newUser.setRole(new UserRole(newUser, role));
+
+        userRepository.save(newUser);
+
+        log.info("Manager registered successfully: {}", request.getUsername());
     }
 
     /**

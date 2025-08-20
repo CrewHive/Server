@@ -103,12 +103,12 @@ public final class UserUtils {
      */
     public static boolean hasRole(String role) {
 
-        CustomUserDetails cud = getCustomUserDetails();
+        var cud = getCustomUserDetails();
 
-        if (cud == null) return false;
+        String normalizedRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
-        return cud.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
+        return cud != null && cud.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(normalizedRole));
     }
 }
 

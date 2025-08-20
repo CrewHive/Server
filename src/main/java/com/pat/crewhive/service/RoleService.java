@@ -90,6 +90,18 @@ public class RoleService {
                 .orElseGet(() -> roleRepository.save(new Role(name, null)));
     }
 
+    /**
+     * Retrieves or creates a global role for managers.
+     *
+     * @return the global role for managers
+     */
+    @Transactional
+    public Role getOrCreateGlobalRoleManager() {
+        String name = "ROLE_MANAGER";
+        return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
+                .orElseGet(() -> roleRepository.save(new Role(name, null)));
+    }
+
     private String normalizeRole(String raw) {
 
         String r = raw.trim().toUpperCase();

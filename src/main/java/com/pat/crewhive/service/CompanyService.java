@@ -35,6 +35,7 @@ public class CompanyService {
         if(companyRepository.existsByName(request.getCompanyName())) throw new ResourceAlreadyExistsException("Company with name " + request.getCompanyName() + " already exists.");
 
         Company company = new Company(request);
+        //todo inserisci il manager nell'azienda
         companyRepository.save(company);
         log.info("Company {} registered successfully", request.getCompanyName());
     }
