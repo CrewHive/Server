@@ -76,5 +76,5 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
-    ResponseEntity<?> setCompany(@Valid @RequestBody SetCompanyDTO request);
+    ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud, @Valid @RequestBody SetCompanyDTO request);
 }

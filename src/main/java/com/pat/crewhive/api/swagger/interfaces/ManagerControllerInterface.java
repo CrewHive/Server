@@ -113,4 +113,39 @@ public interface ManagerControllerInterface {
     })
     ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
                                               @Valid @RequestBody UpdateUserWorkInfoDTO updateUserWorkInfoDTO);
+
+
+
+    @Operation(summary = "Delete a role",
+            description = "Allows managers to delete a role within the company.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Role deleted successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - Role/Company not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "409", description = "Conflict - Role is assigned to users and cannot be deleted",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+    })
+    ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
+                                     @RequestBody @NotBlank(message = "The role name is required") String roleName);
 }

@@ -9,6 +9,7 @@ import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,10 +52,9 @@ public class CompanyService {
         company.setName(normalizedCompanyName);
         companyRepository.save(company);
 
-        SetCompanyDTO setCompanyDTO = new SetCompanyDTO(company.getName(), managerId);
-        setCompany(setCompanyDTO);
-
         User manager = userService.getUserById(managerId);
+        manager.setCompany(company);
+        
         userService.updateUser(manager);
 
         log.info("Company {} registered successfully", request.getCompanyName());
@@ -75,13 +75,31 @@ public class CompanyService {
     }
 
     /**
+     * Checks if a user is part of a specific company.
+     *
+     * @param userId The ID of the user to check.
+     * @param companyName The name of the company to check against.
+     * @return true if the user is part of the company, false otherwise.
+     */
+    @Transactional(readOnly = true)
+    public boolean isPartOfCompany(Long userId, String companyName) {
+
+        User user = userService.getUserById(userId);
+        return user.getCompany() != null && user.getCompany().getName().equals(companyName);
+    }
+
+    /**
      * Sets a company for a user.
      *
      * @param request The request containing user ID and company name.
      * @throws ResourceAlreadyExistsException if the company does not exist.
      */
     @Transactional
-    public void setCompany(SetCompanyDTO request) {
+    public void setCompany(SetCompanyDTO request, Long managerId) {
+
+        if(!isPartOfCompany(managerId, request.getCompanyName())) {
+            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
 
         String normalizedCompanyName = stringUtils.normalizeString(request.getCompanyName());
 

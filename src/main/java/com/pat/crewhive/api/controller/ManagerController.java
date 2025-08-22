@@ -71,4 +71,19 @@ public class ManagerController implements ManagerControllerInterface {
         return ResponseEntity.ok().build();
     }
 
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @DeleteMapping("/delete-role/{roleName}")
+    public ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
+                                        @PathVariable @NotBlank(message = "The role name is required") String roleName) {
+
+        Long companyId = cud.getCompanyId();
+
+        roleService.deleteRole(roleName, companyId);
+
+        log.info("Role {} deleted successfully", roleName);
+
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -41,9 +41,12 @@ public class CompanyController implements CompanyControllerInterface {
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PutMapping("/set-company")
-    public ResponseEntity<?> setCompany(@Valid @RequestBody SetCompanyDTO request) {
+    public ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                        @Valid @RequestBody SetCompanyDTO request) {
 
-        companyService.setCompany(request);
+        Long managerId = cud.getUserId();
+
+        companyService.setCompany(request, managerId);
 
         log.info("Company set for user ID: {}", request.getUserId());
 

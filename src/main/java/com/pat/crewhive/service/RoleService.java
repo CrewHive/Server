@@ -82,6 +82,36 @@ public class RoleService {
         current.setRole(role);
     }
 
+
+    /**
+     * Deletes a role from the system.
+     *
+     * @param roleName the name of the role to be deleted
+     * @param companyId the ID of the company to which the role belongs
+     * @throws ResourceNotFoundException if the role/company is not found
+     * @throws IllegalStateException if the role is assigned to users
+     */
+    @Transactional
+    public void deleteRole(String roleName, Long companyId) {
+
+        String normalizedRole = stringUtils.normalizeRole(roleName);
+
+        Company company = companyService.getCompanyById(companyId);
+
+        Role role = roleRepository.findByRoleNameIgnoreCaseAndCompany(normalizedRole, company)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+
+        if (role.getUsers() != null && !role.getUsers().isEmpty()) {
+
+            log.error("Cannot delete role {} because it is assigned to users", roleName);
+            throw new IllegalStateException("Cannot delete role because it is assigned to users");
+        }
+
+        roleRepository.delete(role);
+        log.info("Role {} deleted successfully", roleName);
+    }
+
+
     /**
      * Retrieves or creates a global role for users.
      *
