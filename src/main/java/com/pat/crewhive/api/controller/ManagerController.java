@@ -58,7 +58,7 @@ public class ManagerController implements ManagerControllerInterface {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PatchMapping("/update-user-time-params")
+    @PatchMapping("/update-user-work-info")
     public ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
                                                        @RequestBody @Valid UpdateUserWorkInfoDTO dto) {
 

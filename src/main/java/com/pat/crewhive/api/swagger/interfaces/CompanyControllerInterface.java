@@ -2,6 +2,7 @@ package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.dto.Company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.Company.SetCompanyDTO;
+import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Company management", description = "Operations related to company management")
@@ -44,7 +46,7 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
-    ResponseEntity<?> registerCompany(@Valid @RequestBody CompanyRegistrationDTO request);
+    ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud, @Valid @RequestBody CompanyRegistrationDTO request);
 
 
 

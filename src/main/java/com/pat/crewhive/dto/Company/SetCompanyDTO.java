@@ -16,7 +16,6 @@ public class SetCompanyDTO {
     @NotBlank(message = "Company name is required")
     private String companyName;
 
-    //todo vedi se è meglio userid o username
     @NotNull(message = "User ID is required")
     private Long userId;
 }

@@ -14,6 +14,7 @@ import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.service.utils.EmailUtil;
 import com.pat.crewhive.service.utils.PasswordUtil;
+import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -33,6 +34,7 @@ public class AuthService {
     private final RoleService roleService;
     private final PasswordUtil passwordUtil;
     private final EmailUtil emailUtil;
+    private final StringUtils stringUtils;
 
     @Autowired
     public AuthService(UserService userService,
@@ -41,7 +43,8 @@ public class AuthService {
                        UserRepository userRepository,
                        RoleService roleService,
                        PasswordUtil passwordUtil,
-                       EmailUtil emailUtil) {
+                       EmailUtil emailUtil,
+                       StringUtils stringUtils) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
@@ -49,6 +52,7 @@ public class AuthService {
         this.roleService = roleService;
         this.passwordUtil = passwordUtil;
         this.emailUtil = emailUtil;
+        this.stringUtils = stringUtils;
     }
 
 
@@ -62,15 +66,16 @@ public class AuthService {
     @Transactional
     public AuthResponseDTO login(AuthRequestDTO request) {
 
-        User user = userService.getUserByUsername(request.getUsername());
+        String normalizedUsername = stringUtils.normalizeString(request.getUsername());
+        User user = userService.getUserByUsername(normalizedUsername);
 
         if (!passwordUtil.matches(request.getPassword(), user.getPassword())) {
-            log.error("Invalid password for user: {}", request.getUsername());
+            log.error("Invalid password for user: {}", normalizedUsername);
 
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        log.info("User {} authenticated successfully", user.getUsername());
+        log.info("User {} authenticated successfully", normalizedUsername);
 
         RefreshToken rt = refreshTokenService.getRefreshTokenByUser(user);
 
@@ -80,7 +85,7 @@ public class AuthService {
         }
 
         return new AuthResponseDTO(
-                jwtService.generateToken(user.getUserId(), user.getUsername(), user.getRole().getRole().getRoleName()),
+                jwtService.generateToken(user.getUserId(), normalizedUsername, user.getRole().getRole().getRoleName()),
                 refreshTokenService.generateRefreshToken(user)
         );
     }
@@ -95,33 +100,35 @@ public class AuthService {
     @Transactional
     public void register(RegistrationDTO request) {
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        String normalizedUsername = stringUtils.normalizeString(request.getUsername());
+        if (userRepository.existsByUsername(normalizedUsername)) {
 
-            log.error("Username already registered: {}", request.getUsername());
+            log.error("Username already registered: {}", normalizedUsername);
             throw new ResourceAlreadyExistsException("Username already registered");
         }
 
-        if (!emailUtil.isValidEmail(request.getEmail())) {
+        String normalizedEmail = stringUtils.normalizeString(request.getEmail());
+        if (!emailUtil.isValidEmail(normalizedEmail)) {
 
-            log.error("Invalid email format: {}", request.getEmail());
+            log.error("Invalid email format: {}", normalizedEmail);
             throw new BadCredentialsException("Invalid email format");
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
 
-            log.error("Email already registered: {}", request.getEmail());
+            log.error("Email already registered: {}", normalizedEmail);
             throw new ResourceAlreadyExistsException("Email already registered");
         }
 
         if (!passwordUtil.isStrong(request.getPassword())) {
 
-            log.error("Weak password provided for user: {}", request.getUsername());
+            log.error("Weak password provided for user: {}", normalizedUsername);
             throw new BadCredentialsException("Weak password provided");
         }
 
         String encodedPassword = passwordUtil.encodePassword(request.getPassword());
 
-        User newUser = new User(request.getUsername(), request.getEmail(), encodedPassword);
+        User newUser = new User(normalizedUsername, normalizedEmail, encodedPassword);
 
         Role role = roleService.getOrCreateGlobalRoleUser();
 
@@ -129,7 +136,7 @@ public class AuthService {
 
         userRepository.save(newUser);
 
-        log.info("User registered successfully: {}", request.getUsername());
+        log.info("User registered successfully: {}", normalizedEmail);
     }
 
     /**
@@ -142,33 +149,36 @@ public class AuthService {
     @Transactional
     public void registerManager(RegistrationDTO request) {
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        String normalizedUsername = stringUtils.normalizeString(request.getUsername());
 
-            log.error("Username already registered: {}", request.getUsername());
+        if (userRepository.existsByUsername(normalizedUsername)) {
+
+            log.error("Username already registered: {}", normalizedUsername);
             throw new ResourceAlreadyExistsException("Username already registered");
         }
 
-        if (!emailUtil.isValidEmail(request.getEmail())) {
+        String normalizedEmail = stringUtils.normalizeString(request.getEmail());
+        if (!emailUtil.isValidEmail(normalizedEmail)) {
 
-            log.error("Invalid email format: {}", request.getEmail());
+            log.error("Invalid email format: {}", normalizedEmail);
             throw new BadCredentialsException("Invalid email format");
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
 
-            log.error("Email already registered: {}", request.getEmail());
+            log.error("Email already registered: {}", normalizedEmail);
             throw new ResourceAlreadyExistsException("Email already registered");
         }
 
         if (!passwordUtil.isStrong(request.getPassword())) {
 
-            log.error("Weak password provided for user: {}", request.getUsername());
+            log.error("Weak password provided for user: {}", normalizedUsername);
             throw new BadCredentialsException("Weak password provided");
         }
 
         String encodedPassword = passwordUtil.encodePassword(request.getPassword());
 
-        User newUser = new User(request.getUsername(), request.getEmail(), encodedPassword);
+        User newUser = new User(normalizedUsername, normalizedEmail, encodedPassword);
 
         Role role = roleService.getOrCreateGlobalRoleManager();
 
@@ -176,7 +186,7 @@ public class AuthService {
 
         userRepository.save(newUser);
 
-        log.info("Manager registered successfully: {}", request.getUsername());
+        log.info("Manager registered successfully: {}", normalizedUsername);
     }
 
     /**

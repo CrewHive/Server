@@ -7,6 +7,7 @@ import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.service.utils.PasswordUtil;
+import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,16 @@ public class UserService {
     private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
     private final PasswordUtil passwordUtil;
+    private final StringUtils stringUtils;
 
     public UserService(UserRepository userRepository,
                        PasswordUtil passwordUtil,
-                       RefreshTokenService refreshTokenService) {
+                       RefreshTokenService refreshTokenService,
+                       StringUtils stringUtils) {
         this.userRepository = userRepository;
         this.passwordUtil = passwordUtil;
         this.refreshTokenService = refreshTokenService;
+        this.stringUtils = stringUtils;
     }
 
 
@@ -36,6 +40,9 @@ public class UserService {
      */
     @Transactional
     public void updateUser(User user) {
+
+        log.info("User {} updated successfully", user.getUsername());
+
         userRepository.save(user);
     }
 
@@ -63,6 +70,8 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public User getUserByUsername(String username) {
+
+        username = stringUtils.normalizeString(username);
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
@@ -77,6 +86,8 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public User getUserByEmail(String email) {
+
+        email = stringUtils.normalizeString(email);
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
@@ -92,6 +103,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(String username) {
 
+        username = stringUtils.normalizeString(username);
         User user = getUserByUsername(username);
 
         log.info("User details retrieved for user: {}", username);
@@ -120,6 +132,9 @@ public class UserService {
     @Transactional
     public void updateUsername(String newUsername, String oldUsername) {
 
+        newUsername = stringUtils.normalizeString(newUsername);
+        oldUsername = stringUtils.normalizeString(oldUsername);
+
         if (userRepository.findByUsername(newUsername).isPresent()) {
             throw new ResourceAlreadyExistsException("Username already exists");
         }
@@ -141,6 +156,8 @@ public class UserService {
      */
     @Transactional
     public void updatePassword(String newPassword, String oldPassword, String username) {
+
+        username = stringUtils.normalizeString(username);
 
         User user = getUserByUsername(username);
 
@@ -200,6 +217,8 @@ public class UserService {
      */
     @Transactional
     public void deleteAccount(String username) {
+
+        username = stringUtils.normalizeString(username);
 
         User user = getUserByUsername(username);
 

@@ -5,6 +5,7 @@ import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -82,6 +83,13 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
         log.info("Resource already exists: {}", ex.getMessage());
         return base(HttpStatus.CONFLICT, "Resource already exists", "A resource with the same identifier already exists", "RES_409");
+    }
+
+    // 409 - Violazione integrità dati
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail onDataIntegrity(DataIntegrityViolationException ex) {
+        log.error("Data integrity violation: {}", ex.getMessage());
+        return base(HttpStatus.CONFLICT, "Data integrity violation", "A data integrity error occurred", "DATA_409_INTEGRITY");
     }
 
     // 401 - Credenziali errate

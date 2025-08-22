@@ -21,7 +21,7 @@
     </root>
     
     <logger name="org.springframework.web" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="CALCULATOR_FILE" />
     </logger>
 
     <logger name="com.pat.crewhive" level="DEBUG" additivity="false">

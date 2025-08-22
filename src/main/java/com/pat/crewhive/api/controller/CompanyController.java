@@ -3,11 +3,13 @@ package com.pat.crewhive.api.controller;
 import com.pat.crewhive.api.swagger.interfaces.CompanyControllerInterface;
 import com.pat.crewhive.dto.Company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.Company.SetCompanyDTO;
+import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -24,9 +26,12 @@ public class CompanyController implements CompanyControllerInterface {
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PostMapping("/register")
-    public ResponseEntity<?> registerCompany(@Valid @RequestBody CompanyRegistrationDTO request) {
+    public ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                             @Valid @RequestBody CompanyRegistrationDTO request) {
 
-        companyService.registerCompany(request);
+        Long managerId = cud.getUserId();
+
+        companyService.registerCompany(managerId, request);
 
         log.info("Company {} registered successfully", request.getCompanyName());
 

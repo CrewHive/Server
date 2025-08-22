@@ -7,6 +7,7 @@ import com.pat.crewhive.model.role.UserRole;
 import com.pat.crewhive.repository.RoleRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,16 @@ public class RoleService {
     private final RoleRepository roleRepository;
     private final UserService userService;
     private final CompanyService companyService;
+    private final StringUtils stringUtils;
 
     public RoleService(RoleRepository roleRepository,
                        UserService userService,
-                       CompanyService companyService) {
+                       CompanyService companyService,
+                       StringUtils stringUtils) {
         this.roleRepository = roleRepository;
         this.userService = userService;
         this.companyService = companyService;
+        this.stringUtils = stringUtils;
     }
 
     /**
@@ -37,7 +41,7 @@ public class RoleService {
     @Transactional
     public void createRole(String roleName, Long companyId) {
 
-        String normalizedRole = normalizeRole(roleName);
+        String normalizedRole = stringUtils.normalizeRole(roleName);
 
         Company company = companyService.getCompanyById(companyId);
 
@@ -64,7 +68,7 @@ public class RoleService {
     @Transactional
     public void updateUserRole(Long targetId, String newRole, Long companyId) {
 
-        String normalizedRole = normalizeRole(newRole);
+        String normalizedRole = stringUtils.normalizeRole(newRole);
 
         Company company = companyService.getCompanyById(companyId);
 
@@ -100,12 +104,6 @@ public class RoleService {
         String name = "ROLE_MANAGER";
         return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
                 .orElseGet(() -> roleRepository.save(new Role(name, null)));
-    }
-
-    private String normalizeRole(String raw) {
-
-        String r = raw.trim().toUpperCase();
-        return r.startsWith("ROLE_") ? r : "ROLE_" + r;
     }
 }
 
