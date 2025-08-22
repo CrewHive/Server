@@ -43,7 +43,7 @@ public class JwtService {
     public String generateToken(Long userId,
                                 String username,
                                 String role) {
-
+//todo aggiungi la company se serve
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role)

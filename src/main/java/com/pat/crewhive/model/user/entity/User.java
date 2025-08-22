@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,7 +62,23 @@ public class User {
     @Column(name = "contract_type")
     private ContractType contractType;
 
+    @Column(name = "workable_hours_per_week", nullable = false)
+    private int workableHoursPerWeek;
 
+    @Column(name = "overtime_hours", nullable = false)
+    private int overtimeHours;
+
+    @Column(name = "vacation_days_accumulated", nullable = false)
+    private BigDecimal vacationDaysAccumulated;
+
+    @Column(name = "vacation_days_taken", nullable = false)
+    private BigDecimal vacationDaysTaken;
+
+    @Column(name = "leave_days_accumulated", nullable = false)
+    private BigDecimal leaveDaysAccumulated;
+
+    @Column(name = "leave_days_taken", nullable = false)
+    private BigDecimal leaveDaysTaken;
 
     //todo se salvo dal lato user lascia all se uso lato shift usa remove uguale per i programmed
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -71,11 +88,16 @@ public class User {
     @OrderBy("start ASC")
     private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
 
-
     public User(String username, String email, String password) {
         this.email = email;
         this.username = username;
         this.password = password;
         this.isWorking = false;
+        this.workableHoursPerWeek = 0;
+        this.overtimeHours = 0;
+        this.vacationDaysAccumulated = BigDecimal.ZERO;
+        this.vacationDaysTaken = BigDecimal.ZERO;
+        this.leaveDaysAccumulated = BigDecimal.ZERO;
+        this.leaveDaysTaken = BigDecimal.ZERO;
     }
 }

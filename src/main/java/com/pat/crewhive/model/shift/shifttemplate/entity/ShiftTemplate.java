@@ -1,4 +1,4 @@
-package com.pat.crewhive.model.shift.emptyshift.entity;
+package com.pat.crewhive.model.shift.shifttemplate.entity;
 
 
 import com.pat.crewhive.model.company.entity.Company;

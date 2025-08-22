@@ -1,5 +1,7 @@
 package com.pat.crewhive.service;
 
+import com.pat.crewhive.dto.Manager.UpdateUserWorkInfoDTO;
+import com.pat.crewhive.dto.User.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
@@ -26,6 +28,7 @@ public class UserService {
         this.refreshTokenService = refreshTokenService;
     }
 
+
     /**
      * Updates the user information in the database.
      *
@@ -50,6 +53,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
+
     /**
      * Retrieves a User by its username.
      *
@@ -63,6 +67,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
+
     /**
      * Retrieves a User by its email.
      *
@@ -75,6 +80,35 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
+
+
+    /**
+     * Retrieves user details along with time parameters by username.
+     *
+     * @param username the username of the user to retrieve
+     * @return a UserWithTimesParamDTO containing user details and time parameters
+     * @throws ResourceNotFoundException if the user is not found
+     */
+    @Transactional(readOnly = true)
+    public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(String username) {
+
+        User user = getUserByUsername(username);
+
+        log.info("User details retrieved for user: {}", username);
+
+        return new UserWithTimeParamsDTO(
+                user.getUserId(),
+                user.getEmail(),
+                user.getCompany().getName(),
+                user.getWorkableHoursPerWeek(),
+                user.getOvertimeHours(),
+                user.getVacationDaysAccumulated(),
+                user.getVacationDaysTaken(),
+                user.getLeaveDaysAccumulated(),
+                user.getLeaveDaysTaken()
+        );
+    }
+
 
     /**
      * Updates the username of a user.
@@ -96,6 +130,7 @@ public class UserService {
         userRepository.save(user);
         log.info("Updated username from {} to {}", oldUsername, newUsername);
     }
+
 
     /**
      * Updates the user's password.
@@ -128,6 +163,35 @@ public class UserService {
         userRepository.save(user);
         log.info("Updated password for user: {}", username);
     }
+
+
+    /**
+     * Updates the time-related parameters of a user.
+     *
+     * @param dto       the UpdateUserWorkInfoDTO containing new time parameters
+     * @param companyId the ID of the company to which the user belongs
+     * @throws ResourceNotFoundException if the user is not found in the specified company
+     */
+    @Transactional
+    public void updateUserTimeParams(UpdateUserWorkInfoDTO dto, Long companyId) {
+
+        User user = getUserById(dto.getTargetUserId());
+
+        if (!user.getCompany().getCompanyId().equals(companyId)) throw new ResourceNotFoundException("User not found in the specified company");
+
+        user.setContractType(dto.getContractType());
+        user.setWorkableHoursPerWeek(dto.getWorkableHoursPerWeek());
+        user.setOvertimeHours(dto.getOvertimeHours());
+        user.setVacationDaysAccumulated(dto.getVacationDaysAccumulated());
+        user.setVacationDaysTaken(dto.getVacationDaysTaken());
+        user.setLeaveDaysAccumulated(dto.getLeaveDaysAccumulated());
+        user.setLeaveDaysTaken(dto.getLeaveDaysTaken());
+
+        userRepository.save(user);
+
+        log.info("Updated time parameters for user: {}", user.getUsername());
+    }
+
 
     /**
      * Deletes a user account.

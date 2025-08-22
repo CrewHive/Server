@@ -1,6 +1,7 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.dto.Manager.UpdateUserRoleDTO;
+import com.pat.crewhive.dto.Manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -49,7 +50,7 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
-    ResponseEntity<String> createRole(@AuthenticationPrincipal CustomUserDetails cud,
+    ResponseEntity<?> createRole(@AuthenticationPrincipal CustomUserDetails cud,
                                       @RequestBody @NotBlank(message = "The role name is required") String roleName);
 
 
@@ -80,6 +81,36 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
     })
-    ResponseEntity<String> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
+    ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
                                           @Valid @RequestBody UpdateUserRoleDTO updateUserRoleDTO);
+
+
+    @Operation(summary = "Update user work information",
+            description = "Allows managers to update the work information of a user within the company.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User work information updated successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - User not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+    })
+    ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
+                                              @Valid @RequestBody UpdateUserWorkInfoDTO updateUserWorkInfoDTO);
 }
