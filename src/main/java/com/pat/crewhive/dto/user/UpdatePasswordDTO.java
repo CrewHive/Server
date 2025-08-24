@@ -1,5 +1,6 @@
 package com.pat.crewhive.dto.user;
 
+import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,9 +13,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UpdatePasswordDTO {
 
-    @NotBlank
+    @NotBlank(message = "Old password cannot be blank")
+    @NoHtml
     private String oldPassword;
 
-    @NotBlank
+    @NotBlank(message = "New password cannot be blank")
+    @NoHtml
     private String newPassword;
 }

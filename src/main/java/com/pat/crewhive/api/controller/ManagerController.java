@@ -4,6 +4,7 @@ import com.pat.crewhive.api.swagger.interfaces.ManagerControllerInterface;
 import com.pat.crewhive.dto.manager.UpdateUserRoleDTO;
 import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import com.pat.crewhive.service.RoleService;
 import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;
@@ -30,9 +31,9 @@ public class ManagerController implements ManagerControllerInterface {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PostMapping("/create-role")
+    @PostMapping(path = "/create-role", produces = "application/json")
     public ResponseEntity<?> createRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                             @RequestBody @NotBlank(message = "The role name is required") String roleName) {
+                                        @RequestBody @NotBlank(message = "The role name is required") String roleName) {
 
         roleService.createRole(roleName, cud.getCompanyId());
 
@@ -43,9 +44,9 @@ public class ManagerController implements ManagerControllerInterface {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PatchMapping("/update-role")
+    @PatchMapping(path = "/update-user-role", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                                 @Valid @RequestBody UpdateUserRoleDTO updateUserRoleDTO) {
+                                            @RequestBody @Valid UpdateUserRoleDTO updateUserRoleDTO) {
 
         Long targetId = updateUserRoleDTO.getUserId();
 
@@ -58,9 +59,9 @@ public class ManagerController implements ManagerControllerInterface {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PatchMapping("/update-user-work-info")
+    @PatchMapping(path = "/update-user-work-info", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
-                                                       @RequestBody @Valid UpdateUserWorkInfoDTO dto) {
+                                                @RequestBody @Valid UpdateUserWorkInfoDTO dto) {
 
         Long companyId = cud.getCompanyId();
 
@@ -73,9 +74,9 @@ public class ManagerController implements ManagerControllerInterface {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @DeleteMapping("/delete-role/{roleName}")
+    @DeleteMapping(path = "/delete-role/{roleName}", produces = "application/json")
     public ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                        @PathVariable @NotBlank(message = "The role name is required") String roleName) {
+                                        @PathVariable @NoHtml @NotBlank(message = "The role name is required") String roleName) {
 
         Long companyId = cud.getCompanyId();
 

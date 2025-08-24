@@ -27,7 +27,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
     @Override
     @PostMapping("/rotate")
-    public ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody RotateRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> rotate(@RequestBody @Valid RotateRequestDTO request) {
 
         AuthResponseDTO response = authService.rotate_token(request.getRefreshToken());
 
@@ -38,7 +38,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
     @Override
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO) {
+    public ResponseEntity<?> register(@RequestBody @Valid RegistrationDTO rDTO) {
 
         authService.register(rDTO);
 
@@ -49,7 +49,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
     @Override
     @PostMapping("/register/manager")
-    public ResponseEntity<?> registerManager(@Valid @RequestBody RegistrationDTO rDTO) {
+    public ResponseEntity<?> registerManager(@RequestBody @Valid RegistrationDTO rDTO) {
 
         authService.registerManager(rDTO);
 
@@ -60,7 +60,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
     @Override
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequestDTO request) {
 
         AuthResponseDTO response = authService.login(request);
 

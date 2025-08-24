@@ -6,6 +6,7 @@ import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import com.pat.crewhive.service.AuthService;
 import com.pat.crewhive.service.UserService;
 import jakarta.validation.Valid;
@@ -30,7 +31,7 @@ public class UserController implements UserControllerInterface {
     }
 
     @Override
-    @GetMapping("/me")
+    @GetMapping(path ="/me", produces = "application/json")
     public ResponseEntity<UserWithTimeParamsDTO> getUser(@AuthenticationPrincipal CustomUserDetails cud) {
 
         String username = cud.getUsername();
@@ -42,8 +43,8 @@ public class UserController implements UserControllerInterface {
     }
 
     @Override
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@Valid @RequestBody LogoutDTO request) {
+    @PostMapping(path = "/logout", produces = "application/json")
+    public ResponseEntity<?> logout(@RequestBody @Valid LogoutDTO request) {
 
         authService.logout(request);
         log.info("Logout ok for user: {}", request.getUsername());
@@ -52,9 +53,9 @@ public class UserController implements UserControllerInterface {
     }
 
     @Override
-    @PatchMapping("/update-username")
+    @PatchMapping(path = "/update-username", produces = "application/json")
     public ResponseEntity<?> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
-                                            @NotBlank @RequestBody String newUsername) {
+                                            @RequestBody @NoHtml @NotBlank String newUsername) {
 
         log.info("Updating username for user: {}", cud.getUsername());
 
@@ -64,9 +65,9 @@ public class UserController implements UserControllerInterface {
     }
 
     @Override
-    @PatchMapping("/update-password")
+    @PatchMapping(path = "/update-password", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updatePassword(@AuthenticationPrincipal CustomUserDetails cud,
-                                            @RequestBody UpdatePasswordDTO updatePasswordDTO) {
+                                            @RequestBody @Valid UpdatePasswordDTO updatePasswordDTO) {
 
         log.info("Updating password for user: {}", cud.getUsername());
 
@@ -76,7 +77,7 @@ public class UserController implements UserControllerInterface {
     }
 
     @Override
-    @DeleteMapping("/delete-account")
+    @DeleteMapping(path = "/delete-account", produces = "application/json")
     public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal CustomUserDetails cud) {
 
         log.info("Deleting account for user: {}", cud.getUsername());

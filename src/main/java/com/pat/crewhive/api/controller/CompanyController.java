@@ -25,9 +25,9 @@ public class CompanyController implements CompanyControllerInterface {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PostMapping("/register")
+    @PostMapping(path = "/register", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                             @Valid @RequestBody CompanyRegistrationDTO request) {
+                                             @RequestBody @Valid CompanyRegistrationDTO request) {
 
         Long managerId = cud.getUserId();
 
@@ -40,9 +40,9 @@ public class CompanyController implements CompanyControllerInterface {
 
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    @PutMapping("/set-company")
+    @PutMapping(path = "/set", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                        @Valid @RequestBody SetCompanyDTO request) {
+                                        @RequestBody @Valid SetCompanyDTO request) {
 
         Long managerId = cud.getUserId();
 
