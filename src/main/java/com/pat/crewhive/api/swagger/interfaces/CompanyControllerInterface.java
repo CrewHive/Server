@@ -1,7 +1,7 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
-import com.pat.crewhive.dto.Company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.Company.SetCompanyDTO;
+import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -2,10 +2,10 @@ package com.pat.crewhive.api.controller;
 
 
 import com.pat.crewhive.api.swagger.interfaces.AuthUserControllerInterface;
-import com.pat.crewhive.dto.Auth.AuthRequestDTO;
-import com.pat.crewhive.dto.Auth.AuthResponseDTO;
-import com.pat.crewhive.dto.Auth.RegistrationDTO;
-import com.pat.crewhive.dto.Auth.RotateRequestDTO;
+import com.pat.crewhive.dto.auth.AuthRequestDTO;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
+import com.pat.crewhive.dto.auth.RegistrationDTO;
+import com.pat.crewhive.dto.auth.RotateRequestDTO;
 import com.pat.crewhive.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

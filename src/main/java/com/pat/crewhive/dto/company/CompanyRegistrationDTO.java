@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.Company;
+package com.pat.crewhive.dto.company;
 
 
 import com.pat.crewhive.dto.json.AddressJSON;

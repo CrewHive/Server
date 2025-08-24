@@ -1,10 +1,10 @@
 package com.pat.crewhive.service;
 
 
-import com.pat.crewhive.dto.Auth.AuthRequestDTO;
-import com.pat.crewhive.dto.Auth.AuthResponseDTO;
-import com.pat.crewhive.dto.Auth.RegistrationDTO;
-import com.pat.crewhive.dto.User.LogoutDTO;
+import com.pat.crewhive.dto.auth.AuthRequestDTO;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
+import com.pat.crewhive.dto.auth.RegistrationDTO;
+import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.role.entity.Role;

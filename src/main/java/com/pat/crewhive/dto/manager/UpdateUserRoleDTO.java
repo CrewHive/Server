@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.Manager;
+package com.pat.crewhive.dto.manager;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

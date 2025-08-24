@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.Manager;
+package com.pat.crewhive.dto.manager;
 
 import com.pat.crewhive.model.util.ContractType;
 import jakarta.validation.constraints.Digits;

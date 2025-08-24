@@ -1,9 +1,9 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
-import com.pat.crewhive.dto.Auth.AuthRequestDTO;
-import com.pat.crewhive.dto.Auth.AuthResponseDTO;
-import com.pat.crewhive.dto.Auth.RegistrationDTO;
-import com.pat.crewhive.dto.Auth.RotateRequestDTO;
+import com.pat.crewhive.dto.auth.AuthRequestDTO;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
+import com.pat.crewhive.dto.auth.RegistrationDTO;
+import com.pat.crewhive.dto.auth.RotateRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

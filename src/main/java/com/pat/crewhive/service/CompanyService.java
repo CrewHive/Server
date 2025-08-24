@@ -1,14 +1,13 @@
 package com.pat.crewhive.service;
 
-import com.pat.crewhive.dto.Company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.Company.SetCompanyDTO;
+import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +53,7 @@ public class CompanyService {
 
         User manager = userService.getUserById(managerId);
         manager.setCompany(company);
-        
+
         userService.updateUser(manager);
 
         log.info("Company {} registered successfully", request.getCompanyName());

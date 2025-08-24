@@ -1,7 +1,7 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
-import com.pat.crewhive.dto.Manager.UpdateUserRoleDTO;
-import com.pat.crewhive.dto.Manager.UpdateUserWorkInfoDTO;
+import com.pat.crewhive.dto.manager.UpdateUserRoleDTO;
+import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

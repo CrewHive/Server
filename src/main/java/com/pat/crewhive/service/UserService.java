@@ -1,7 +1,7 @@
 package com.pat.crewhive.service;
 
-import com.pat.crewhive.dto.Manager.UpdateUserWorkInfoDTO;
-import com.pat.crewhive.dto.User.UserWithTimeParamsDTO;
+import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
+import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
@@ -12,6 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -58,6 +63,40 @@ public class UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+
+    /**
+     * Retrieves a list of Users by their IDs.
+     *
+     * @param ids a set of user IDs to retrieve
+     * @return a list of User objects corresponding to the provided IDs
+     * @throws ResourceNotFoundException if any of the users are not found
+     */
+    @Transactional(readOnly = true)
+    public List<User> getUsersByIds(Set<Long> ids) {
+
+        if (ids == null || ids.isEmpty()) {
+
+            log.info("Retrieving users: empty id set -> returning empty list");
+            return List.of();
+        }
+
+        log.info("Retrieving users {}", ids);
+
+        List<User> users = userRepository.findAllByIds(ids);
+        if (users.size() != ids.size()) {
+            // calcola gli ID mancanti per un messaggio più utile
+            Set<Long> foundIds = users.stream()
+                    .map(User::getUserId)
+                    .collect(Collectors.toSet());
+
+            Set<Long> missing = new HashSet<>(ids);
+            missing.removeAll(foundIds);
+            throw new ResourceNotFoundException("Users not found: " + missing);
+        }
+
+        return users;
     }
 
 

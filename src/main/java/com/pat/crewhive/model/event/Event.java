@@ -12,6 +12,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -57,20 +58,35 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventUsers> users = new LinkedHashSet<>();
 
+
     /**
-     *
-     *  Quando viene creato un evento viene chiamata questa funzione
-     *  per aggiungere gli utenti selezionati
+     * Add a user to the event and the event to the user
+     * @param u the user to add
      */
-    private void addUser(User u) {
-        EventUsers link = new EventUsers(u, this);
-        this.users.add(link);
-        u.getPersonalEvents().add(link);
+    public void addUser(User u) {
+
+        boolean alreadyPresent = this.users.stream()
+                .anyMatch(eu -> Objects.equals(eu.getUser().getUserId(), u.getUserId()));
+
+        if (!alreadyPresent) {
+            EventUsers link = new EventUsers(u, this);
+            this.users.add(link);
+            u.getPersonalEvents().add(link);
+        }
     }
 
-    private void removeUser(User u) {
-        this.users.removeIf(link -> link.getUser().equals(u));
-        u.getPersonalEvents().removeIf(link -> link.getEvent().equals(this));
+
+    /**
+     * Remove the user from the event and the event from the user
+     * @param u the user to remove
+     */
+    public void removeUser(User u) {
+
+        Long uid = u.getUserId();
+
+        this.users.removeIf(eu -> Objects.equals(eu.getUser().getUserId(), uid));
+
+        u.getPersonalEvents().removeIf(eu -> Objects.equals(eu.getEvent().getEventId(), this.eventId));
     }
 
 

@@ -1,6 +1,6 @@
 package com.pat.crewhive.security.util;
 
-import com.pat.crewhive.dto.User.UserDTO;
+import com.pat.crewhive.dto.user.UserDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.Auth;
+package com.pat.crewhive.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

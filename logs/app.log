@@ -1,3 +1,2 @@
-2025-08-22 19:23:04.377 [RMI TCP Connection(5)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-08-22 19:23:04.380 [RMI TCP Connection(5)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
-2025-08-22 19:24:21.079 [http-nio-0.0.0.0-8080-exec-5] ERROR c.p.crewhive.service.CompanyService - Attempting to register company with name: Sara
+2025-08-23 10:39:59.637 [RMI TCP Connection(3)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-08-23 10:39:59.640 [RMI TCP Connection(3)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms

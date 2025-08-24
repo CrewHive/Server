@@ -1,0 +1,233 @@
+package com.pat.crewhive.service;
+
+
+import com.pat.crewhive.dto.event.CreateEventDTO;
+import com.pat.crewhive.dto.event.PatchEventDTO;
+import com.pat.crewhive.model.event.Event;
+import com.pat.crewhive.model.event.EventUsers;
+import com.pat.crewhive.model.user.entity.User;
+import com.pat.crewhive.model.util.EventTemp;
+import com.pat.crewhive.repository.EventRepository;
+import com.pat.crewhive.repository.EventUsersRepository;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.pat.crewhive.model.util.EventType.PUBLIC;
+
+@Slf4j
+@Service
+public class EventService {
+
+    private final EventRepository eventRepository;
+    private final EventUsersRepository eventUsersRepository;
+    private final UserService userService;
+
+    public EventService(EventRepository eventRepository,
+                        EventUsersRepository eventUsersRepository,
+                        UserService userService) {
+
+        this.eventRepository = eventRepository;
+        this.eventUsersRepository = eventUsersRepository;
+        this.userService = userService;
+    }
+
+
+    /**
+     * Create a new event and associate it with users.
+     * @param createEventDTO The DTO containing event details.
+     * @return The ID of the created event.
+     * @throws IllegalArgumentException if the start date is after the end date.
+     */
+    @Transactional
+    public Long createEvent(CreateEventDTO createEventDTO) {
+
+        log.info("Creating event with name: {}", createEventDTO.getName());
+
+        if (createEventDTO.getStart().isAfter(createEventDTO.getEnd())) {
+            throw new IllegalArgumentException("L'inizio deve essere prima della fine");
+        }
+
+        List<User> users = userService.getUsersByIds(createEventDTO.getUserId());
+
+        Event event = new Event();
+        event.setEventName(createEventDTO.getName());
+        event.setDescription(createEventDTO.getDescription());
+        event.setStart(createEventDTO.getStart());
+        event.setEnd(createEventDTO.getEnd());
+        event.setColor(createEventDTO.getColor());
+        event.setEventType(createEventDTO.getEventType());
+
+        for (User user : users) {
+            event.addUser(user);
+        }
+
+        Event saved = eventRepository.save(event);
+
+        return saved.getEventId();
+    }
+
+
+    /**
+     * Fetch events for a user within a specified time period.
+     * @param eventTemp The time period (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
+     * @param userId The ID of the user.
+     * @return List of events within the specified period for the user.
+     */
+    @Transactional(readOnly = true)
+    public List<Event> getEventsByPeriodAndUser(EventTemp eventTemp, Long userId) {
+
+        log.info("Fetching events for userId: {} with eventTemp: {}", userId, eventTemp);
+
+        LocalDate today = LocalDate.now();
+        LocalDate from;
+        LocalDate to;
+
+        switch (eventTemp) {
+            case DAY -> {
+                from = today;
+                to = today;
+            }
+            case WEEK -> {
+                from = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                to = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+            }
+            case MONTH -> {
+                from = today.with(TemporalAdjusters.firstDayOfMonth());
+                to = today.with(TemporalAdjusters.lastDayOfMonth());
+            }
+            case TRIMESTER -> {
+                int q = ((today.getMonthValue() - 1) / 3) + 1;
+                int startMonth = (q - 1) * 3 + 1;
+                from = LocalDate.of(today.getYear(), startMonth, 1);
+                to = from.plusMonths(3).minusDays(1);
+            }
+            case SEMESTER -> {
+                int startMonth = (today.getMonthValue() <= 6) ? 1 : 7;
+                from = LocalDate.of(today.getYear(), startMonth, 1);
+                to = from.plusMonths(6).minusDays(1);
+            }
+            case YEAR -> {
+                from = LocalDate.of(today.getYear(), 1, 1);
+                to = LocalDate.of(today.getYear(), 12, 31);
+            }
+            default -> {
+                log.warn("Unknown EventTemp: {}. Returning empty list.", eventTemp);
+                return List.of();
+            }
+        }
+
+        return eventUsersRepository.findEventsByUserIdAndDateBetween(userId, from, to);
+    }
+
+
+    /**
+     * Fetch all events associated with a specific user.
+     * @param userId The ID of the user.
+     * @return List of events associated with the user.
+     */
+    @Transactional(readOnly = true)
+    public List<Event> getUserEvents(Long userId) {
+
+        log.info("Fetching all events for userId: {}", userId);
+
+        return eventUsersRepository.findEventsByUserId(userId);
+    }
+
+
+    /**
+     * Fetch all public events.
+     * @return List of public events.
+     */
+    @Transactional(readOnly = true)
+    public List<Event> getPublicEvents() {
+
+        log.info("Fetching all public events");
+
+        return eventRepository.findAllByEventType(PUBLIC);
+    }
+
+
+    /**
+     * Update an existing event.
+     * @param dto The DTO containing updated event details.
+     * @return The ID of the updated event.
+     * @throws ResourceNotFoundException if the event does not exist.
+     * @throws IllegalArgumentException if the start date is after the end date.
+     */
+    @Transactional
+    public Long patchEvent(PatchEventDTO dto) {
+
+        log.info("Patching event with ID: {}", dto.getEventId());
+
+        if (dto.getStart().isAfter(dto.getEnd())) {
+            throw new IllegalArgumentException("L'inizio deve essere prima della fine");
+        }
+
+        Event event = eventRepository.findByIdWithParticipants(dto.getEventId())
+                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + dto.getEventId()));
+
+        event.setEventName(dto.getName());
+        event.setDescription(dto.getDescription());
+        event.setStart(dto.getStart());
+        event.setEnd(dto.getEnd());
+        event.setColor(dto.getColor());
+        event.setEventType(dto.getEventType());
+
+        Set<Long> newUserIds = dto.getUserId();
+        if (newUserIds != null) {
+
+            Set<Long> existingIds = event.getUsers().stream()
+                    .map(eu -> eu.getUser().getUserId())
+                    .collect(Collectors.toSet());
+
+            // rimuovi i non più presenti
+            Set<Long> toRemove = new HashSet<>(existingIds);
+            toRemove.removeAll(newUserIds);
+            if (!toRemove.isEmpty()) {
+                List<User> usersToRemove = userService.getUsersByIds(toRemove);
+                usersToRemove.forEach(event::removeUser);
+            }
+
+            // aggiungi i nuovi mancanti
+            Set<Long> toAdd = new HashSet<>(newUserIds);
+            toAdd.removeAll(existingIds);
+            if (!toAdd.isEmpty()) {
+                List<User> usersToAdd = userService.getUsersByIds(toAdd);
+                usersToAdd.forEach(event::addUser);
+            }
+        }
+
+        Event saved = eventRepository.save(event);
+
+        return saved.getEventId();
+    }
+
+
+    /**
+     * Delete an event by its ID.
+     * @param eventId The ID of the event to delete.
+     * @throws ResourceNotFoundException if the event does not exist.
+     */
+    @Transactional
+    public void deleteEvent(Long eventId) {
+
+        log.info("Deleting event with ID: {}", eventId);
+
+        if (!eventRepository.existsById(eventId)) {
+            throw new ResourceNotFoundException("Evento non trovato con ID: " + eventId);
+        }
+
+        eventUsersRepository.deleteByEventId(eventId);
+        eventRepository.deleteById(eventId);
+    }
+}

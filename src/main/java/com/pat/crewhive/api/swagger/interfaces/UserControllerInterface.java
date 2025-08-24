@@ -1,8 +1,8 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
-import com.pat.crewhive.dto.User.LogoutDTO;
-import com.pat.crewhive.dto.User.UpdatePasswordDTO;
-import com.pat.crewhive.dto.User.UserWithTimeParamsDTO;
+import com.pat.crewhive.dto.user.LogoutDTO;
+import com.pat.crewhive.dto.user.UpdatePasswordDTO;
+import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

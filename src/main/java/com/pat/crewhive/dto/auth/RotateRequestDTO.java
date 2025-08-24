@@ -1,4 +1,5 @@
-package com.pat.crewhive.dto.Auth;
+package com.pat.crewhive.dto.auth;
+
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -8,14 +9,10 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
-public class AuthResponseDTO {
+@AllArgsConstructor
+public class RotateRequestDTO {
 
-    @NotBlank(message = "accessToken cannot be blank")
-    private String accessToken;
-
-    @NotBlank(message = "refreshToken cannot be blank")
+    @NotBlank(message = "Refresh token must not be blank")
     private String refreshToken;
-
 }

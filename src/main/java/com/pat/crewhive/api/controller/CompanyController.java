@@ -1,8 +1,8 @@
 package com.pat.crewhive.api.controller;
 
 import com.pat.crewhive.api.swagger.interfaces.CompanyControllerInterface;
-import com.pat.crewhive.dto.Company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.Company.SetCompanyDTO;
+import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.service.CompanyService;
 import jakarta.validation.Valid;

@@ -1,6 +1,6 @@
 package com.pat.crewhive.model.company.entity;
 
-import com.pat.crewhive.dto.Company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.json.AddressJSON;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.CompanyType;
