@@ -24,7 +24,6 @@ public class CompanyController implements CompanyControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PostMapping(path = "/register", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                              @RequestBody @Valid CompanyRegistrationDTO request) {

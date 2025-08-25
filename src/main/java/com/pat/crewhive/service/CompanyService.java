@@ -3,8 +3,10 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.model.company.entity.Company;
+import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
+import com.pat.crewhive.repository.RoleRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -18,14 +20,17 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final UserService userService;
+    private final RoleRepository roleRepository;
     private final StringUtils stringUtils;
 
     public CompanyService(CompanyRepository companyRepository,
                           UserService userService,
-                          StringUtils stringUtils) {
+                          StringUtils stringUtils,
+                          RoleRepository roleRepository) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -53,6 +58,12 @@ public class CompanyService {
 
         User manager = userService.getUserById(managerId);
         manager.setCompany(company);
+
+        // Duplicate of getOrCreateGlobalRoleManager but here to avoid circular dependency
+        String name = "ROLE_MANAGER";
+        Role role = roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
+                .orElseGet(() -> roleRepository.save(new Role(name, null)));
+        manager.getRole().setRole(role);
 
         userService.updateUser(manager);
 

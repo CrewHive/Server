@@ -65,32 +65,6 @@ public interface AuthUserControllerInterface {
     ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO);
 
 
-
-    @Operation(summary = "Register a new manager",
-            description = "Registers a new manager with the provided registration details.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Manager registered successfully"),
-
-            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
-
-            @ApiResponse(responseCode = "401", description = "Bad Request - Invalid registration details",
-            content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
-
-            @ApiResponse(responseCode = "409", description = "Conflict - Username or email already exists",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
-
-            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
-    })
-    ResponseEntity<?> registerManager(@Valid @RequestBody RegistrationDTO rDTO);
-
-
-
     @Operation(summary = "User login",
             description = "Authenticates a user.")
     @ApiResponses({
