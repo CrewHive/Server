@@ -1,5 +1,6 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
+import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.shift.shift_template.CreateShiftTemplateDTO;
 import com.pat.crewhive.dto.shift.shift_template.PatchShiftTemplateDTO;
 import com.pat.crewhive.model.shift.shifttemplate.entity.ShiftTemplate;
@@ -33,23 +34,23 @@ public interface ShiftTemplateControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - Shift template not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<ShiftTemplate> getShiftTemplate(
             @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
@@ -68,23 +69,23 @@ public interface ShiftTemplateControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "409", description = "Conflict - A shift template with the same name already exists for this company",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<ShiftTemplate> createShiftTemplate(@RequestBody @Valid CreateShiftTemplateDTO request);
 
@@ -100,27 +101,27 @@ public interface ShiftTemplateControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - Shift template not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "409", description = "Conflict - New name already exists for this company",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<ShiftTemplate> updateShiftTemplate(@RequestBody @Valid PatchShiftTemplateDTO request);
 
@@ -136,23 +137,23 @@ public interface ShiftTemplateControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - Shift template not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> deleteShiftTemplate(
             @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,

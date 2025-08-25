@@ -1,5 +1,6 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
+import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.event.CreateEventDTO;
 import com.pat.crewhive.dto.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
@@ -30,19 +31,19 @@ public interface EventControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<Long> createEvent(@RequestBody @Valid CreateEventDTO dto);
 
@@ -56,19 +57,19 @@ public interface EventControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable EventTemp temp, @PathVariable Long userId);
 
@@ -81,19 +82,19 @@ public interface EventControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable Long eventId);
 
@@ -106,19 +107,19 @@ public interface EventControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<List<Event>> getAllPublicEvents();
 
@@ -131,19 +132,19 @@ public interface EventControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<Long> patchEvent(@RequestBody @Valid PatchEventDTO dto);
 
@@ -156,19 +157,19 @@ public interface EventControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<String> deleteEvent(@PathVariable Long eventId);
 

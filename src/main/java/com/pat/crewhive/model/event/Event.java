@@ -112,7 +112,7 @@ public class Event {
     @PrePersist
     @PreUpdate
     private void syncDate() {
-        this.date = start.toLocalDate();
+        this.date = this.start.toLocalDate();
     }
 
 }

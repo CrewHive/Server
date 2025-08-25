@@ -1,5 +1,6 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
+import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.manager.UpdateUserRoleDTO;
 import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
@@ -28,27 +29,27 @@ public interface ManagerControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - Company not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "409", description = "Conflict - Role already exists",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> createRole(@AuthenticationPrincipal CustomUserDetails cud,
                                       @RequestBody @NotBlank(message = "The role name is required") String roleName);
@@ -63,23 +64,23 @@ public interface ManagerControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - User/Role/Company not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
                                           @Valid @RequestBody UpdateUserRoleDTO updateUserRoleDTO);
@@ -93,23 +94,23 @@ public interface ManagerControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - User not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
                                               @Valid @RequestBody UpdateUserWorkInfoDTO updateUserWorkInfoDTO);
@@ -124,27 +125,27 @@ public interface ManagerControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - Role/Company not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "409", description = "Conflict - Role is assigned to users and cannot be deleted",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
                                      @RequestBody @NotBlank(message = "The role name is required") String roleName);
