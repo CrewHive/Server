@@ -33,7 +33,7 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to create event");
 
-        return new ResponseEntity<>(eventService.createEvent(dto), HttpStatus.CREATED);
+        return ResponseEntity.ok(eventService.createEvent(dto));
     }
 
     @Override
@@ -42,7 +42,7 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to get events for user {} in period {}", userId, temp);
 
-        return new ResponseEntity<>(eventService.getEventsByPeriodAndUser(temp, userId), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.getEventsByPeriodAndUser(temp, userId));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to get all events for user {}", userId);
 
-        return new ResponseEntity<>(eventService.getUserEvents(userId), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.getUserEvents(userId));
     }
 
     @Override
@@ -59,7 +59,7 @@ public class EventController implements EventControllerInterface {
     public ResponseEntity<List<Event>> getAllPublicEvents() {
 
         log.info("Received request to get all public events");
-        return new ResponseEntity<>(eventService.getPublicEvents(), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.getPublicEvents());
     }
 
     @Override
@@ -68,7 +68,7 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to patch event with id: {}", dto.getEventId());
 
-        return new ResponseEntity<>(eventService.patchEvent(dto), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.patchEvent(dto));
     }
 
     @Override
@@ -78,6 +78,6 @@ public class EventController implements EventControllerInterface {
         log.info("Received request to delete event with id: {}", eventId);
 
         eventService.deleteEvent(eventId);
-        return new ResponseEntity<>("Evento eliminato con successo", HttpStatus.OK);
+        return ResponseEntity.ok("Evento eliminato con successo");
     }
 }

@@ -119,7 +119,6 @@ public class CompanyService {
         User user = userService.getUserById(request.getUserId());
 
         user.setCompany(company);
-
         userService.updateUser(user);
         log.info("Company {} set for user ID: {}", request.getCompanyName(), request.getUserId());
     }
