@@ -30,7 +30,7 @@ public class Company {
     private String name;
 
     @Type(JsonType.class)
-    @Column(name = "address", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "address", columnDefinition = "jsonb")
     private AddressJSON addressJSON;
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)

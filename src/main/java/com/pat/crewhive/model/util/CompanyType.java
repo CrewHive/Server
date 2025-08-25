@@ -3,7 +3,8 @@ package com.pat.crewhive.model.util;
 public enum CompanyType {
     HOSPITAL("Hospital"),
     RESTAURANT("Restaurant"),
-    BAR("Bar");
+    BAR("Bar"),
+    OTHER("Other");
 
     private final String label;
 

@@ -1,3 +1,2 @@
-2025-08-25 14:06:30.949 [RMI TCP Connection(1)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-08-25 14:06:30.953 [RMI TCP Connection(1)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
-2025-08-25 14:06:32.680 [http-nio-0.0.0.0-8080-exec-3] ERROR c.p.crewhive.service.CompanyService - Attempting to register company with name: Rachi
+2025-08-25 15:15:52.336 [RMI TCP Connection(4)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-08-25 15:15:52.339 [RMI TCP Connection(4)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms

@@ -85,7 +85,7 @@ public class AuthService {
         }
 
         return new AuthResponseDTO(
-                jwtService.generateToken(user.getUserId(), normalizedUsername, user.getRole().getRole().getRoleName()),
+                jwtService.generateToken(user.getUserId(), normalizedUsername, user.getRole().getRole().getRoleName(), user.getCompany().getCompanyId()),
                 refreshTokenService.generateRefreshToken(user)
         );
     }
@@ -170,8 +170,9 @@ public class AuthService {
         Long userId = owner.getUserId();
         String role = owner.getRole().getRole().getRoleName();
         String username = owner.getUsername();
+        Long companyId = owner.getCompany().getCompanyId();
 
-        String newAccessToken = jwtService.generateToken(userId, role, username);
+        String newAccessToken = jwtService.generateToken(userId, role, username, companyId);
 
         String newRefreshToken = refreshTokenService.rotateRefreshToken(rt);
 
