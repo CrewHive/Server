@@ -10,6 +10,7 @@ import com.pat.crewhive.model.util.EventTemp;
 import com.pat.crewhive.repository.EventRepository;
 import com.pat.crewhive.repository.EventUsersRepository;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,14 +32,17 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventUsersRepository eventUsersRepository;
     private final UserService userService;
+    private final StringUtils stringUtils;
 
     public EventService(EventRepository eventRepository,
                         EventUsersRepository eventUsersRepository,
-                        UserService userService) {
+                        UserService userService,
+                        StringUtils stringUtils) {
 
         this.eventRepository = eventRepository;
         this.eventUsersRepository = eventUsersRepository;
         this.userService = userService;
+        this.stringUtils = stringUtils;
     }
 
 
@@ -52,6 +56,9 @@ public class EventService {
     public Long createEvent(CreateEventDTO createEventDTO) {
 
         log.info("Creating event with name: {}", createEventDTO.getName());
+
+        String normalizedEventName = stringUtils.normalizeString(createEventDTO.getName());
+        createEventDTO.setName(normalizedEventName);
 
         if (createEventDTO.getStart().isAfter(createEventDTO.getEnd())) {
             throw new IllegalArgumentException("L'inizio deve essere prima della fine");
@@ -175,6 +182,9 @@ public class EventService {
 
         Event event = eventRepository.findByIdWithParticipants(dto.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + dto.getEventId()));
+
+        String normalizedEventName = stringUtils.normalizeString(dto.getName());
+        dto.setName(normalizedEventName);
 
         event.setEventName(dto.getName());
         event.setDescription(dto.getDescription());
