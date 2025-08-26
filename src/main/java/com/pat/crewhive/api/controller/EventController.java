@@ -10,6 +10,7 @@ import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import com.pat.crewhive.service.EventService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -56,13 +57,14 @@ public class EventController implements EventControllerInterface {
     }
 
     @Override
-    @GetMapping(path = "/public", produces = "application/json")
-    public ResponseEntity<List<Event>> getAllPublicEvents(@AuthenticationPrincipal CustomUserDetails cud, Period temp) {
+    @GetMapping(path = "/public/{temp}", produces = "application/json")
+    public ResponseEntity<List<Event>> getAllPublicEventsByCompanyAndPeriod(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                            @PathVariable @NotNull Period temp) {
 
         Long companyId = cud.getCompanyId();
 
         log.info("Received request to get all public events");
-        return ResponseEntity.ok(eventService.getPublicEvents(companyId, temp));
+        return ResponseEntity.ok(eventService.getPublicEventsByCompanyAndPeriod(companyId, temp));
     }
 
     @Override

@@ -90,7 +90,7 @@ public class ShiftProgrammedService {
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
-    public List<ShiftProgrammed> getShiftByPeriodAndUser(Period period, Long userId) {
+    public List<ShiftProgrammed> getShiftsByPeriodAndUser(Period period, Long userId) {
 
         log.info("Fetching shifts for user ID: {}", userId);
 
@@ -108,50 +108,14 @@ public class ShiftProgrammedService {
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
-    public List<ShiftProgrammed> getShiftByPeriodAndCompany(Period period, Long companyId) {
+    public List<ShiftProgrammed> getShiftsByPeriodAndCompany(Period period, Long companyId) {
 
         log.info("Fetching shifts for company ID: {}", companyId);
 
-        LocalDate today = LocalDate.now();
-        LocalDate from;
-        LocalDate to;
-
-        switch (period) {
-            case DAY -> {
-                from = today;
-                to = today;
-            }
-            case WEEK -> {
-                from = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                to = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-            }
-            case MONTH -> {
-                from = today.with(TemporalAdjusters.firstDayOfMonth());
-                to = today.with(TemporalAdjusters.lastDayOfMonth());
-            }
-            case TRIMESTER -> {
-                int q = ((today.getMonthValue() - 1) / 3) + 1;
-                int startMonth = (q - 1) * 3 + 1;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(3).minusDays(1);
-            }
-            case SEMESTER -> {
-                int startMonth = (today.getMonthValue() <= 6) ? 1 : 7;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(6).minusDays(1);
-            }
-            case YEAR -> {
-                from = LocalDate.of(today.getYear(), 1, 1);
-                to = LocalDate.of(today.getYear(), 12, 31);
-            }
-            default -> {
-                log.warn("Unknown EventTemp: {}. Returning empty list.", period);
-                return List.of();
-            }
-        }
+        LocalDate from = dateUtils.getStartDateForPeriod(period);
+        LocalDate to = dateUtils.getEndDateForPeriod(period);
 
         return shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to);
-
     }
 
 
