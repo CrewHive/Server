@@ -9,6 +9,7 @@ import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.repository.EventRepository;
 import com.pat.crewhive.repository.EventUsersRepository;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.service.utils.DateUtils;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,16 +33,19 @@ public class EventService {
     private final EventUsersRepository eventUsersRepository;
     private final UserService userService;
     private final StringUtils stringUtils;
+    private final DateUtils dateUtils;
 
     public EventService(EventRepository eventRepository,
                         EventUsersRepository eventUsersRepository,
                         UserService userService,
-                        StringUtils stringUtils) {
+                        StringUtils stringUtils,
+                        DateUtils dateUtils) {
 
         this.eventRepository = eventRepository;
         this.eventUsersRepository = eventUsersRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
+        this.dateUtils = dateUtils;
     }
 
 
@@ -94,45 +98,10 @@ public class EventService {
 
         log.info("Fetching events for userId: {} with eventTemp: {}", userId, period);
 
-        LocalDate today = LocalDate.now();
-        LocalDate from;
-        LocalDate to;
+        LocalDate from = dateUtils.getStartDateForPeriod(period);
+        LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        switch (period) {
-            case DAY -> {
-                from = today;
-                to = today;
-            }
-            case WEEK -> {
-                from = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                to = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-            }
-            case MONTH -> {
-                from = today.with(TemporalAdjusters.firstDayOfMonth());
-                to = today.with(TemporalAdjusters.lastDayOfMonth());
-            }
-            case TRIMESTER -> {
-                int q = ((today.getMonthValue() - 1) / 3) + 1;
-                int startMonth = (q - 1) * 3 + 1;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(3).minusDays(1);
-            }
-            case SEMESTER -> {
-                int startMonth = (today.getMonthValue() <= 6) ? 1 : 7;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(6).minusDays(1);
-            }
-            case YEAR -> {
-                from = LocalDate.of(today.getYear(), 1, 1);
-                to = LocalDate.of(today.getYear(), 12, 31);
-            }
-            default -> {
-                log.warn("Unknown EventTemp: {}. Returning empty list.", period);
-                return List.of();
-            }
-        }
-
-        return eventUsersRepository.findEventsByUserIdAndDateBetween(userId, from, to);
+        return eventRepository.findWithParticipantsByUserAndDateBetween(userId, from, to);
     }
 
 
@@ -156,11 +125,14 @@ public class EventService {
      * @return List of public events.
      */
     @Transactional(readOnly = true)
-    public List<Event> getPublicEvents(Long companyId) {
+    public List<Event> getPublicEventsByCompanyAndPeriod(Long companyId, Period period) {
 
         log.info("Fetching all public events");
 
-        return eventRepository.findAllByEventTypeAndCompanyId(PUBLIC, companyId);
+        LocalDate from = dateUtils.getStartDateForPeriod(period);
+        LocalDate to = dateUtils.getEndDateForPeriod(period);
+
+        return eventRepository.findPublicWithParticipantsByCompanyAndDateBetween(PUBLIC, companyId, from, to);
     }
 
 

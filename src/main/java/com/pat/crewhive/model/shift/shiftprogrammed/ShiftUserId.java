@@ -12,7 +12,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class ShiftUsersId implements Serializable {
+public class ShiftUserId implements Serializable {
 
     @Column(name = "shift_programmed_id", nullable = false)
     private Long shiftProgrammedId;

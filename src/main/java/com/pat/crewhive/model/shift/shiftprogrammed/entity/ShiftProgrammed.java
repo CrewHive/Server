@@ -16,9 +16,8 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "shift_programmed", indexes = {
-        @Index(name = "idx_shiftprogrammed_user_id", columnList = "user_id"),
         @Index(name = "idx_shiftprogrammed_date", columnList = "shift_date"),
-        @Index(name = "idx_shiftprogrammed", columnList = "start_shift")
+        @Index(name = "idx_shiftprogrammed_start", columnList = "start_shift")
 })
 public class ShiftProgrammed {
 

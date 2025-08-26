@@ -9,6 +9,7 @@ import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.repository.ShiftProgrammedRepository;
 import com.pat.crewhive.repository.ShiftUserRepository;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.service.utils.DateUtils;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,15 +31,18 @@ public class ShiftProgrammedService {
     private final ShiftUserRepository shiftUserRepository;
     private final StringUtils stringUtils;
     private final UserService userService;
+    private final DateUtils dateUtils;
 
     public ShiftProgrammedService(ShiftProgrammedRepository shiftProgrammedRepository,
                                     ShiftUserRepository shiftUserRepository,
                                   StringUtils stringUtils,
-                                  UserService userService) {
+                                  UserService userService,
+                                  DateUtils dateUtils) {
         this.shiftProgrammedRepository = shiftProgrammedRepository;
         this.shiftUserRepository = shiftUserRepository;
         this.stringUtils = stringUtils;
         this.userService = userService;
+        this.dateUtils = dateUtils;
     }
 
 
@@ -90,48 +94,19 @@ public class ShiftProgrammedService {
 
         log.info("Fetching shifts for user ID: {}", userId);
 
-        LocalDate today = LocalDate.now();
-        LocalDate from;
-        LocalDate to;
+        LocalDate from = dateUtils.getStartDateForPeriod(period);
+        LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        switch (period) {
-            case DAY -> {
-                from = today;
-                to = today;
-            }
-            case WEEK -> {
-                from = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                to = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-            }
-            case MONTH -> {
-                from = today.with(TemporalAdjusters.firstDayOfMonth());
-                to = today.with(TemporalAdjusters.lastDayOfMonth());
-            }
-            case TRIMESTER -> {
-                int q = ((today.getMonthValue() - 1) / 3) + 1;
-                int startMonth = (q - 1) * 3 + 1;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(3).minusDays(1);
-            }
-            case SEMESTER -> {
-                int startMonth = (today.getMonthValue() <= 6) ? 1 : 7;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(6).minusDays(1);
-            }
-            case YEAR -> {
-                from = LocalDate.of(today.getYear(), 1, 1);
-                to = LocalDate.of(today.getYear(), 12, 31);
-            }
-            default -> {
-                log.warn("Unknown EventTemp: {}. Returning empty list.", period);
-                return List.of();
-            }
-        }
-
-        return shiftUserRepository.findShiftsByUserIdAndDateBetween(userId, from, to);
+        return shiftProgrammedRepository.findByUserAndDateBetween(userId, from, to);
     }
 
 
+    /**
+     * Retrieve shifts for a specific company within a defined period.
+     * @param period The period to filter shifts (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
+     * @param companyId The ID of the company whose shifts are to be retrieved.
+     * @return A list of ShiftProgrammed entities matching the criteria.
+     */
     @Transactional(readOnly = true)
     public List<ShiftProgrammed> getShiftByPeriodAndCompany(Period period, Long companyId) {
 
@@ -175,7 +150,8 @@ public class ShiftProgrammedService {
             }
         }
 
-        return shiftUserRepository.findShiftsByCompanyIdAndDateBetween(companyId, from, to);
+        return shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to);
+
     }
 
 

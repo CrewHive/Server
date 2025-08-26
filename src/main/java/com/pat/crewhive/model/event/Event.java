@@ -1,6 +1,8 @@
 package com.pat.crewhive.model.event;
 
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.EventType;
 import jakarta.persistence.*;
@@ -24,7 +26,9 @@ import java.util.Set;
         @Index(name = "idx_event_end_event", columnList = "end_event"),
         @Index(name = "idx_event_date", columnList = "date")
 })
-
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "eventId")
 public class Event {
 
     @Id
