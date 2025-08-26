@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "ShiftWorked", description = "Operations related to ShiftWorked management")
+@Tag(name = "Shift Worked", description = "Operations related to ShiftWorked management")
 public interface ShiftWorkedControllerInterface {
 
     @Operation(summary = "Create a new ShiftWorked record",

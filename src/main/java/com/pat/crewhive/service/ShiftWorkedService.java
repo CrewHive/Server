@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Service
 public class ShiftWorkedService {
@@ -48,6 +50,12 @@ public class ShiftWorkedService {
                 dto.getExtraHours(),
                 user
         );
+
+        BigDecimal oldOvertime = user.getOvertimeHours();
+        BigDecimal newOvertime = oldOvertime.add(dto.getExtraHours());
+        user.setOvertimeHours(newOvertime);
+
+        userService.updateUser(user);
 
         repo.save(sw);
     }

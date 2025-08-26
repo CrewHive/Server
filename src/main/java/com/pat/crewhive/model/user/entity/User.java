@@ -69,7 +69,7 @@ public class User {
     private int workableHoursPerWeek;
 
     @Column(name = "overtime_hours", nullable = false)
-    private int overtimeHours;
+    private BigDecimal overtimeHours;
 
     @Column(name = "vacation_days_accumulated", nullable = false)
     private BigDecimal vacationDaysAccumulated;
@@ -95,7 +95,7 @@ public class User {
         this.password = password;
         this.isWorking = false;
         this.workableHoursPerWeek = 0;
-        this.overtimeHours = 0;
+        this.overtimeHours = BigDecimal.ZERO;
         this.vacationDaysAccumulated = BigDecimal.ZERO;
         this.vacationDaysTaken = BigDecimal.ZERO;
         this.leaveDaysAccumulated = BigDecimal.ZERO;

@@ -1,6 +1,7 @@
 package com.pat.crewhive.api.controller;
 
 
+import com.pat.crewhive.api.swagger.interfaces.ShiftProgrammedControllerInterface;
 import com.pat.crewhive.dto.shift.shift_programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.shift.shift_programmed.PatchShiftProgrammedDTO;
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
@@ -18,7 +19,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/shift-programmed")
-public class ShiftProgrammedController {
+public class ShiftProgrammedController implements ShiftProgrammedControllerInterface {
 
     private final ShiftProgrammedService shiftProgrammedService;
 

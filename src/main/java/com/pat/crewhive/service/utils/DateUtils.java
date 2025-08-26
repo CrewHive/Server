@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.List;
 
 @Slf4j
 @Component
-@NoArgsConstructor
-@AllArgsConstructor
 public class DateUtils {
+
+    public DateUtils() {
+    }
 
     public LocalDate getStartDateForPeriod(Period period) {
 
