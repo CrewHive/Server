@@ -1,5 +1,6 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
+import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
@@ -28,11 +29,11 @@ public interface UserControllerInterface {
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
             content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<UserWithTimeParamsDTO> getUser(@AuthenticationPrincipal CustomUserDetails cud);
 
@@ -46,15 +47,15 @@ public interface UserControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated or invalid token",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> logout(@Valid @RequestBody LogoutDTO request);
 
@@ -68,23 +69,23 @@ public interface UserControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - User not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "409", description = "Conflict - Username already exists",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
                                      @Valid @RequestBody String newUsername);
@@ -99,19 +100,19 @@ public interface UserControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated or password mismatch or weak password",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - User not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> updatePassword(@AuthenticationPrincipal CustomUserDetails cud,
                                      @RequestBody UpdatePasswordDTO updatePasswordDTO);
@@ -126,15 +127,15 @@ public interface UserControllerInterface {
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - User not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> deleteAccount(@AuthenticationPrincipal CustomUserDetails cud);
 }

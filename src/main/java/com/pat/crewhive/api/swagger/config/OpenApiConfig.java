@@ -1,4 +1,4 @@
-package com.pat.crewhive.api.swagger;
+package com.pat.crewhive.api.swagger.config;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;

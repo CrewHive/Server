@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -64,6 +65,13 @@ public class GlobalExceptionHandler {
         return base(HttpStatus.FORBIDDEN, "Access denied", "You do not have permission to access this resource", "AUTH_403_DENIED");
     }
 
+    // 409 - Conflitto di versione (optimistic locking)
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
+        log.error("Optimistic locking failure: {}", ex.getMessage(), ex);
+        return base(HttpStatus.CONFLICT, "Conflict", "The resource was modified by another transaction. Please retry.", "DATA_409_OPTIMISTIC_LOCK");
+    }
+
     // 400 - JSON malformato / payload non leggibile
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleParsingException(HttpMessageNotReadableException ex) {
@@ -111,6 +119,13 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleJwtAuthenticationException(JwtAuthenticationException ex) {
         log.info("JWT authentication error: {}", ex.getMessage());
         return base(HttpStatus.UNAUTHORIZED, "Unauthorized", "JWT authentication failed", "AUTH_401_JWT");
+    }
+
+    // 400 - Argomenti non validi
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.error("Illegal argument: {}", ex.getMessage(), ex);
+        return base(HttpStatus.BAD_REQUEST, "Bad request", ex.getMessage(), "GEN_400_ILLARG");
     }
 
     // 500 - Stati illegali

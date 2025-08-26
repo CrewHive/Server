@@ -84,8 +84,10 @@ public class AuthService {
             refreshTokenService.invalidateRefreshToken(rt);
         }
 
+        Long company = user.getCompany() == null ? null : user.getCompany().getCompanyId();
+
         return new AuthResponseDTO(
-                jwtService.generateToken(user.getUserId(), normalizedUsername, user.getRole().getRole().getRoleName()),
+                jwtService.generateToken(user.getUserId(), normalizedUsername, user.getRole().getRole().getRoleName(), company),
                 refreshTokenService.generateRefreshToken(user)
         );
     }
@@ -140,56 +142,6 @@ public class AuthService {
     }
 
     /**
-     * Registers a new manager with the provided details.
-     *
-     * @param request The registration request containing username, email, and password.
-     * @throws BadCredentialsException if the email format is invalid or the password is weak.
-     * @throws ResourceAlreadyExistsException if the username or email already exist.
-     */
-    @Transactional
-    public void registerManager(RegistrationDTO request) {
-
-        String normalizedUsername = stringUtils.normalizeString(request.getUsername());
-
-        if (userRepository.existsByUsername(normalizedUsername)) {
-
-            log.error("Username already registered: {}", normalizedUsername);
-            throw new ResourceAlreadyExistsException("Username already registered");
-        }
-
-        String normalizedEmail = stringUtils.normalizeString(request.getEmail());
-        if (!emailUtil.isValidEmail(normalizedEmail)) {
-
-            log.error("Invalid email format: {}", normalizedEmail);
-            throw new BadCredentialsException("Invalid email format");
-        }
-
-        if (userRepository.existsByEmail(normalizedEmail)) {
-
-            log.error("Email already registered: {}", normalizedEmail);
-            throw new ResourceAlreadyExistsException("Email already registered");
-        }
-
-        if (!passwordUtil.isStrong(request.getPassword())) {
-
-            log.error("Weak password provided for user: {}", normalizedUsername);
-            throw new BadCredentialsException("Weak password provided");
-        }
-
-        String encodedPassword = passwordUtil.encodePassword(request.getPassword());
-
-        User newUser = new User(normalizedUsername, normalizedEmail, encodedPassword);
-
-        Role role = roleService.getOrCreateGlobalRoleManager();
-
-        newUser.setRole(new UserRole(newUser, role));
-
-        userRepository.save(newUser);
-
-        log.info("Manager registered successfully: {}", normalizedUsername);
-    }
-
-    /**
      * Rotates the refresh token for a user.
      *
      * @param token The request containing the string of the Refresh Token.
@@ -220,8 +172,9 @@ public class AuthService {
         Long userId = owner.getUserId();
         String role = owner.getRole().getRole().getRoleName();
         String username = owner.getUsername();
+        Long companyId = owner.getCompany().getCompanyId() == null ? null : owner.getCompany().getCompanyId();
 
-        String newAccessToken = jwtService.generateToken(userId, role, username);
+        String newAccessToken = jwtService.generateToken(userId, role, username, companyId);
 
         String newRefreshToken = refreshTokenService.rotateRefreshToken(rt);
 

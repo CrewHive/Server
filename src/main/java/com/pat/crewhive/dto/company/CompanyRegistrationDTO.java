@@ -27,7 +27,6 @@ public class CompanyRegistrationDTO {
     @NotNull(message = "Company type cannot be blank")
     private CompanyType companyType;
 
-    @NotNull(message = "Address cannot be blank")
     @Valid
     private AddressJSON address;
 }

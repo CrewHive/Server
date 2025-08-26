@@ -1,4 +1,4 @@
-package com.pat.crewhive.api.swagger;
+package com.pat.crewhive.api.swagger.schema;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

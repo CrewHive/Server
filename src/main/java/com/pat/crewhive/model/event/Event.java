@@ -1,6 +1,8 @@
 package com.pat.crewhive.model.event;
 
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.EventType;
 import jakarta.persistence.*;
@@ -11,7 +13,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -24,7 +26,9 @@ import java.util.Set;
         @Index(name = "idx_event_end_event", columnList = "end_event"),
         @Index(name = "idx_event_date", columnList = "date")
 })
-
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "eventId")
 public class Event {
 
     @Id
@@ -32,6 +36,11 @@ public class Event {
     @Column(name = "event_id", nullable = false)
     @Setter(AccessLevel.NONE)
     private Long eventId;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    @Setter(AccessLevel.NONE)
+    private Long version;
 
     @Column(name = "name", nullable = false)
     private String eventName;
@@ -56,7 +65,7 @@ public class Event {
     private EventType eventType;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<EventUsers> users = new LinkedHashSet<>();
+    private Set<EventUsers> users = new HashSet<>();
 
 
     /**
@@ -82,11 +91,15 @@ public class Event {
      */
     public void removeUser(User u) {
 
-        Long uid = u.getUserId();
-
-        this.users.removeIf(eu -> Objects.equals(eu.getUser().getUserId(), uid));
-
-        u.getPersonalEvents().removeIf(eu -> Objects.equals(eu.getEvent().getEventId(), this.eventId));
+        this.users.removeIf(link -> {
+            if (Objects.equals(link.getUser().getUserId(), u.getUserId())) {
+                u.getPersonalEvents().remove(link);
+                link.setUser(null);
+                link.setEvent(null);
+                return true;
+            }
+            return false;
+        });
     }
 
 
@@ -112,7 +125,7 @@ public class Event {
     @PrePersist
     @PreUpdate
     private void syncDate() {
-        this.date = start.toLocalDate();
+        this.date = this.start.toLocalDate();
     }
 
 }

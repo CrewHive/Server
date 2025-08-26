@@ -15,27 +15,27 @@ import java.time.OffsetTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "empty_shift", indexes = {
-        @Index(name = "idx_emptyshift_shift_name", columnList = "shift_name"),
-        @Index(name = "idx_emptyshift_company_id", columnList = "company_id")
+@Table(name = "shift_template", indexes = {
+        @Index(name = "idx_shifttemplate_shift_name", columnList = "shift_name"),
+        @Index(name = "idx_shifttemplate_company_id", columnList = "company_id")
 }, uniqueConstraints = {
-        @UniqueConstraint(name = "uc_emptyshift_order_number", columnNames = {"order_number", "company_id"})
+        @UniqueConstraint(name = "uk_shifttemplate_shift_name_company_id", columnNames = {"shift_name", "company_id"})
 })
 public class ShiftTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="empty_shift_id", nullable = false)
-    private Long emptyShiftId;
+    @Column(name="shift_id", nullable = false)
+    private Long shiftId;
 
     @Column(name = "shift_name", nullable = false)
-    private String shift_name;
+    private String shiftName;
 
     @Column(name = "start_shift", nullable = false)
-    private OffsetTime start;
+    private OffsetTime startShift;
 
     @Column(name = "end_shift", nullable = false)
-    private OffsetTime end;
+    private OffsetTime endShift;
 
     @Column(name = "description", nullable = false)
     private String description;

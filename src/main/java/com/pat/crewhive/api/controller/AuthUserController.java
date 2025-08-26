@@ -48,17 +48,6 @@ public class AuthUserController implements AuthUserControllerInterface {
     }
 
     @Override
-    @PostMapping("/register/manager")
-    public ResponseEntity<?> registerManager(@RequestBody @Valid RegistrationDTO rDTO) {
-
-        authService.registerManager(rDTO);
-
-        log.info("Manager {} registered successfully", rDTO.getUsername());
-
-        return ResponseEntity.ok().build();
-    }
-
-    @Override
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequestDTO request) {
 

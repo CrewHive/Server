@@ -4,12 +4,13 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.event.CreateEventDTO;
 import com.pat.crewhive.dto.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
-import com.pat.crewhive.model.event.EventUsers;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.model.util.EventTemp;
+import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.repository.EventRepository;
 import com.pat.crewhive.repository.EventUsersRepository;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.service.utils.DateUtils;
+import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,14 +32,20 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventUsersRepository eventUsersRepository;
     private final UserService userService;
+    private final StringUtils stringUtils;
+    private final DateUtils dateUtils;
 
     public EventService(EventRepository eventRepository,
                         EventUsersRepository eventUsersRepository,
-                        UserService userService) {
+                        UserService userService,
+                        StringUtils stringUtils,
+                        DateUtils dateUtils) {
 
         this.eventRepository = eventRepository;
         this.eventUsersRepository = eventUsersRepository;
         this.userService = userService;
+        this.stringUtils = stringUtils;
+        this.dateUtils = dateUtils;
     }
 
 
@@ -52,6 +59,9 @@ public class EventService {
     public Long createEvent(CreateEventDTO createEventDTO) {
 
         log.info("Creating event with name: {}", createEventDTO.getName());
+
+        String normalizedEventName = stringUtils.normalizeString(createEventDTO.getName());
+        createEventDTO.setName(normalizedEventName);
 
         if (createEventDTO.getStart().isAfter(createEventDTO.getEnd())) {
             throw new IllegalArgumentException("L'inizio deve essere prima della fine");
@@ -79,54 +89,19 @@ public class EventService {
 
     /**
      * Fetch events for a user within a specified time period.
-     * @param eventTemp The time period (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
+     * @param period The time period (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
      * @param userId The ID of the user.
      * @return List of events within the specified period for the user.
      */
     @Transactional(readOnly = true)
-    public List<Event> getEventsByPeriodAndUser(EventTemp eventTemp, Long userId) {
+    public List<Event> getEventsByPeriodAndUser(Period period, Long userId) {
 
-        log.info("Fetching events for userId: {} with eventTemp: {}", userId, eventTemp);
+        log.info("Fetching events for userId: {} with eventTemp: {}", userId, period);
 
-        LocalDate today = LocalDate.now();
-        LocalDate from;
-        LocalDate to;
+        LocalDate from = dateUtils.getStartDateForPeriod(period);
+        LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        switch (eventTemp) {
-            case DAY -> {
-                from = today;
-                to = today;
-            }
-            case WEEK -> {
-                from = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                to = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-            }
-            case MONTH -> {
-                from = today.with(TemporalAdjusters.firstDayOfMonth());
-                to = today.with(TemporalAdjusters.lastDayOfMonth());
-            }
-            case TRIMESTER -> {
-                int q = ((today.getMonthValue() - 1) / 3) + 1;
-                int startMonth = (q - 1) * 3 + 1;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(3).minusDays(1);
-            }
-            case SEMESTER -> {
-                int startMonth = (today.getMonthValue() <= 6) ? 1 : 7;
-                from = LocalDate.of(today.getYear(), startMonth, 1);
-                to = from.plusMonths(6).minusDays(1);
-            }
-            case YEAR -> {
-                from = LocalDate.of(today.getYear(), 1, 1);
-                to = LocalDate.of(today.getYear(), 12, 31);
-            }
-            default -> {
-                log.warn("Unknown EventTemp: {}. Returning empty list.", eventTemp);
-                return List.of();
-            }
-        }
-
-        return eventUsersRepository.findEventsByUserIdAndDateBetween(userId, from, to);
+        return eventRepository.findWithParticipantsByUserAndDateBetween(userId, from, to);
     }
 
 
@@ -145,15 +120,19 @@ public class EventService {
 
 
     /**
-     * Fetch all public events.
+     * Fetch all public events for a specific company.
+     * @param companyId The ID of the company.
      * @return List of public events.
      */
     @Transactional(readOnly = true)
-    public List<Event> getPublicEvents() {
+    public List<Event> getPublicEventsByCompanyAndPeriod(Long companyId, Period period) {
 
         log.info("Fetching all public events");
 
-        return eventRepository.findAllByEventType(PUBLIC);
+        LocalDate from = dateUtils.getStartDateForPeriod(period);
+        LocalDate to = dateUtils.getEndDateForPeriod(period);
+
+        return eventRepository.findPublicWithParticipantsByCompanyAndDateBetween(PUBLIC, companyId, from, to);
     }
 
 
@@ -175,6 +154,9 @@ public class EventService {
 
         Event event = eventRepository.findByIdWithParticipants(dto.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + dto.getEventId()));
+
+        String normalizedEventName = stringUtils.normalizeString(dto.getName());
+        dto.setName(normalizedEventName);
 
         event.setEventName(dto.getName());
         event.setDescription(dto.getDescription());

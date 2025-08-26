@@ -1,9 +1,10 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.dto.manager.UpdateUserRoleDTO;
-import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
-import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.dto.shift.shift_template.CreateShiftTemplateDTO;
+import com.pat.crewhive.dto.shift.shift_template.PatchShiftTemplateDTO;
+import com.pat.crewhive.model.shift.shifttemplate.entity.ShiftTemplate;
+import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,19 +14,23 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@Tag(name = "Manager Management", description = "Operations related to manager functionalities")
-public interface ManagerControllerInterface {
+@Tag(name = "Shift template management", description = "Operations related to shift templates")
+public interface ShiftTemplateControllerInterface {
 
 
-    @Operation(summary = "Create a new role",
-            description = "Allows managers to create a new role within the company.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(
+            summary = "Get a shift template by name and company",
+            description = "Returns the shift template identified by {shiftName} within the given company {companyId}.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Role created successfully"),
+            @ApiResponse(responseCode = "200", description = "Shift template retrieved successfully"),
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
@@ -39,11 +44,7 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
-            @ApiResponse(responseCode = "404", description = "Not Found - Company not found",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ApiError.class))),
-
-            @ApiResponse(responseCode = "409", description = "Conflict - Role already exists",
+            @ApiResponse(responseCode = "404", description = "Not Found - Shift template not found",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
@@ -51,16 +52,20 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> createRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                      @RequestBody @NotBlank(message = "The role name is required") String roleName);
+    ResponseEntity<ShiftTemplate> getShiftTemplate(
+            @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
+            @PathVariable @NotNull Long companyId
+    );
 
 
 
-    @Operation(summary = "Update user role",
-            description = "Allows managers to update the role of a user within the company.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(
+            summary = "Create a new shift template",
+            description = "Creates a new shift template for the specified company.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User role updated successfully"),
+            @ApiResponse(responseCode = "200", description = "Shift template created successfully"),
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
@@ -74,7 +79,7 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
-            @ApiResponse(responseCode = "404", description = "Not Found - User/Role/Company not found",
+            @ApiResponse(responseCode = "409", description = "Conflict - A shift template with the same name already exists for this company",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
@@ -82,15 +87,17 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                          @Valid @RequestBody UpdateUserRoleDTO updateUserRoleDTO);
+    ResponseEntity<ShiftTemplate> createShiftTemplate(@RequestBody @Valid CreateShiftTemplateDTO request);
 
 
-    @Operation(summary = "Update user work information",
-            description = "Allows managers to update the work information of a user within the company.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+
+    @Operation(
+            summary = "Update (patch) an existing shift template",
+            description = "Applies partial updates to an existing shift template.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User work information updated successfully"),
+            @ApiResponse(responseCode = "200", description = "Shift template updated successfully"),
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
@@ -104,7 +111,11 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
-            @ApiResponse(responseCode = "404", description = "Not Found - User not found",
+            @ApiResponse(responseCode = "404", description = "Not Found - Shift template not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "409", description = "Conflict - New name already exists for this company",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
@@ -112,16 +123,17 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
-                                              @Valid @RequestBody UpdateUserWorkInfoDTO updateUserWorkInfoDTO);
+    ResponseEntity<ShiftTemplate> updateShiftTemplate(@RequestBody @Valid PatchShiftTemplateDTO request);
 
 
 
-    @Operation(summary = "Delete a role",
-            description = "Allows managers to delete a role within the company.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(
+            summary = "Delete a shift template",
+            description = "Deletes the shift template identified by {shiftName} within the given company {companyId}.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Role deleted successfully"),
+            @ApiResponse(responseCode = "200", description = "Shift template deleted successfully"),
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
@@ -135,11 +147,7 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
-            @ApiResponse(responseCode = "404", description = "Not Found - Role/Company not found",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ApiError.class))),
-
-            @ApiResponse(responseCode = "409", description = "Conflict - Role is assigned to users and cannot be deleted",
+            @ApiResponse(responseCode = "404", description = "Not Found - Shift template not found",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
@@ -147,6 +155,8 @@ public interface ManagerControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                     @RequestBody @NotBlank(message = "The role name is required") String roleName);
+    ResponseEntity<?> deleteShiftTemplate(
+            @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
+            @PathVariable @NotNull Long companyId
+    );
 }

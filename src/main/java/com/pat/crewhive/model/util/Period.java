@@ -1,6 +1,6 @@
 package com.pat.crewhive.model.util;
 
-public enum EventTemp {
+public enum Period {
 
     DAY,
     WEEK,

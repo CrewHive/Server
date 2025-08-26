@@ -1,10 +1,13 @@
 package com.pat.crewhive.model.user.entity;
 
-
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.event.EventUsers;
+import com.pat.crewhive.model.shift.shiftprogrammed.ShiftUser;
 import com.pat.crewhive.model.shift.shiftworked.entity.ShiftWorked;
-import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.role.UserRole;
 import com.pat.crewhive.model.util.ContractType;
 import jakarta.persistence.*;
@@ -14,20 +17,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @NoArgsConstructor
 @Entity
 @Table(name = "users", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
         @Index(name = "idx_user_username", columnList = "username"),
         @Index(name = "idx_user_company_id", columnList = "company_id")
 })
 @Getter
 @Setter
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "userId")
 public class User {
 
     @Id
@@ -42,6 +44,7 @@ public class User {
     @Column(name="username", nullable = false, unique = true)
     private String username;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name="password", nullable = false)
     private String password;
 
@@ -53,7 +56,7 @@ public class User {
     private boolean isWorking;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<EventUsers> personalEvents = new LinkedHashSet<>();
+    private Set<EventUsers> personalEvents = new HashSet<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserRole role;
@@ -66,7 +69,7 @@ public class User {
     private int workableHoursPerWeek;
 
     @Column(name = "overtime_hours", nullable = false)
-    private int overtimeHours;
+    private BigDecimal overtimeHours;
 
     @Column(name = "vacation_days_accumulated", nullable = false)
     private BigDecimal vacationDaysAccumulated;
@@ -80,13 +83,11 @@ public class User {
     @Column(name = "leave_days_taken", nullable = false)
     private BigDecimal leaveDaysTaken;
 
-    //todo se salvo dal lato user lascia all se uso lato shift usa remove uguale per i programmed
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ShiftWorked> shiftWorked = new ArrayList<>();
+    private Set<ShiftWorked> shiftWorked = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @OrderBy("start ASC")
-    private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
+    private Set<ShiftUser> shiftUsers = new HashSet<>();
 
     public User(String username, String email, String password) {
         this.email = email;
@@ -94,7 +95,7 @@ public class User {
         this.password = password;
         this.isWorking = false;
         this.workableHoursPerWeek = 0;
-        this.overtimeHours = 0;
+        this.overtimeHours = BigDecimal.ZERO;
         this.vacationDaysAccumulated = BigDecimal.ZERO;
         this.vacationDaysTaken = BigDecimal.ZERO;
         this.leaveDaysAccumulated = BigDecimal.ZERO;

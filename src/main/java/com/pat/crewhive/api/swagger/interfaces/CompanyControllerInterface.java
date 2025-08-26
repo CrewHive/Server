@@ -1,5 +1,6 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
+import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
@@ -28,23 +29,23 @@ public interface CompanyControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "409", description = "Conflict - Company already exists",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud, @Valid @RequestBody CompanyRegistrationDTO request);
 
@@ -58,23 +59,23 @@ public interface CompanyControllerInterface {
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "404", description = "Not Found - User or company not found",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class))),
+                            schema = @Schema(implementation = ApiError.class))),
 
             @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
                     content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = com.pat.crewhive.api.swagger.ApiError.class)))
+                            schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud, @Valid @RequestBody SetCompanyDTO request);
 }

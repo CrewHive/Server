@@ -5,13 +5,15 @@ import com.pat.crewhive.api.swagger.interfaces.EventControllerInterface;
 import com.pat.crewhive.dto.event.CreateEventDTO;
 import com.pat.crewhive.dto.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
-import com.pat.crewhive.model.util.EventTemp;
+import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import com.pat.crewhive.service.EventService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,16 +35,16 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to create event");
 
-        return new ResponseEntity<>(eventService.createEvent(dto), HttpStatus.CREATED);
+        return ResponseEntity.ok(eventService.createEvent(dto));
     }
 
     @Override
     @GetMapping(path = "/{temp}/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable EventTemp temp, @PathVariable @NoHtml Long userId) {
+    public ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable Period temp, @PathVariable @NoHtml Long userId) {
 
         log.info("Received request to get events for user {} in period {}", userId, temp);
 
-        return new ResponseEntity<>(eventService.getEventsByPeriodAndUser(temp, userId), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.getEventsByPeriodAndUser(temp, userId));
     }
 
     @Override
@@ -51,15 +53,18 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to get all events for user {}", userId);
 
-        return new ResponseEntity<>(eventService.getUserEvents(userId), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.getUserEvents(userId));
     }
 
     @Override
-    @GetMapping(path = "/public", produces = "application/json")
-    public ResponseEntity<List<Event>> getAllPublicEvents() {
+    @GetMapping(path = "/public/{temp}", produces = "application/json")
+    public ResponseEntity<List<Event>> getAllPublicEventsByCompanyAndPeriod(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                            @PathVariable @NotNull Period temp) {
+
+        Long companyId = cud.getCompanyId();
 
         log.info("Received request to get all public events");
-        return new ResponseEntity<>(eventService.getPublicEvents(), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.getPublicEventsByCompanyAndPeriod(companyId, temp));
     }
 
     @Override
@@ -68,7 +73,7 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to patch event with id: {}", dto.getEventId());
 
-        return new ResponseEntity<>(eventService.patchEvent(dto), HttpStatus.OK);
+        return ResponseEntity.ok(eventService.patchEvent(dto));
     }
 
     @Override
@@ -78,6 +83,6 @@ public class EventController implements EventControllerInterface {
         log.info("Received request to delete event with id: {}", eventId);
 
         eventService.deleteEvent(eventId);
-        return new ResponseEntity<>("Evento eliminato con successo", HttpStatus.OK);
+        return ResponseEntity.ok("Evento eliminato con successo");
     }
 }

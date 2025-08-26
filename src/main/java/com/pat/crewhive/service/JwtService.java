@@ -42,12 +42,14 @@ public class JwtService {
      */
     public String generateToken(Long userId,
                                 String username,
-                                String role) {
-//todo aggiungi la company se serve
+                                String role,
+                                Long companyId) {
+
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role)
                 .claim("username", username)
+                .claim("companyId", companyId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
