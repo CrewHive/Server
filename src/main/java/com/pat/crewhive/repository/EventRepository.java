@@ -13,20 +13,10 @@ import java.util.Optional;
 public interface EventRepository extends JpaRepository<Event, Long> {
 
     @EntityGraph(attributePaths = {"users", "users.user"})
-    List<Event> findAllByEventType(EventType eventType);
+    List<Event> findAllByEventTypeAndCompanyId(EventType eventType, Long companyId);
 
     @EntityGraph(attributePaths = {"users", "users.user"})
     @Query("select distinct e from Event e where e.eventId = :id")
     Optional<Event> findByIdWithParticipants(@Param("id") Long id);
-
-    @EntityGraph(attributePaths = {"users", "users.user"})
-    @Query("""
-           select distinct e
-           from Event e
-           join e.users eu
-           where eu.user.userId = :userId
-           order by e.start asc
-           """)
-    List<Event> findAllByUserIdWithParticipants(@Param("userId") Long userId);
 
 }

@@ -4,7 +4,7 @@ import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.event.CreateEventDTO;
 import com.pat.crewhive.dto.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
-import com.pat.crewhive.model.util.EventTemp;
+import com.pat.crewhive.model.util.Period;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -71,7 +71,7 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable EventTemp temp, @PathVariable Long userId);
+    ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable Period temp, @PathVariable Long userId);
 
 
     @Operation(summary = "Get all events by user",

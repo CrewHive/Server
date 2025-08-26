@@ -1,11 +1,15 @@
 package com.pat.crewhive.model.shift.shiftprogrammed.entity;
 
+import com.pat.crewhive.model.shift.shiftprogrammed.ShiftUser;
 import com.pat.crewhive.model.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @NoArgsConstructor
 @Getter
@@ -23,6 +27,11 @@ public class ShiftProgrammed {
     @Column(name = "shift_programmed_id", nullable = false)
     @Setter(AccessLevel.NONE)
     private Long shiftProgrammedId;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    @Setter(AccessLevel.NONE)
+    private Long version;
 
     @Column(name = "shift_programmed_name", nullable = false)
     private String shiftName;
@@ -42,17 +51,57 @@ public class ShiftProgrammed {
     @Column(name = "color", nullable = false)
     private String color;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @OneToMany(mappedBy = "shift", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ShiftUser> users = new HashSet<>();
 
-    public ShiftProgrammed(OffsetDateTime start,
-                           OffsetDateTime end,
-                           User user) {
-        this.start = start;
-        this.end = end;
-        this.date = start.toLocalDate();
-        this.user = user;
+
+    public void addUser(User u) {
+
+        boolean alreadyPresent = this.users.stream()
+                .anyMatch(eu -> Objects.equals(eu.getUser().getUserId(), u.getUserId()));
+
+        if (!alreadyPresent) {
+            ShiftUser link = new ShiftUser(this, u);
+            this.users.add(link);
+            u.getShiftUsers().add(link);
+        }
     }
+
+    public void removeUser(User u) {
+
+        this.users.removeIf(link -> {
+            if (Objects.equals(link.getUser().getUserId(), u.getUserId())) {
+                u.getShiftUsers().remove(link);
+                link.setUser(null);
+                link.setShift(null);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    public ShiftProgrammed(Set<User> user,
+                 String name,
+                 String description,
+                 OffsetDateTime startEvent, OffsetDateTime endEvent,
+                 String color) {
+
+        for (User u : user) {
+            addUser(u);
+        }
+        this.shiftName = name;
+        this.description = description;
+        this.start = startEvent;
+        this.end = endEvent;
+        this.color = color;
+        syncDate();
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncDate() {
+        this.date = this.start.toLocalDate();
+    }
+
 
 }

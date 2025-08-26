@@ -5,12 +5,11 @@ import com.pat.crewhive.api.swagger.interfaces.EventControllerInterface;
 import com.pat.crewhive.dto.event.CreateEventDTO;
 import com.pat.crewhive.dto.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
-import com.pat.crewhive.model.util.EventTemp;
+import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import com.pat.crewhive.service.EventService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +37,7 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @GetMapping(path = "/{temp}/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable EventTemp temp, @PathVariable @NoHtml Long userId) {
+    public ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable Period temp, @PathVariable @NoHtml Long userId) {
 
         log.info("Received request to get events for user {} in period {}", userId, temp);
 

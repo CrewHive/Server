@@ -11,7 +11,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -32,6 +32,11 @@ public class Event {
     @Column(name = "event_id", nullable = false)
     @Setter(AccessLevel.NONE)
     private Long eventId;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    @Setter(AccessLevel.NONE)
+    private Long version;
 
     @Column(name = "name", nullable = false)
     private String eventName;
@@ -56,7 +61,7 @@ public class Event {
     private EventType eventType;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<EventUsers> users = new LinkedHashSet<>();
+    private Set<EventUsers> users = new HashSet<>();
 
 
     /**
@@ -82,11 +87,15 @@ public class Event {
      */
     public void removeUser(User u) {
 
-        Long uid = u.getUserId();
-
-        this.users.removeIf(eu -> Objects.equals(eu.getUser().getUserId(), uid));
-
-        u.getPersonalEvents().removeIf(eu -> Objects.equals(eu.getEvent().getEventId(), this.eventId));
+        this.users.removeIf(link -> {
+            if (Objects.equals(link.getUser().getUserId(), u.getUserId())) {
+                u.getPersonalEvents().remove(link);
+                link.setUser(null);
+                link.setEvent(null);
+                return true;
+            }
+            return false;
+        });
     }
 
 

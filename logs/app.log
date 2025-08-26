@@ -1,2 +1,4 @@
-2025-08-25 18:12:57.616 [RMI TCP Connection(1)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-08-25 18:12:57.618 [RMI TCP Connection(1)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2025-08-26 14:39:58.724 [RMI TCP Connection(2)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-08-26 14:39:58.728 [RMI TCP Connection(2)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+2025-08-26 14:40:09.851 [http-nio-0.0.0.0-8080-exec-3] ERROR c.pat.crewhive.service.AuthService - Invalid password for user: enri
+2025-08-26 14:40:55.118 [http-nio-0.0.0.0-8080-exec-2] ERROR c.pat.crewhive.service.AuthService - Invalid password for user: enri

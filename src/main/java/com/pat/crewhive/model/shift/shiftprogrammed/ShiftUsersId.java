@@ -1,23 +1,22 @@
-package com.pat.crewhive.model.event;
+package com.pat.crewhive.model.shift.shiftprogrammed;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 @Embeddable
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
-public class EventUsersId implements Serializable {
+public class ShiftUsersId implements Serializable {
+
+    @Column(name = "shift_programmed_id", nullable = false)
+    private Long shiftProgrammedId;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
-
-    @Column(name = "event_id", nullable = false)
-    private Long eventId;
 }

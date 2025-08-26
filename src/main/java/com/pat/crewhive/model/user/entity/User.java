@@ -1,10 +1,9 @@
 package com.pat.crewhive.model.user.entity;
 
-
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.event.EventUsers;
+import com.pat.crewhive.model.shift.shiftprogrammed.ShiftUser;
 import com.pat.crewhive.model.shift.shiftworked.entity.ShiftWorked;
-import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.role.UserRole;
 import com.pat.crewhive.model.util.ContractType;
 import jakarta.persistence.*;
@@ -14,10 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @NoArgsConstructor
 @Entity
@@ -53,7 +49,7 @@ public class User {
     private boolean isWorking;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<EventUsers> personalEvents = new LinkedHashSet<>();
+    private Set<EventUsers> personalEvents = new HashSet<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserRole role;
@@ -80,13 +76,11 @@ public class User {
     @Column(name = "leave_days_taken", nullable = false)
     private BigDecimal leaveDaysTaken;
 
-    //todo se salvo dal lato user lascia all se uso lato shift usa remove uguale per i programmed
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ShiftWorked> shiftWorked = new ArrayList<>();
+    private Set<ShiftWorked> shiftWorked = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @OrderBy("start ASC")
-    private Set<ShiftProgrammed> shiftProgrammed = new LinkedHashSet<>();
+    private Set<ShiftUser> shiftUsers = new HashSet<>();
 
     public User(String username, String email, String password) {
         this.email = email;

@@ -4,9 +4,8 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.event.CreateEventDTO;
 import com.pat.crewhive.dto.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
-import com.pat.crewhive.model.event.EventUsers;
 import com.pat.crewhive.model.user.entity.User;
-import com.pat.crewhive.model.util.EventTemp;
+import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.repository.EventRepository;
 import com.pat.crewhive.repository.EventUsersRepository;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
@@ -86,20 +85,20 @@ public class EventService {
 
     /**
      * Fetch events for a user within a specified time period.
-     * @param eventTemp The time period (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
+     * @param period The time period (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
      * @param userId The ID of the user.
      * @return List of events within the specified period for the user.
      */
     @Transactional(readOnly = true)
-    public List<Event> getEventsByPeriodAndUser(EventTemp eventTemp, Long userId) {
+    public List<Event> getEventsByPeriodAndUser(Period period, Long userId) {
 
-        log.info("Fetching events for userId: {} with eventTemp: {}", userId, eventTemp);
+        log.info("Fetching events for userId: {} with eventTemp: {}", userId, period);
 
         LocalDate today = LocalDate.now();
         LocalDate from;
         LocalDate to;
 
-        switch (eventTemp) {
+        switch (period) {
             case DAY -> {
                 from = today;
                 to = today;
@@ -128,7 +127,7 @@ public class EventService {
                 to = LocalDate.of(today.getYear(), 12, 31);
             }
             default -> {
-                log.warn("Unknown EventTemp: {}. Returning empty list.", eventTemp);
+                log.warn("Unknown EventTemp: {}. Returning empty list.", period);
                 return List.of();
             }
         }
@@ -152,15 +151,16 @@ public class EventService {
 
 
     /**
-     * Fetch all public events.
+     * Fetch all public events for a specific company.
+     * @param companyId The ID of the company.
      * @return List of public events.
      */
     @Transactional(readOnly = true)
-    public List<Event> getPublicEvents() {
+    public List<Event> getPublicEvents(Long companyId) {
 
         log.info("Fetching all public events");
 
-        return eventRepository.findAllByEventType(PUBLIC);
+        return eventRepository.findAllByEventTypeAndCompanyId(PUBLIC, companyId);
     }
 
 
