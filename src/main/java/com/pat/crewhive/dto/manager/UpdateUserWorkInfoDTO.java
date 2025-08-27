@@ -29,7 +29,7 @@ public class UpdateUserWorkInfoDTO {
     int workableHoursPerWeek;
 
     @Min(value = 0, message = "Overtime hours must be at least 0")
-    int overtimeHours;
+    BigDecimal overtimeHours;
 
     @Min(value = 0, message = "Vacation days accumulated must be at least 0")
     @Digits(fraction = 2, integer = 3, message = "Vacation days accumulated must be a number with up to 3 digits and 2 decimal places")

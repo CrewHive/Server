@@ -1,2 +1,5 @@
-2025-08-26 18:03:16.114 [RMI TCP Connection(1)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-08-26 18:03:16.117 [RMI TCP Connection(1)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2025-08-26 22:56:28.751 [RMI TCP Connection(4)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-08-26 22:56:28.755 [RMI TCP Connection(4)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2025-08-26 23:58:02.871 [http-nio-0.0.0.0-8080-exec-3] ERROR c.p.crewhive.service.CompanyService - Attempting to register company with name: prova
+2025-08-27 00:24:30.964 [http-nio-0.0.0.0-8080-exec-8] ERROR c.pat.crewhive.service.AuthService - Invalid password for user: puffyenri4
+2025-08-27 00:31:36.219 [http-nio-0.0.0.0-8080-exec-5] ERROR c.pat.crewhive.service.AuthService - Invalid password for user: puffyenri4

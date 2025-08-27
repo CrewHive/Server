@@ -21,7 +21,7 @@ public class UserWithTimeParamsDTO {
 
     private int workableHoursPerWeek;
 
-    private int overtimeHours;
+    private BigDecimal overtimeHours;
 
     private BigDecimal vacationDaysAccumulated;
 
