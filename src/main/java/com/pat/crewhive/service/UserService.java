@@ -149,6 +149,7 @@ public class UserService {
 
         return new UserWithTimeParamsDTO(
                 user.getUserId(),
+                user.getUsername(),
                 user.getEmail(),
                 user.getCompany().getName(),
                 user.getWorkableHoursPerWeek(),
@@ -255,17 +256,15 @@ public class UserService {
      * @param username the username of the user to delete
      */
     @Transactional
-    public void deleteAccount(String username) {
+    public void deleteAccount(Long userId) {
 
-        username = stringUtils.normalizeString(username);
-
-        User user = getUserByUsername(username);
+        User user = getUserById(userId);
 
         refreshTokenService.deleteTokenByUser(user);
 
         userRepository.delete(user);
 
-        log.info("Deleted account for user: {}", username);
+        log.info("Deleted account for user: {}", userId);
     }
 
 }

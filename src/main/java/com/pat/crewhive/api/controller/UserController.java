@@ -82,7 +82,7 @@ public class UserController implements UserControllerInterface {
 
         log.info("Deleting account for user: {}", cud.getUsername());
 
-        userService.deleteAccount(cud.getUsername());
+        userService.deleteAccount(cud.getUserId());
 
         return ResponseEntity.ok().build();
     }

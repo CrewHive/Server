@@ -51,4 +51,6 @@ public class CompanyController implements CompanyControllerInterface {
 
         return ResponseEntity.ok().build();
     }
+
+    //todo delete company and clean all references
 }

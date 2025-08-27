@@ -15,6 +15,8 @@ public class UserWithTimeParamsDTO {
 
     private Long userId;
 
+    private String username;
+
     private String email;
 
     private String companyName;
