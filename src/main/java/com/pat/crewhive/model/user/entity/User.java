@@ -1,9 +1,6 @@
 package com.pat.crewhive.model.user.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.event.EventUsers;
 import com.pat.crewhive.model.shift.shiftprogrammed.ShiftUser;
@@ -50,12 +47,14 @@ public class User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
+    @JsonIgnore
     private Company company;
 
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Set<EventUsers> personalEvents = new HashSet<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -87,6 +86,7 @@ public class User {
     private Set<ShiftWorked> shiftWorked = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Set<ShiftUser> shiftUsers = new HashSet<>();
 
     public User(String username, String email, String password) {

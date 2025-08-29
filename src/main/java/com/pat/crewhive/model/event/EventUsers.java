@@ -1,6 +1,7 @@
 package com.pat.crewhive.model.event;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pat.crewhive.model.user.entity.User;
 import jakarta.persistence.*;
@@ -21,29 +22,23 @@ import lombok.Setter;
 public class EventUsers {
 
     @EmbeddedId
-    private EventUsersId id;
+    private EventUsersId id = new EventUsersId();
 
     @ManyToOne (optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @MapsId("userId")
+    @JsonBackReference
     private User user;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     @MapsId("eventId")
+    @JsonBackReference
     private Event event;
 
     public EventUsers(User user, Event personalEvent) {
         this.user = user;
         this.event = personalEvent;
-    }
-
-    @PrePersist
-    void fillIdIfNull() {
-        if (id == null && user != null && event != null
-                && user.getUserId() != null && event.getEventId() != null) {
-            this.id = new EventUsersId(user.getUserId(), event.getEventId());
-        }
     }
 
 }

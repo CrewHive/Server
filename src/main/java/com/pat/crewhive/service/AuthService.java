@@ -201,13 +201,13 @@ public class AuthService {
         }
 
         User owner = refreshTokenService.getOwner(rt);
-        if (owner == null || !owner.getUsername().equals(request.getUsername())) {
+        if (owner == null || !owner.getUserId().equals(request.getUserId())) {
 
             throw new InvalidTokenException("Refresh Token does not belong to user");
         }
 
         refreshTokenService.invalidateRefreshToken(rt);
-        log.info("User {} logged out successfully", request.getUsername());
+        log.info("User {} logged out successfully", request.getUserId());
     }
 }
 

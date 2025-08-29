@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -70,8 +71,36 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndUser(@PathVariable Period period,
-                                                                   @PathVariable Long userId);
+    ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
+                                                                   @PathVariable @NotNull Long userId);
+
+
+
+    @Operation(summary = "Get programmed shifts by period and company",
+            description = "Retrieves programmed shifts for a specific company within a defined time period.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Shifts retrieved successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndCompany(@PathVariable @NotNull Period period,
+                                                                      @PathVariable @NotNull Long companyId);
+
 
 
     @Operation(summary = "Get all users assigned to a programmed shift",
@@ -96,7 +125,7 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<User>> getUsersByShift(@PathVariable Long shiftId);
+    ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull Long shiftId);
 
 
     @Operation(summary = "Update an existing programmed shift",
@@ -158,5 +187,5 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> deleteShift(@PathVariable Long shiftId);
+    ResponseEntity<?> deleteShift(@PathVariable @NotNull Long shiftId);
 }

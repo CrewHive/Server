@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -73,7 +74,8 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable Period temp, @PathVariable Long userId);
+    ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable @NotNull Period temp,
+                                                         @PathVariable @NotNull Long userId);
 
 
     @Operation(summary = "Get all events by user",
@@ -98,7 +100,7 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable Long eventId);
+    ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable @NotNull Long eventId);
 
 
     @Operation(summary = "Get all public events by company and period",
@@ -123,7 +125,8 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<Event>> getAllPublicEventsByCompanyAndPeriod(@AuthenticationPrincipal CustomUserDetails cud,@PathVariable Period temp);
+    ResponseEntity<List<Event>> getAllPublicEventsByCompanyAndPeriod(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                     @PathVariable @NotNull Period temp);
 
 
     @Operation(summary = "Update an existing event",
@@ -173,6 +176,6 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<String> deleteEvent(@PathVariable Long eventId);
+    ResponseEntity<String> deleteEvent(@PathVariable @NotNull Long eventId);
 
 }

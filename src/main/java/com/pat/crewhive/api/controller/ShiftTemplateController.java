@@ -67,7 +67,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @DeleteMapping("/delete/{shiftName}/company/{companyId}")
     public ResponseEntity<?> deleteShiftTemplate(@PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
-                                                    @PathVariable @NotNull Long companyId) {
+                                                 @PathVariable @NotNull Long companyId) {
 
         log.info("Received request to delete shift template '{}' for company ID {}", shiftName, companyId);
 

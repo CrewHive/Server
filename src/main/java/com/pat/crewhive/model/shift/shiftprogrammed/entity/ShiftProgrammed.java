@@ -1,5 +1,6 @@
 package com.pat.crewhive.model.shift.shiftprogrammed.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.pat.crewhive.model.shift.shiftprogrammed.ShiftUser;
 import com.pat.crewhive.model.user.entity.User;
 import jakarta.persistence.*;
@@ -51,6 +52,7 @@ public class ShiftProgrammed {
     private String color;
 
     @OneToMany(mappedBy = "shift", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private Set<ShiftUser> users = new HashSet<>();
 
 

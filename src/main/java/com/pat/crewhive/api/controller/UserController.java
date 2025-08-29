@@ -47,7 +47,7 @@ public class UserController implements UserControllerInterface {
     public ResponseEntity<?> logout(@RequestBody @Valid LogoutDTO request) {
 
         authService.logout(request);
-        log.info("Logout ok for user: {}", request.getUsername());
+        log.info("Logout ok for user: {}", request.getUserId());
 
         return ResponseEntity.ok().build();
     }
@@ -72,6 +72,17 @@ public class UserController implements UserControllerInterface {
         log.info("Updating password for user: {}", cud.getUsername());
 
         userService.updatePassword(updatePasswordDTO.getNewPassword(), updatePasswordDTO.getOldPassword(), cud.getUsername());
+
+        return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @DeleteMapping(path = "/leave-company", produces = "application/json")
+    public ResponseEntity<?> leaveCompany(@AuthenticationPrincipal CustomUserDetails cud) {
+
+        log.info("User {} is leaving their company", cud.getUsername());
+
+        userService.leaveCompany(cud.getUserId());
 
         return ResponseEntity.ok().build();
     }
