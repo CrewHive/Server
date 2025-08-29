@@ -42,5 +42,6 @@ public class CreateEventDTO {
     @NotNull(message = "Event type cannot be null")
     EventType eventType;
 
+    @NotNull(message = "Event must have at least one user")
     Set<Long> userId;
 }

@@ -33,7 +33,7 @@ public class ManagerController implements ManagerControllerInterface {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @PostMapping(path = "/create-role", produces = "application/json")
     public ResponseEntity<?> createRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                        @RequestBody @NotBlank(message = "The role name is required") String roleName) {
+                                        @RequestBody @NoHtml @NotBlank(message = "The role name is required") String roleName) {
 
         roleService.createRole(roleName, cud.getCompanyId());
 

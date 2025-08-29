@@ -27,7 +27,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         this.shiftProgrammedService = shiftProgrammedService;
     }
 
-
+    @Override
     @PostMapping("/create")
     public ResponseEntity<Long> createShift(@RequestBody @Valid CreateShiftProgrammedDTO dto) {
 
@@ -36,7 +36,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.createShift(dto));
     }
 
-
+    @Override
     @GetMapping("/period/{period}/user/{userId}")
     public ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
                                                                           @PathVariable @NotNull Long userId) {
@@ -46,6 +46,19 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndUser(period, userId));
     }
 
+
+    @Override
+    @GetMapping("/period/{period}/company/{companyId}")
+    public ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndCompany(@PathVariable @NotNull Period period,
+                                                                             @PathVariable @NotNull Long companyId) {
+
+        log.info("Received request to get shifts for company {} in period {}",  companyId, period);
+
+        return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndCompany(period, companyId));
+    }
+
+
+    @Override
     @GetMapping("/users/{shiftId}")
     public ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull Long shiftId) {
 
@@ -54,6 +67,8 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.getUsersInShift(shiftId));
     }
 
+
+    @Override
     @PatchMapping("/patch")
     public ResponseEntity<Long> patchShift(@RequestBody @Valid PatchShiftProgrammedDTO dto) {
 
@@ -62,6 +77,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.patchShift(dto));
     }
 
+    @Override
     @DeleteMapping("/delete/{shiftId}")
     public ResponseEntity<?> deleteShift(@PathVariable @NotNull Long shiftId) {
 

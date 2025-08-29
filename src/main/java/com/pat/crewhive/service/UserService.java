@@ -163,6 +163,21 @@ public class UserService {
 
 
     /**
+     * Retrieves all users belonging to a specific company.
+     *
+     * @param companyId the ID of the company
+     * @return a list of User objects belonging to the specified company
+     */
+    @Transactional(readOnly = true)
+    public List<User> getAllUsersInCompany(Long companyId) {
+
+        log.info("Retrieving all users in company with ID: {}", companyId);
+
+        return userRepository.findAllByCompanyId(companyId);
+    }
+
+
+    /**
      * Updates the username of a user.
      *
      * @param newUsername the new username to set
@@ -251,9 +266,35 @@ public class UserService {
 
 
     /**
+     * Allows a user to leave their current company.
+     *
+     * @param userId the ID of the user who wants to leave the company
+     * @throws ResourceAlreadyExistsException if the user is not part of any company
+     */
+    @Transactional
+    public void leaveCompany(Long userId) {
+
+        User user = getUserById(userId);
+
+        if(user.getCompany() == null) {
+
+            log.info("User {} is not part of any company", user.getUsername());
+            throw new ResourceAlreadyExistsException("User is not part of any company");
+        }
+
+        String companyName = user.getCompany().getName();
+        user.setCompany(null);
+
+        userRepository.save(user);
+
+        log.info("User {} has left the company {}", user.getUsername(), companyName);
+    }
+
+
+    /**
      * Deletes a user account.
      *
-     * @param username the username of the user to delete
+     * @param userId the username of the user to delete
      */
     @Transactional
     public void deleteAccount(Long userId) {
@@ -266,5 +307,6 @@ public class UserService {
 
         log.info("Deleted account for user: {}", userId);
     }
+
 
 }

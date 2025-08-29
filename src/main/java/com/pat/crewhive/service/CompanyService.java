@@ -2,17 +2,21 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
+import com.pat.crewhive.dto.user.UserIdAndUsernameDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.CompanyRepository;
 import com.pat.crewhive.repository.RoleRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -84,6 +88,34 @@ public class CompanyService {
                 .orElseThrow(() -> new ResourceAlreadyExistsException("Company with ID " + companyId + " does not exist."));
     }
 
+
+    /**
+     * Retrieves all users associated with a specific company.
+     *
+     * @param managerId The ID of the manager requesting the user list.
+     * @param companyId The ID of the company whose users are to be retrieved.
+     * @return A list of UserIdAndUsernameDTO representing users in the company.
+     * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
+     */
+    @Transactional(readOnly = true)
+    public List<UserIdAndUsernameDTO> getAllUsersInCompany(Long managerId, Long companyId) {
+
+        log.info("Retrieving all users in company with ID: {}", companyId);
+
+        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+
+            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
+
+        var users = userService.getAllUsersInCompany(companyId);
+
+        return users.stream()
+                .map(user -> new UserIdAndUsernameDTO(user.getUserId(), user.getUsername()))
+                .toList();
+    }
+
+
     /**
      * Checks if a user is part of a specific company.
      *
@@ -121,5 +153,82 @@ public class CompanyService {
         user.setCompany(company);
         userService.updateUser(user);
         log.info("Company {} set for user ID: {}", request.getCompanyName(), request.getUserId());
+    }
+
+
+    /**
+     * Deletes a company by its ID after removing its association from all users.
+     *
+     * @param companyId The ID of the company to delete.
+     * @param managerId The ID of the manager requesting the deletion.
+     * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
+     */
+    @Transactional
+    public void deleteCompany(Long companyId, Long managerId) {
+
+        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+
+            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
+
+        removeCompanyFromUsers(companyId);
+
+        companyRepository.deleteById(companyId);
+
+        log.info("Company with ID {} deleted successfully", companyId);
+    }
+
+
+    /**
+     * Removes a user from a company.
+     *
+     * @param userId The ID of the user to remove from the company.
+     * @param managerId The ID of the manager requesting the removal.
+     * @param companyId The ID of the company from which to remove the user.
+     * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
+     * @throws ResourceNotFoundException if the user does not belong to the specified company or doesn't have one.
+     */
+    @Transactional
+    public void removeUserFromCompany(Long userId, Long managerId, Long companyId) {
+
+        log.info("Attempting to remove user ID {} from company ID {}", userId, companyId);
+
+        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+
+            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
+
+        User user = userService.getUserById(userId);
+
+        if(user.getCompany() == null || !user.getCompany().getCompanyId().equals(companyId)) {
+
+            log.error("Company with ID {} does not belong to the specified company.", companyId);
+            throw new ResourceNotFoundException("User does not belong to the specified company or doesn't have one.");
+        }
+
+        user.setCompany(null);
+        userService.updateUser(user);
+        log.info("User with ID {} removed from company ID {}", userId, companyId);
+    }
+
+
+    /**
+     * Removes the association of a company from all users linked to it.
+     *
+     * @param companyId The ID of the company to remove from users.
+     */
+    @Transactional
+    public void removeCompanyFromUsers(Long companyId) {
+
+        var users = userService.getAllUsersInCompany(companyId);
+
+        for (User user : users) {
+            user.setCompany(null);
+            userService.updateUser(user);
+        }
+
+        log.info("Removed company {} from all associated users", companyId);
     }
 }

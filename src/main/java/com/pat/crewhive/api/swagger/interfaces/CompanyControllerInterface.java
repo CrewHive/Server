@@ -3,6 +3,7 @@ package com.pat.crewhive.api.swagger.interfaces;
 import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
+import com.pat.crewhive.dto.user.UserIdAndUsernameDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,9 +13,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 @Tag(name = "Company management", description = "Operations related to company management")
 public interface CompanyControllerInterface {
@@ -47,7 +52,39 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud, @Valid @RequestBody CompanyRegistrationDTO request);
+    ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                      @Valid @RequestBody CompanyRegistrationDTO request);
+
+
+
+    @Operation(summary = "Get all users in a company",
+            description = "Retrieves all users associated with a specific company.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - Company not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<List<UserIdAndUsernameDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
+                                                               @PathVariable @NotNull Long companyId);
 
 
 
@@ -77,5 +114,69 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud, @Valid @RequestBody SetCompanyDTO request);
+    ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                 @Valid @RequestBody SetCompanyDTO request);
+
+
+
+    @Operation(summary = "Remove user from company",
+            description = "Removes a user from a specified company.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User removed from company successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - User or company not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                   @PathVariable @NotNull Long userId,
+                                   @PathVariable @NotNull Long companyId);
+
+
+
+    @Operation(summary = "Delete a company",
+            description = "Deletes a company by its ID after removing its association from all users.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Company deleted successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - Company not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<?> deleteCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                   @PathVariable @NotNull Long companyId);
 }

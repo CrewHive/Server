@@ -4,6 +4,7 @@ import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.manager.UpdateUserRoleDTO;
 import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -52,7 +53,7 @@ public interface ManagerControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> createRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                      @RequestBody @NotBlank(message = "The role name is required") String roleName);
+                                 @RequestBody @NoHtml @NotBlank(message = "The role name is required") String roleName);
 
 
 
@@ -83,7 +84,7 @@ public interface ManagerControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                          @Valid @RequestBody UpdateUserRoleDTO updateUserRoleDTO);
+                                     @RequestBody @Valid UpdateUserRoleDTO updateUserRoleDTO);
 
 
     @Operation(summary = "Update user work information",
@@ -113,7 +114,7 @@ public interface ManagerControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
-                                              @Valid @RequestBody UpdateUserWorkInfoDTO updateUserWorkInfoDTO);
+                                         @RequestBody @Valid UpdateUserWorkInfoDTO updateUserWorkInfoDTO);
 
 
 
@@ -148,5 +149,5 @@ public interface ManagerControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
-                                     @RequestBody @NotBlank(message = "The role name is required") String roleName);
+                                 @RequestBody @NoHtml @NotBlank(message = "The role name is required") String roleName);
 }

@@ -1,5 +1,6 @@
 package com.pat.crewhive.model.shift.shiftprogrammed;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.user.entity.User;
@@ -21,31 +22,25 @@ import lombok.Setter;
 public class ShiftUser {
 
     @EmbeddedId
-    private ShiftUserId id;
+    private ShiftUserId id = new ShiftUserId();
 
-    //todo per il refactoring per la beta togliere jsonignore e comincia a creare i dto per i service e a modificare le qeury per dare le info che servono
+    //todo per il refactoring per la beta togliere jsonignore e comincia a creare i dto per i service e a modificare le query per dare le info che servono
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_programmed_id", nullable = false)
     @JsonIgnore
     @MapsId("shiftProgrammedId")
+    @JsonBackReference
     private ShiftProgrammed shift;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     @MapsId("userId")
+    @JsonBackReference
     private User user;
 
     public ShiftUser(ShiftProgrammed shift, User user) {
         this.shift = shift;
         this.user = user;
-    }
-
-    @PrePersist
-    void fillIdIfNull() {
-        if (id == null && user != null && shift != null
-                && user.getUserId() != null && shift.getShiftProgrammedId() != null) {
-            this.id = new ShiftUserId(shift.getShiftProgrammedId(), user.getUserId());
-        }
     }
 }

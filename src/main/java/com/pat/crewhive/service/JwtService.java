@@ -47,7 +47,7 @@ public class JwtService {
 
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .claim("role", role)
+                .claim("role", role) // ROLE_USER, ROLE_MANAGER, ...
                 .claim("username", username)
                 .claim("companyId", companyId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
