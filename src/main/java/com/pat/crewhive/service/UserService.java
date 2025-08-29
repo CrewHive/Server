@@ -173,7 +173,7 @@ public class UserService {
 
         log.info("Retrieving all users in company with ID: {}", companyId);
 
-        return userRepository.findAllByCompanyId(companyId);
+        return userRepository.findAllByCompany_CompanyId(companyId);
     }
 
 
