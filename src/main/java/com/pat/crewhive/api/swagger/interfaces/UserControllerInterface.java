@@ -3,6 +3,7 @@ package com.pat.crewhive.api.swagger.interfaces;
 import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
+import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
@@ -89,8 +90,8 @@ public interface UserControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
-                                     @RequestBody @NoHtml @NotBlank String newUsername);
+    ResponseEntity<UpdateUsernameOutputDTO> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
+                                                           @RequestBody @NoHtml @NotBlank String newUsername);
 
 
 

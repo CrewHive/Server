@@ -2,8 +2,9 @@ package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.company.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
-import com.pat.crewhive.dto.user.UserIdAndUsernameDTO;
+import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -83,8 +84,8 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<UserIdAndUsernameDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
-                                                               @PathVariable @NotNull Long companyId);
+    ResponseEntity<List<UserIdAndUsernameAndHoursDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                       @PathVariable @NotNull Long companyId);
 
 
 
@@ -145,9 +146,9 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                   @PathVariable @NotNull Long userId,
-                                   @PathVariable @NotNull Long companyId);
+    ResponseEntity<RemoveUserFromCompanyOutputDTO> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                     @PathVariable @NotNull Long userId,
+                                                                     @PathVariable @NotNull Long companyId);
 
 
 

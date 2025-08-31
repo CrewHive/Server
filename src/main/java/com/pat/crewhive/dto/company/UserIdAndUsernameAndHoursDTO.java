@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.user;
+package com.pat.crewhive.dto.company;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,9 +9,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserIdAndUsernameDTO {
+public class UserIdAndUsernameAndHoursDTO {
 
     private Long userId;
 
     private String username;
+
+    private int workableHoursPerWeek;
 }

@@ -12,6 +12,7 @@ import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.service.utils.DateUtils;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +57,7 @@ public class EventService {
      * @throws IllegalArgumentException if the start date is after the end date.
      */
     @Transactional
-    public Long createEvent(CreateEventDTO createEventDTO) {
+    public Long createEvent(CreateEventDTO createEventDTO, String role) {
 
         log.info("Creating event with name: {}", createEventDTO.getName());
 
@@ -65,6 +66,10 @@ public class EventService {
 
         if (createEventDTO.getStart().isAfter(createEventDTO.getEnd())) {
             throw new IllegalArgumentException("L'inizio deve essere prima della fine");
+        }
+
+        if (role.equals("ROLE_USER") && createEventDTO.getEventType() == PUBLIC) {
+            throw new AuthorizationDeniedException("Non sei autorizzato a creare eventi pubblici");
         }
 
         List<User> users = userService.getUsersByIds(createEventDTO.getUserId());

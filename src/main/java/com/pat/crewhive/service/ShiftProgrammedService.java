@@ -3,6 +3,8 @@ package com.pat.crewhive.service;
 
 import com.pat.crewhive.dto.shift.shift_programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.shift.shift_programmed.PatchShiftProgrammedDTO;
+import com.pat.crewhive.dto.shift.shift_programmed.ShiftProgrammedOutputDTO;
+import com.pat.crewhive.dto.shift.shift_programmed.UsernameAndUserIdForShiftProgrammedDTO;
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.Period;
@@ -15,9 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -83,6 +84,7 @@ public class ShiftProgrammedService {
     }
 
 
+    //todo refactor function after the exam to avoid that horrible list and dtos
     /**
      * Retrieve shifts for a specific user within a defined period.
      * @param period The period to filter shifts (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
@@ -90,14 +92,32 @@ public class ShiftProgrammedService {
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
-    public List<ShiftProgrammed> getShiftsByPeriodAndUser(Period period, Long userId) {
+    public ShiftProgrammedOutputDTO getShiftsByPeriodAndUser(Period period, Long userId) {
 
         log.info("Fetching shifts for user ID: {}", userId);
 
         LocalDate from = dateUtils.getStartDateForPeriod(period);
         LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        return shiftProgrammedRepository.findByUserAndDateBetween(userId, from, to);
+        List<ShiftProgrammed> dbList = shiftProgrammedRepository.findByUserAndDateBetween(userId, from, to);
+
+        List<UsernameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
+
+        dbList.forEach(shiftProgrammed -> {
+
+            List<String> usernames = new ArrayList<>();
+            List<Long> userIds   = new ArrayList<>();
+
+            shiftProgrammed.getUsers().forEach(su -> {
+                var u = su.getUser();
+                userIds.add(u.getUserId());
+                usernames.add(u.getUsername());
+            });
+
+            result.add(new UsernameAndUserIdForShiftProgrammedDTO(usernames, userIds, shiftProgrammed.getShiftProgrammedId()));
+        });
+
+        return new ShiftProgrammedOutputDTO(dbList, result);
     }
 
 
@@ -108,14 +128,32 @@ public class ShiftProgrammedService {
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
-    public List<ShiftProgrammed> getShiftsByPeriodAndCompany(Period period, Long companyId) {
+    public ShiftProgrammedOutputDTO getShiftsByPeriodAndCompany(Period period, Long companyId) {
 
         log.info("Fetching shifts for company ID: {}", companyId);
 
         LocalDate from = dateUtils.getStartDateForPeriod(period);
         LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        return shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to);
+        List<ShiftProgrammed> dbList = shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to);
+
+        List<UsernameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
+
+        dbList.forEach(shiftProgrammed -> {
+
+            List<String> usernames = new ArrayList<>();
+            List<Long> userIds   = new ArrayList<>();
+
+            shiftProgrammed.getUsers().forEach(su -> {
+                var u = su.getUser();
+                userIds.add(u.getUserId());
+                usernames.add(u.getUsername());
+            });
+
+            result.add(new UsernameAndUserIdForShiftProgrammedDTO(usernames, userIds, shiftProgrammed.getShiftProgrammedId()));
+        });
+
+        return new ShiftProgrammedOutputDTO(dbList, result);
     }
 
 
