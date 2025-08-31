@@ -2,6 +2,7 @@ package com.pat.crewhive.model.event;
 
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.EventType;
@@ -34,12 +35,10 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id", nullable = false)
-    @Setter(AccessLevel.NONE)
     private Long eventId;
 
     @Version
     @Column(name = "version", nullable = false)
-    @Setter(AccessLevel.NONE)
     private Long version;
 
     @Column(name = "name", nullable = false)
@@ -65,6 +64,7 @@ public class Event {
     private EventType eventType;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private Set<EventUsers> users = new HashSet<>();
 
 

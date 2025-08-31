@@ -31,16 +31,20 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @PostMapping(path = "/create", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Long> createEvent(@RequestBody @Valid CreateEventDTO dto) {
+    public ResponseEntity<Long> createEvent(@AuthenticationPrincipal CustomUserDetails cud,
+                                            @RequestBody @Valid CreateEventDTO dto) {
 
         log.info("Received request to create event");
 
-        return ResponseEntity.ok(eventService.createEvent(dto));
+        String role = cud.getRole();
+
+        return ResponseEntity.ok(eventService.createEvent(dto, role));
     }
 
     @Override
     @GetMapping(path = "/{temp}/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable Period temp, @PathVariable @NoHtml Long userId) {
+    public ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable @NotNull Period temp,
+                                                                @PathVariable @NotNull Long userId) {
 
         log.info("Received request to get events for user {} in period {}", userId, temp);
 
@@ -49,7 +53,7 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @GetMapping(path = "/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable @NoHtml Long userId) {
+    public ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable @NotNull Long userId) {
 
         log.info("Received request to get all events for user {}", userId);
 
@@ -78,7 +82,7 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @DeleteMapping(path = "/delete/{eventId}", produces = "application/json")
-    public ResponseEntity<String> deleteEvent(@PathVariable @NoHtml Long eventId) {
+    public ResponseEntity<String> deleteEvent(@PathVariable @NotNull Long eventId) {
 
         log.info("Received request to delete event with id: {}", eventId);
 

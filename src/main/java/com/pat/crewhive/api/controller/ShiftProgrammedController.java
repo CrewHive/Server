@@ -4,6 +4,7 @@ package com.pat.crewhive.api.controller;
 import com.pat.crewhive.api.swagger.interfaces.ShiftProgrammedControllerInterface;
 import com.pat.crewhive.dto.shift.shift_programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.shift.shift_programmed.PatchShiftProgrammedDTO;
+import com.pat.crewhive.dto.shift.shift_programmed.ShiftProgrammedOutputDTO;
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.Period;
@@ -27,7 +28,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         this.shiftProgrammedService = shiftProgrammedService;
     }
 
-
+    @Override
     @PostMapping("/create")
     public ResponseEntity<Long> createShift(@RequestBody @Valid CreateShiftProgrammedDTO dto) {
 
@@ -36,9 +37,9 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.createShift(dto));
     }
 
-
+    @Override
     @GetMapping("/period/{period}/user/{userId}")
-    public ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
+    public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
                                                                           @PathVariable @NotNull Long userId) {
 
         log.info("Received request to get shifts for user {} in period {}", userId, period);
@@ -46,6 +47,19 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndUser(period, userId));
     }
 
+
+    @Override
+    @GetMapping("/period/{period}/company/{companyId}")
+    public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@PathVariable @NotNull Period period,
+                                                                                     @PathVariable @NotNull Long companyId) {
+
+        log.info("Received request to get shifts for company {} in period {}",  companyId, period);
+
+        return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndCompany(period, companyId));
+    }
+
+
+    @Override
     @GetMapping("/users/{shiftId}")
     public ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull Long shiftId) {
 
@@ -54,6 +68,8 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.getUsersInShift(shiftId));
     }
 
+
+    @Override
     @PatchMapping("/patch")
     public ResponseEntity<Long> patchShift(@RequestBody @Valid PatchShiftProgrammedDTO dto) {
 
@@ -62,6 +78,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
         return ResponseEntity.ok(shiftProgrammedService.patchShift(dto));
     }
 
+    @Override
     @DeleteMapping("/delete/{shiftId}")
     public ResponseEntity<?> deleteShift(@PathVariable @NotNull Long shiftId) {
 

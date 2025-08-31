@@ -20,60 +20,40 @@ public class DateUtils {
     public LocalDate getStartDateForPeriod(Period period) {
 
         LocalDate now = LocalDate.now();
-        LocalDate from;
 
-        switch (period) {
-            case DAY -> from = now;
-            case WEEK -> from = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            case MONTH -> from = now.with(TemporalAdjusters.firstDayOfMonth());
-            case TRIMESTER -> {
-                int q = ((now.getMonthValue() - 1) / 3) + 1;
-                int startMonth = (q - 1) * 3 + 1;
-                from = LocalDate.of(now.getYear(), startMonth, 1);
-            }
-            case SEMESTER -> {
-                int startMonth = (now.getMonthValue() <= 6) ? 1 : 7;
-                from = LocalDate.of(now.getYear(), startMonth, 1);
-            }
-            case YEAR -> {
-                from = LocalDate.of(now.getYear(), 1, 1);
-            }
-            default -> {
-                log.warn("Unknown Period: {}. Returning current date.", period);
-                return null;
-            }
+        return switch (period) {
+
+            case DAY -> now;
+
+            case WEEK -> now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
+            case MONTH -> now.with(TemporalAdjusters.firstDayOfMonth());
+
+            case TRIMESTER -> now.minusMonths(1).withDayOfMonth(1);
+
+            case SEMESTER -> now.minusMonths(2).withDayOfMonth(1);
+
+            case YEAR -> now.minusMonths(5).withDayOfMonth(1);
         };
-
-        return from;
     }
 
     public LocalDate getEndDateForPeriod(Period period) {
 
         LocalDate now = LocalDate.now();
-        LocalDate to;
 
-        switch (period) {
-            case DAY -> to = now;
-            case WEEK -> to = now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-            case MONTH -> to = now.with(TemporalAdjusters.lastDayOfMonth());
-            case TRIMESTER -> {
-                int q = ((now.getMonthValue() - 1) / 3) + 1;
-                int startMonth = (q - 1) * 3 + 1;
-                LocalDate from = LocalDate.of(now.getYear(), startMonth, 1);
-                to = from.plusMonths(3).minusDays(1);
-            }
-            case SEMESTER -> {
-                int startMonth = (now.getMonthValue() <= 6) ? 1 : 7;
-                LocalDate from = LocalDate.of(now.getYear(), startMonth, 1);
-                to = from.plusMonths(6).minusDays(1);
-            }
-            case YEAR -> to = LocalDate.of(now.getYear(), 12, 31);
-            default -> {
-                log.warn("Unknown Period: {}. Returning current date.", period);
-                return null;
-            }
+         return switch (period) {
+
+            case DAY -> now;
+
+            case WEEK -> now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+
+            case MONTH -> now.with(TemporalAdjusters.lastDayOfMonth());
+
+            case TRIMESTER -> now.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
+
+            case SEMESTER -> now.plusMonths(2).with(TemporalAdjusters.lastDayOfMonth());
+
+            case YEAR -> now.plusMonths(5).with(TemporalAdjusters.lastDayOfMonth());
         };
-
-        return to;
     }
 }

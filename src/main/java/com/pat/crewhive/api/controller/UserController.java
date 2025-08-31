@@ -4,6 +4,7 @@ package com.pat.crewhive.api.controller;
 import com.pat.crewhive.api.swagger.interfaces.UserControllerInterface;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
+import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
@@ -47,21 +48,21 @@ public class UserController implements UserControllerInterface {
     public ResponseEntity<?> logout(@RequestBody @Valid LogoutDTO request) {
 
         authService.logout(request);
-        log.info("Logout ok for user: {}", request.getUsername());
+        log.info("Logout ok for user: {}", request.getUserId());
 
         return ResponseEntity.ok().build();
     }
 
     @Override
     @PatchMapping(path = "/update-username", produces = "application/json")
-    public ResponseEntity<?> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
-                                            @RequestBody @NoHtml @NotBlank String newUsername) {
+    public ResponseEntity<UpdateUsernameOutputDTO> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                  @RequestBody @NoHtml @NotBlank String newUsername) {
 
         log.info("Updating username for user: {}", cud.getUsername());
 
-        userService.updateUsername(newUsername, cud.getUsername());
+        UpdateUsernameOutputDTO dto = userService.updateUsername(newUsername, cud.getUsername());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(dto);
     }
 
     @Override
@@ -72,6 +73,17 @@ public class UserController implements UserControllerInterface {
         log.info("Updating password for user: {}", cud.getUsername());
 
         userService.updatePassword(updatePasswordDTO.getNewPassword(), updatePasswordDTO.getOldPassword(), cud.getUsername());
+
+        return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @DeleteMapping(path = "/leave-company", produces = "application/json")
+    public ResponseEntity<?> leaveCompany(@AuthenticationPrincipal CustomUserDetails cud) {
+
+        log.info("User {} is leaving their company", cud.getUsername());
+
+        userService.leaveCompany(cud.getUserId());
 
         return ResponseEntity.ok().build();
     }
