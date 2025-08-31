@@ -1,6 +1,7 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
 import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
@@ -148,7 +149,7 @@ public interface UserControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> leaveCompany(@AuthenticationPrincipal CustomUserDetails cud);
+    ResponseEntity<AuthResponseDTO> leaveCompany(@AuthenticationPrincipal CustomUserDetails cud);
 
 
 

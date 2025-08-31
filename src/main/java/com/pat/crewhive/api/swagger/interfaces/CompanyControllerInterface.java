@@ -2,7 +2,7 @@ package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.company.RemoveUserFromCompanyOutputDTO;
+import com.pat.crewhive.dto.user.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
@@ -146,7 +146,7 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<RemoveUserFromCompanyOutputDTO> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
+    ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                                                      @PathVariable @NotNull Long userId,
                                                                      @PathVariable @NotNull Long companyId);
 
