@@ -158,11 +158,13 @@ public class UserService {
 
         log.info("User details retrieved for user: {}", username);
 
+        String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
+
         return new UserWithTimeParamsDTO(
                 user.getUserId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getCompany().getName(),
+                companyName,
                 user.getContractType(),
                 user.getWorkableHoursPerWeek(),
                 user.getOvertimeHours(),
@@ -309,7 +311,6 @@ public class UserService {
 
         shiftUserRepository.deleteByUserId(userId);
 
-        user.getShiftUsers().clear();
         updateUser(user);
 
         refreshTokenService.deleteTokenByUser(user);
