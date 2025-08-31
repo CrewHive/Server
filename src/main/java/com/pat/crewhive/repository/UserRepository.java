@@ -15,7 +15,7 @@ import java.util.Set;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    @EntityGraph(attributePaths = {"role", "role.role"})
+    @EntityGraph(attributePaths = {"role", "role.role", "shiftUsers", "shiftUsers.shift"})
     Optional<User> findById(Long id);
 
     List<User> findAllByCompany_CompanyId(Long companyId);
@@ -23,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @EntityGraph(attributePaths = {"role", "role.role"})
     Optional<User> findByEmail(String email);
 
-    @EntityGraph(attributePaths = {"role", "role.role"})
+    @EntityGraph(attributePaths = {"role", "role.role", "shiftUsers", "shiftUsers.shift"})
     Optional<User> findByUsername(String username);
 
     @EntityGraph(attributePaths = {"role", "role.role"})

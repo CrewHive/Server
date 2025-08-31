@@ -9,6 +9,7 @@ import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.role.UserRole;
+import com.pat.crewhive.model.util.ContractType;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;

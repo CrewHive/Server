@@ -2,6 +2,7 @@ package com.pat.crewhive.api.controller;
 
 
 import com.pat.crewhive.api.swagger.interfaces.UserControllerInterface;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
 import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
@@ -79,13 +80,13 @@ public class UserController implements UserControllerInterface {
 
     @Override
     @DeleteMapping(path = "/leave-company", produces = "application/json")
-    public ResponseEntity<?> leaveCompany(@AuthenticationPrincipal CustomUserDetails cud) {
+    public ResponseEntity<AuthResponseDTO> leaveCompany(@AuthenticationPrincipal CustomUserDetails cud) {
 
         log.info("User {} is leaving their company", cud.getUsername());
 
-        userService.leaveCompany(cud.getUserId());
+        AuthResponseDTO dto = userService.leaveCompany(cud.getUserId());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(dto);
     }
 
     @Override
