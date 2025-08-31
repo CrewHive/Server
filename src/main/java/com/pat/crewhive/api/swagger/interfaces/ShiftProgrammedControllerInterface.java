@@ -3,6 +3,7 @@ package com.pat.crewhive.api.swagger.interfaces;
 import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.shift.shift_programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.shift.shift_programmed.PatchShiftProgrammedDTO;
+import com.pat.crewhive.dto.shift.shift_programmed.ShiftProgrammedOutputDTO;
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.Period;
@@ -71,8 +72,8 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
-                                                                   @PathVariable @NotNull Long userId);
+    ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
+                                                                      @PathVariable @NotNull Long userId);
 
 
 
@@ -98,7 +99,7 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<ShiftProgrammed>> getShiftsByPeriodAndCompany(@PathVariable @NotNull Period period,
+    ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@PathVariable @NotNull Period period,
                                                                       @PathVariable @NotNull Long companyId);
 
 

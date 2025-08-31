@@ -1,8 +1,9 @@
 package com.pat.crewhive.service;
 
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.company.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
-import com.pat.crewhive.dto.user.UserIdAndUsernameDTO;
+import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.user.entity.User;
@@ -24,17 +25,20 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final UserService userService;
+    private final JwtService jwtService;
     private final RoleRepository roleRepository;
     private final StringUtils stringUtils;
 
     public CompanyService(CompanyRepository companyRepository,
                           UserService userService,
                           StringUtils stringUtils,
-                          RoleRepository roleRepository) {
+                          RoleRepository roleRepository,
+                          JwtService jwtService) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
         this.roleRepository = roleRepository;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -98,7 +102,7 @@ public class CompanyService {
      * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
      */
     @Transactional(readOnly = true)
-    public List<UserIdAndUsernameDTO> getAllUsersInCompany(Long managerId, Long companyId) {
+    public List<UserIdAndUsernameAndHoursDTO> getAllUsersInCompany(Long managerId, Long companyId) {
 
         log.info("Retrieving all users in company with ID: {}", companyId);
 
@@ -111,7 +115,7 @@ public class CompanyService {
         var users = userService.getAllUsersInCompany(companyId);
 
         return users.stream()
-                .map(user -> new UserIdAndUsernameDTO(user.getUserId(), user.getUsername()))
+                .map(user -> new UserIdAndUsernameAndHoursDTO(user.getUserId(), user.getUsername(), user.getWorkableHoursPerWeek()))
                 .toList();
     }
 
@@ -149,6 +153,11 @@ public class CompanyService {
                 .orElseThrow(() ->new ResourceAlreadyExistsException("Company with name " + request.getCompanyName() + " does not exist."));
 
         User user = userService.getUserById(request.getUserId());
+
+        if (user.getCompany() != null) {
+            log.info("User ID: {} is already part of company: {}", request.getUserId(), request.getCompanyName());
+            return; // User is already part of the specified company
+        }
 
         user.setCompany(company);
         userService.updateUser(user);
@@ -190,7 +199,7 @@ public class CompanyService {
      * @throws ResourceNotFoundException if the user does not belong to the specified company or doesn't have one.
      */
     @Transactional
-    public void removeUserFromCompany(Long userId, Long managerId, Long companyId) {
+    public RemoveUserFromCompanyOutputDTO removeUserFromCompany(Long userId, Long managerId, Long companyId) {
 
         log.info("Attempting to remove user ID {} from company ID {}", userId, companyId);
 
@@ -210,7 +219,16 @@ public class CompanyService {
 
         user.setCompany(null);
         userService.updateUser(user);
+
         log.info("User with ID {} removed from company ID {}", userId, companyId);
+
+        String accessToken = jwtService
+                .generateToken(user.getUserId(),
+                        user.getUsername(),
+                        user.getRole().getRole().getRoleName(),
+                        null);
+
+        return new RemoveUserFromCompanyOutputDTO(accessToken);
     }
 
 

@@ -31,11 +31,14 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @PostMapping(path = "/create", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Long> createEvent(@RequestBody @Valid CreateEventDTO dto) {
+    public ResponseEntity<Long> createEvent(@AuthenticationPrincipal CustomUserDetails cud,
+                                            @RequestBody @Valid CreateEventDTO dto) {
 
         log.info("Received request to create event");
 
-        return ResponseEntity.ok(eventService.createEvent(dto));
+        String role = cud.getRole();
+
+        return ResponseEntity.ok(eventService.createEvent(dto, role));
     }
 
     @Override

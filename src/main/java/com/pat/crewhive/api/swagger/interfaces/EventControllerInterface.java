@@ -48,7 +48,8 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Long> createEvent(@RequestBody @Valid CreateEventDTO dto);
+    ResponseEntity<Long> createEvent(@AuthenticationPrincipal CustomUserDetails cud,
+                                     @RequestBody @Valid CreateEventDTO dto);
 
 
 

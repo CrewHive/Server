@@ -1,6 +1,7 @@
 package com.pat.crewhive.service;
 
 import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
+import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.UserRepository;
@@ -26,15 +27,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordUtil passwordUtil;
     private final StringUtils stringUtils;
+    private final JwtService jwtService;
 
     public UserService(UserRepository userRepository,
                        PasswordUtil passwordUtil,
                        RefreshTokenService refreshTokenService,
-                       StringUtils stringUtils) {
+                       StringUtils stringUtils, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordUtil = passwordUtil;
         this.refreshTokenService = refreshTokenService;
         this.stringUtils = stringUtils;
+        this.jwtService = jwtService;
     }
 
 
@@ -185,7 +188,7 @@ public class UserService {
      * @throws ResourceAlreadyExistsException if the new username already exists
      */
     @Transactional
-    public void updateUsername(String newUsername, String oldUsername) {
+    public UpdateUsernameOutputDTO updateUsername(String newUsername, String oldUsername) {
 
         newUsername = stringUtils.normalizeString(newUsername);
         oldUsername = stringUtils.normalizeString(oldUsername);
@@ -198,7 +201,19 @@ public class UserService {
         user.setUsername(newUsername);
 
         userRepository.save(user);
+
+        String accessToken = jwtService
+                .generateToken(
+                        user.getUserId(),
+                        user.getUsername(),
+                        user.getRole().getRole().getRoleName(),
+                        user.getCompany() != null ? user.getCompany().getCompanyId() : null);
+
+        UpdateUsernameOutputDTO dto = new UpdateUsernameOutputDTO(newUsername, accessToken);
+
         log.info("Updated username from {} to {}", oldUsername, newUsername);
+
+        return dto;
     }
 
 

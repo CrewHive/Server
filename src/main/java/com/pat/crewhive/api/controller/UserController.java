@@ -4,6 +4,7 @@ package com.pat.crewhive.api.controller;
 import com.pat.crewhive.api.swagger.interfaces.UserControllerInterface;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
+import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
@@ -54,14 +55,14 @@ public class UserController implements UserControllerInterface {
 
     @Override
     @PatchMapping(path = "/update-username", produces = "application/json")
-    public ResponseEntity<?> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
-                                            @RequestBody @NoHtml @NotBlank String newUsername) {
+    public ResponseEntity<UpdateUsernameOutputDTO> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                  @RequestBody @NoHtml @NotBlank String newUsername) {
 
         log.info("Updating username for user: {}", cud.getUsername());
 
-        userService.updateUsername(newUsername, cud.getUsername());
+        UpdateUsernameOutputDTO dto = userService.updateUsername(newUsername, cud.getUsername());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(dto);
     }
 
     @Override
