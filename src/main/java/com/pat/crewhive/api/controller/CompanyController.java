@@ -6,6 +6,7 @@ import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.user.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
+import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.service.CompanyService;
 import jakarta.validation.Valid;
@@ -42,6 +43,22 @@ public class CompanyController implements CompanyControllerInterface {
         log.info("Fetched {} users for company ID: {}", users.size(), companyId);
 
         return ResponseEntity.ok(users);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @GetMapping(path = "/{companyId}/user/{targetId}/info", produces = "application/json")
+    public ResponseEntity<UserWithTimeParamsDTO> getUserInformation(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                          @PathVariable @NotNull Long companyId,
+                                                                          @PathVariable @NotNull Long targetId) {
+
+        Long managerId = cud.getUserId();
+
+        UserWithTimeParamsDTO user = companyService.getCompanyUserWithInformation(managerId, companyId, targetId);
+
+        log.info("Fetched {} users for company ID: {}", user, companyId);
+
+        return ResponseEntity.ok(user);
     }
 
     @Override

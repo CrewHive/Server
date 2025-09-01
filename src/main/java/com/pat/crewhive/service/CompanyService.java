@@ -4,6 +4,7 @@ import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
+import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.user.entity.User;
@@ -126,6 +127,46 @@ public class CompanyService {
         return users.stream()
                 .map(user -> new UserIdAndUsernameAndHoursDTO(user.getUserId(), user.getUsername(), user.getWorkableHoursPerWeek()))
                 .toList();
+    }
+
+
+    /**
+     * Retrieves detailed information about a specific user within a company.
+     *
+     * @param managerId The ID of the manager requesting the user information.
+     * @param companyId The ID of the company to which the user belongs.
+     * @param targetId The ID of the user whose information is to be retrieved.
+     * @return A UserWithTimeParamsDTO containing detailed information about the user.
+     * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
+     */
+    @Transactional(readOnly = true)
+    public UserWithTimeParamsDTO getCompanyUserWithInformation(Long managerId, Long companyId, Long targetId) {
+
+        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+
+            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
+
+        User user = userService.getUserById(targetId);
+
+        log.info("User details retrieved for user: {}", user.getUsername());
+
+        String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
+
+        return new UserWithTimeParamsDTO(
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                companyName,
+                user.getContractType(),
+                user.getWorkableHoursPerWeek(),
+                user.getOvertimeHours(),
+                user.getVacationDaysAccumulated(),
+                user.getVacationDaysTaken(),
+                user.getLeaveDaysAccumulated(),
+                user.getLeaveDaysTaken()
+        );
     }
 
 
