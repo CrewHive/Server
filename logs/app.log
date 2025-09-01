@@ -1,3 +1,5 @@
-2025-09-01 01:10:50.312 [RMI TCP Connection(3)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-09-01 01:10:50.315 [RMI TCP Connection(3)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
-2025-09-01 01:11:26.383 [http-nio-0.0.0.0-8080-exec-6] ERROR c.p.crewhive.service.CompanyService - Attempting to register company with name: jsjej
+2025-09-01 01:43:27.254 [RMI TCP Connection(4)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-01 01:43:27.259 [RMI TCP Connection(4)-100.105.186.65] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 5 ms
+2025-09-01 02:11:17.525 [http-nio-0.0.0.0-8080-exec-7] ERROR c.pat.crewhive.service.AuthService - Invalid password for user: ric
+2025-09-01 02:12:38.949 [http-nio-0.0.0.0-8080-exec-8] ERROR c.p.crewhive.service.CompanyService - Attempting to register company with name: Letsgoski
+2025-09-01 02:15:17.010 [http-nio-0.0.0.0-8080-exec-6] ERROR c.p.crewhive.service.CompanyService - Attempting to register company with name: jagsysj
