@@ -146,7 +146,7 @@ public class UserService {
     /**
      * Retrieves user details along with time parameters by username.
      *
-     * @param username the username of the user to retrieve
+     * @param userId the ID of the user
      * @return a UserWithTimesParamDTO containing user details and time parameters
      * @throws ResourceNotFoundException if the user is not found
      */
