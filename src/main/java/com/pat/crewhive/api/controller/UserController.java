@@ -36,9 +36,9 @@ public class UserController implements UserControllerInterface {
     @GetMapping(path ="/me", produces = "application/json")
     public ResponseEntity<UserWithTimeParamsDTO> getUser(@AuthenticationPrincipal CustomUserDetails cud) {
 
-        String username = cud.getUsername();
+        Long userId = cud.getUserId();
+        UserWithTimeParamsDTO dto = userService.getUserWithTimeParamsByUsername(userId);
 
-        UserWithTimeParamsDTO dto = userService.getUserWithTimeParamsByUsername(username);
         log.info("User details retrieved for user: {}", cud.getUsername());
 
         return ResponseEntity.ok(dto);

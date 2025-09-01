@@ -146,17 +146,16 @@ public class UserService {
     /**
      * Retrieves user details along with time parameters by username.
      *
-     * @param username the username of the user to retrieve
+     * @param userId the ID of the user
      * @return a UserWithTimesParamDTO containing user details and time parameters
      * @throws ResourceNotFoundException if the user is not found
      */
     @Transactional(readOnly = true)
-    public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(String username) {
+    public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(Long userId) {
 
-        username = stringUtils.normalizeString(username);
-        User user = getUserByUsername(username);
+        User user = getUserById(userId);
 
-        log.info("User details retrieved for user: {}", username);
+        log.info("User details retrieved for user: {}", user.getUsername());
 
         String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 
