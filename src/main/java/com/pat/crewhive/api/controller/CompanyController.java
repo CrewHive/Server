@@ -1,6 +1,7 @@
 package com.pat.crewhive.api.controller;
 
 import com.pat.crewhive.api.swagger.interfaces.CompanyControllerInterface;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.user.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
@@ -45,16 +46,16 @@ public class CompanyController implements CompanyControllerInterface {
 
     @Override
     @PostMapping(path = "/register", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
+    public ResponseEntity<AuthResponseDTO> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                              @RequestBody @Valid CompanyRegistrationDTO request) {
 
         Long managerId = cud.getUserId();
 
-        companyService.registerCompany(managerId, request);
+        AuthResponseDTO dto = companyService.registerCompany(managerId, request);
 
         log.info("Company {} registered successfully", request.getCompanyName());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(dto);
     }
 
     @Override

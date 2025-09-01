@@ -1,6 +1,7 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.user.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
@@ -53,8 +54,8 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                      @Valid @RequestBody CompanyRegistrationDTO request);
+    ResponseEntity<AuthResponseDTO> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                                   @Valid @RequestBody CompanyRegistrationDTO request);
 
 
 
