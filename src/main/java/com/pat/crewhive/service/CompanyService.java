@@ -80,6 +80,8 @@ public class CompanyService {
 
         log.info("Company {} registered successfully", request.getCompanyName());
 
+        refreshTokenService.deleteTokenByUser(manager);
+
         return new AuthResponseDTO(
                 jwtService.generateToken(manager.getUserId(), manager.getUsername(), manager.getRole().getRole().getRoleName(), company.getCompanyId()),
                 refreshTokenService.generateRefreshToken(manager));
