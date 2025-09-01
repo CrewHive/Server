@@ -26,4 +26,8 @@ public interface ShiftUserRepository extends JpaRepository<ShiftUser, ShiftUserI
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from ShiftUser su where su.shift.shiftProgrammedId = :shiftId")
     int deleteByShiftId(@Param("shiftId") Long shiftId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from ShiftUser su where su.user.userId = :userId")
+    int deleteByUserId(@Param("userId") Long userId);
 }

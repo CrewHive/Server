@@ -5,10 +5,12 @@ import com.pat.crewhive.dto.auth.AuthRequestDTO;
 import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.auth.RegistrationDTO;
 import com.pat.crewhive.dto.user.LogoutDTO;
+import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.role.UserRole;
+import com.pat.crewhive.model.util.ContractType;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
@@ -172,7 +174,9 @@ public class AuthService {
         Long userId = owner.getUserId();
         String role = owner.getRole().getRole().getRoleName();
         String username = owner.getUsername();
-        Long companyId = owner.getCompany().getCompanyId() == null ? null : owner.getCompany().getCompanyId();
+        Company company = owner.getCompany();
+        Long companyId = (company != null) ? company.getCompanyId() : null;
+
 
         String newAccessToken = jwtService.generateToken(userId, role, username, companyId);
 

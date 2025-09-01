@@ -1,10 +1,12 @@
 package com.pat.crewhive.api.controller;
 
 import com.pat.crewhive.api.swagger.interfaces.CompanyControllerInterface;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.company.RemoveUserFromCompanyOutputDTO;
+import com.pat.crewhive.dto.user.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
+import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.service.CompanyService;
 import jakarta.validation.Valid;
@@ -44,17 +46,33 @@ public class CompanyController implements CompanyControllerInterface {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @GetMapping(path = "/{companyId}/user/{targetId}/info", produces = "application/json")
+    public ResponseEntity<UserWithTimeParamsDTO> getUserInformation(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                          @PathVariable @NotNull Long companyId,
+                                                                          @PathVariable @NotNull Long targetId) {
+
+        Long managerId = cud.getUserId();
+
+        UserWithTimeParamsDTO user = companyService.getCompanyUserWithInformation(managerId, companyId, targetId);
+
+        log.info("Fetched {} users for company ID: {}", user, companyId);
+
+        return ResponseEntity.ok(user);
+    }
+
+    @Override
     @PostMapping(path = "/register", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
+    public ResponseEntity<AuthResponseDTO> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                              @RequestBody @Valid CompanyRegistrationDTO request) {
 
         Long managerId = cud.getUserId();
 
-        companyService.registerCompany(managerId, request);
+        AuthResponseDTO dto = companyService.registerCompany(managerId, request);
 
         log.info("Company {} registered successfully", request.getCompanyName());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(dto);
     }
 
     @Override
@@ -76,17 +94,17 @@ public class CompanyController implements CompanyControllerInterface {
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @DeleteMapping(path = "/{companyId}/remove/{userId}", produces = "application/json")
-    public ResponseEntity<RemoveUserFromCompanyOutputDTO> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
+    public ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                                                             @PathVariable @NotNull Long userId,
                                                                             @PathVariable @NotNull Long companyId) {
 
         Long managerId = cud.getUserId();
 
-        RemoveUserFromCompanyOutputDTO dto = companyService.removeUserFromCompany(userId, managerId, companyId);
+        companyService.removeUserFromCompany(userId, managerId, companyId);
 
         log.info("Company {} removed for user ID: {} by manager ID: {}", companyId, userId, managerId);
 
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok().build();
     }
 
 

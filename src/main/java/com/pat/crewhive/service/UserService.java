@@ -1,9 +1,13 @@
 package com.pat.crewhive.service;
 
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
+import com.pat.crewhive.model.company.entity.Company;
+import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
+import com.pat.crewhive.repository.ShiftUserRepository;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
@@ -24,16 +28,20 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final RefreshTokenService refreshTokenService;
+    private final ShiftUserRepository shiftUserRepository;
     private final UserRepository userRepository;
     private final PasswordUtil passwordUtil;
     private final StringUtils stringUtils;
     private final JwtService jwtService;
 
     public UserService(UserRepository userRepository,
+                       ShiftUserRepository shiftUserRepository,
                        PasswordUtil passwordUtil,
-                       RefreshTokenService refreshTokenService,
-                       StringUtils stringUtils, JwtService jwtService) {
+                       StringUtils stringUtils,
+                       JwtService jwtService,
+                       RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
+        this.shiftUserRepository = shiftUserRepository;
         this.passwordUtil = passwordUtil;
         this.refreshTokenService = refreshTokenService;
         this.stringUtils = stringUtils;
@@ -138,23 +146,25 @@ public class UserService {
     /**
      * Retrieves user details along with time parameters by username.
      *
-     * @param username the username of the user to retrieve
+     * @param userId the ID of the user
      * @return a UserWithTimesParamDTO containing user details and time parameters
      * @throws ResourceNotFoundException if the user is not found
      */
     @Transactional(readOnly = true)
-    public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(String username) {
+    public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(Long userId) {
 
-        username = stringUtils.normalizeString(username);
-        User user = getUserByUsername(username);
+        User user = getUserById(userId);
 
-        log.info("User details retrieved for user: {}", username);
+        log.info("User details retrieved for user: {}", user.getUsername());
+
+        String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 
         return new UserWithTimeParamsDTO(
                 user.getUserId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getCompany().getName(),
+                companyName,
+                user.getContractType(),
                 user.getWorkableHoursPerWeek(),
                 user.getOvertimeHours(),
                 user.getVacationDaysAccumulated(),
@@ -207,7 +217,8 @@ public class UserService {
                         user.getUserId(),
                         user.getUsername(),
                         user.getRole().getRole().getRoleName(),
-                        user.getCompany() != null ? user.getCompany().getCompanyId() : null);
+                        user.getCompany().getCompanyId());
+                        /*user.getCompany() != null ? user.getCompany().getCompanyId() : null);*/
 
         UpdateUsernameOutputDTO dto = new UpdateUsernameOutputDTO(newUsername, accessToken);
 
@@ -287,22 +298,30 @@ public class UserService {
      * @throws ResourceAlreadyExistsException if the user is not part of any company
      */
     @Transactional
-    public void leaveCompany(Long userId) {
+    public AuthResponseDTO leaveCompany(Long userId) {
 
         User user = getUserById(userId);
 
-        if(user.getCompany() == null) {
+        if (user.getCompany() == null) throw new ResourceNotFoundException("User has no company");
 
-            log.info("User {} is not part of any company", user.getUsername());
-            throw new ResourceAlreadyExistsException("User is not part of any company");
-        }
-
-        String companyName = user.getCompany().getName();
+        Company c = user.getCompany();
+        c.getUsers().remove(user);
         user.setCompany(null);
 
-        userRepository.save(user);
+        shiftUserRepository.deleteByUserId(userId);
 
-        log.info("User {} has left the company {}", user.getUsername(), companyName);
+        updateUser(user);
+
+        refreshTokenService.deleteTokenByUser(user);
+        String rt = refreshTokenService.generateRefreshToken(user);
+
+        return new AuthResponseDTO(
+                jwtService.generateToken(
+                        user.getUserId(),
+                        user.getUsername(),
+                        "ROLE_USER",
+                        null),
+                rt);
     }
 
 

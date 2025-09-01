@@ -1,9 +1,10 @@
 package com.pat.crewhive.service;
 
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.company.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
+import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.user.entity.User;
@@ -28,17 +29,20 @@ public class CompanyService {
     private final JwtService jwtService;
     private final RoleRepository roleRepository;
     private final StringUtils stringUtils;
+    private final RefreshTokenService refreshTokenService;
 
     public CompanyService(CompanyRepository companyRepository,
                           UserService userService,
                           StringUtils stringUtils,
                           RoleRepository roleRepository,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          RefreshTokenService refreshTokenService) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
         this.roleRepository = roleRepository;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     /**
@@ -47,7 +51,7 @@ public class CompanyService {
      * @param request The company registration request containing company details.
      */
     @Transactional
-    public void registerCompany(Long managerId, CompanyRegistrationDTO request) {
+    public AuthResponseDTO registerCompany(Long managerId, CompanyRegistrationDTO request) {
 
         log.error("Attempting to register company with name: {}", request.getCompanyName());
 
@@ -76,6 +80,12 @@ public class CompanyService {
         userService.updateUser(manager);
 
         log.info("Company {} registered successfully", request.getCompanyName());
+
+        refreshTokenService.deleteTokenByUser(manager);
+
+        return new AuthResponseDTO(
+                jwtService.generateToken(manager.getUserId(), manager.getUsername(), manager.getRole().getRole().getRoleName(), company.getCompanyId()),
+                refreshTokenService.generateRefreshToken(manager));
     }
 
     /**
@@ -117,6 +127,46 @@ public class CompanyService {
         return users.stream()
                 .map(user -> new UserIdAndUsernameAndHoursDTO(user.getUserId(), user.getUsername(), user.getWorkableHoursPerWeek()))
                 .toList();
+    }
+
+
+    /**
+     * Retrieves detailed information about a specific user within a company.
+     *
+     * @param managerId The ID of the manager requesting the user information.
+     * @param companyId The ID of the company to which the user belongs.
+     * @param targetId The ID of the user whose information is to be retrieved.
+     * @return A UserWithTimeParamsDTO containing detailed information about the user.
+     * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
+     */
+    @Transactional(readOnly = true)
+    public UserWithTimeParamsDTO getCompanyUserWithInformation(Long managerId, Long companyId, Long targetId) {
+
+        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+
+            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
+
+        User user = userService.getUserById(targetId);
+
+        log.info("User details retrieved for user: {}", user.getUsername());
+
+        String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
+
+        return new UserWithTimeParamsDTO(
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                companyName,
+                user.getContractType(),
+                user.getWorkableHoursPerWeek(),
+                user.getOvertimeHours(),
+                user.getVacationDaysAccumulated(),
+                user.getVacationDaysTaken(),
+                user.getLeaveDaysAccumulated(),
+                user.getLeaveDaysTaken()
+        );
     }
 
 
@@ -199,36 +249,23 @@ public class CompanyService {
      * @throws ResourceNotFoundException if the user does not belong to the specified company or doesn't have one.
      */
     @Transactional
-    public RemoveUserFromCompanyOutputDTO removeUserFromCompany(Long userId, Long managerId, Long companyId) {
+    public void removeUserFromCompany(Long userId, Long managerId, Long companyId) {
 
-        log.info("Attempting to remove user ID {} from company ID {}", userId, companyId);
-
-        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
-
-            log.error("Manager {} may be not part of company {}", managerId, companyId);
-            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        if (userId.equals(managerId)) {
+            throw new AuthorizationDeniedException("Managers cannot remove themselves from the company.");
         }
 
-        User user = userService.getUserById(userId);
-
-        if(user.getCompany() == null || !user.getCompany().getCompanyId().equals(companyId)) {
-
-            log.error("Company with ID {} does not belong to the specified company.", companyId);
-            throw new ResourceNotFoundException("User does not belong to the specified company or doesn't have one.");
+        if (!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+            throw new AuthorizationDeniedException("Not allowed");
         }
 
-        user.setCompany(null);
-        userService.updateUser(user);
+        User target = userService.getUserById(userId);
 
-        log.info("User with ID {} removed from company ID {}", userId, companyId);
+        if (target.getCompany() == null || !target.getCompany().getCompanyId().equals(companyId)) {
+            throw new ResourceNotFoundException("User not in this company");
+        }
 
-        String accessToken = jwtService
-                .generateToken(user.getUserId(),
-                        user.getUsername(),
-                        user.getRole().getRole().getRoleName(),
-                        null);
-
-        return new RemoveUserFromCompanyOutputDTO(accessToken);
+        userService.leaveCompany(userId);
     }
 
 

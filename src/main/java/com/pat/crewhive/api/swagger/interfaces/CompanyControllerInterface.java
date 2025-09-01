@@ -1,10 +1,12 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.company.RemoveUserFromCompanyOutputDTO;
+import com.pat.crewhive.dto.user.RemoveUserFromCompanyOutputDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
+import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -53,8 +55,8 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                      @Valid @RequestBody CompanyRegistrationDTO request);
+    ResponseEntity<AuthResponseDTO> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                                   @Valid @RequestBody CompanyRegistrationDTO request);
 
 
 
@@ -87,6 +89,36 @@ public interface CompanyControllerInterface {
     ResponseEntity<List<UserIdAndUsernameAndHoursDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
                                                                        @PathVariable @NotNull Long companyId);
 
+
+    @Operation(summary = "Get user information in a company",
+            description = "Retrieves detailed information about a specific user within a company.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User information retrieved successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have permission to do this action",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - User or company not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<UserWithTimeParamsDTO> getUserInformation(@AuthenticationPrincipal CustomUserDetails cud,
+                                                             @PathVariable @NotNull Long companyId,
+                                                             @PathVariable @NotNull Long targetId);
 
 
     @Operation(summary = "Set company for user",
@@ -146,7 +178,7 @@ public interface CompanyControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<RemoveUserFromCompanyOutputDTO> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
+    ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                                                      @PathVariable @NotNull Long userId,
                                                                      @PathVariable @NotNull Long companyId);
 
