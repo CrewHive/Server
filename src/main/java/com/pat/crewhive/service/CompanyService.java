@@ -1,5 +1,6 @@
 package com.pat.crewhive.service;
 
+import com.pat.crewhive.dto.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.company.SetCompanyDTO;
 import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
@@ -27,17 +28,20 @@ public class CompanyService {
     private final JwtService jwtService;
     private final RoleRepository roleRepository;
     private final StringUtils stringUtils;
+    private final RefreshTokenService refreshTokenService;
 
     public CompanyService(CompanyRepository companyRepository,
                           UserService userService,
                           StringUtils stringUtils,
                           RoleRepository roleRepository,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          RefreshTokenService refreshTokenService) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
         this.roleRepository = roleRepository;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     /**
@@ -46,7 +50,7 @@ public class CompanyService {
      * @param request The company registration request containing company details.
      */
     @Transactional
-    public void registerCompany(Long managerId, CompanyRegistrationDTO request) {
+    public AuthResponseDTO registerCompany(Long managerId, CompanyRegistrationDTO request) {
 
         log.error("Attempting to register company with name: {}", request.getCompanyName());
 
@@ -75,6 +79,10 @@ public class CompanyService {
         userService.updateUser(manager);
 
         log.info("Company {} registered successfully", request.getCompanyName());
+
+        return new AuthResponseDTO(
+                jwtService.generateToken(manager.getUserId(), manager.getUsername(), manager.getRole().getRole().getRoleName(), company.getCompanyId()),
+                refreshTokenService.generateRefreshToken(manager));
     }
 
     /**
