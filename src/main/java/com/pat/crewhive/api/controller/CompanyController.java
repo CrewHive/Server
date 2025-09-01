@@ -56,7 +56,7 @@ public class CompanyController implements CompanyControllerInterface {
 
         UserWithTimeParamsDTO user = companyService.getCompanyUserWithInformation(managerId, companyId, targetId);
 
-        log.info("Fetched {} users for company ID: {}", user, companyId);
+        log.info("Fetched {} user for company ID: {}", user, companyId);
 
         return ResponseEntity.ok(user);
     }
