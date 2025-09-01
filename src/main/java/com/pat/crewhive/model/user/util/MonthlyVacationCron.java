@@ -15,7 +15,7 @@ public class MonthlyVacationCron {
     private final UserRepository userRepository;
 
     @Transactional
-    @Scheduled(cron = "0 0 3 1 * *", zone = "Europe/Rome")
+    @Scheduled(cron = "0 0 2 1 * *", zone = "Europe/Rome")
     public void run() {
         int updated = userRepository.accrueMonthlyVacationDays();
         log.info("MonthlyVacationCron eseguito: {} utenti aggiornati.", updated);
