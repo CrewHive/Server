@@ -20,7 +20,7 @@ import java.util.Set;
         @UniqueConstraint(name = "uc_role_role_name_company_id", columnNames = {"role_name", "company_id"})
 })
 public class Role {
-
+    //todo modifica annotazioni json
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="role_id", nullable = false)

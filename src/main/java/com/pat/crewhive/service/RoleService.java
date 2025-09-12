@@ -119,6 +119,8 @@ public class RoleService {
      */
     @Transactional
     public Role getOrCreateGlobalRoleUser() {
+
+        //todo Ritorna un DTO
         String name = "ROLE_USER";
         return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
                 .orElseGet(() -> roleRepository.save(new Role(name, null)));
@@ -131,6 +133,8 @@ public class RoleService {
      */
     @Transactional
     public Role getOrCreateGlobalRoleManager() {
+
+        //todo Ritorna un DTO
         String name = "ROLE_MANAGER";
         return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
                 .orElseGet(() -> roleRepository.save(new Role(name, null)));

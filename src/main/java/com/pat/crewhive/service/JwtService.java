@@ -45,14 +45,14 @@ public class JwtService {
                                 String role,
                                 Long companyId) {
 
-        //todo rimetti la scadenza a 15 minuti
+        //todo implementa frontend per rotate token
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role) // ROLE_USER, ROLE_MANAGER, ...
                 .claim("username", username)
                 .claim("companyId", companyId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 14))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
 

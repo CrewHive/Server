@@ -20,7 +20,7 @@ import lombok.Setter;
         @UniqueConstraint(name = "uc_eventusers_event_id", columnNames = {"event_id", "user_id"})
 })
 public class EventUsers {
-
+    //todo togli annotazioni json
     @EmbeddedId
     private EventUsersId id = new EventUsersId();
 

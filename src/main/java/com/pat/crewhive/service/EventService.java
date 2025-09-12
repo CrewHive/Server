@@ -101,6 +101,7 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<Event> getEventsByPeriodAndUser(Period period, Long userId) {
 
+        //todo ritorna un DTO
         log.info("Fetching events for userId: {} with eventTemp: {}", userId, period);
 
         LocalDate from = dateUtils.getStartDateForPeriod(period);
@@ -118,6 +119,7 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<Event> getUserEvents(Long userId) {
 
+        //todo ritorna un DTO
         log.info("Fetching all events for userId: {}", userId);
 
         return eventUsersRepository.findEventsByUserId(userId);
@@ -132,6 +134,7 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<Event> getPublicEventsByCompanyAndPeriod(Long companyId, Period period) {
 
+        //todo ritorna un DTO
         log.info("Fetching all public events");
 
         LocalDate from = dateUtils.getStartDateForPeriod(period);
