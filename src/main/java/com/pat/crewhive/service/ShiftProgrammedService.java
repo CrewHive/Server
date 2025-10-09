@@ -166,6 +166,7 @@ public class ShiftProgrammedService {
     @Transactional(readOnly = true)
     public List<User> getUsersInShift(Long shiftId) {
 
+        // todo ritorna un dto
         log.info("Fetching users in shift with id: {}", shiftId);
 
         if (!shiftProgrammedRepository.existsById(shiftId)) {
@@ -187,6 +188,7 @@ public class ShiftProgrammedService {
      */
     @Transactional
     public Long patchShift(PatchShiftProgrammedDTO dto) {
+
         log.info("Patching shift with id: {}", dto.getShiftProgrammedId());
 
         ShiftProgrammed shift = shiftProgrammedRepository.findByIdWithWorkers(dto.getShiftProgrammedId())

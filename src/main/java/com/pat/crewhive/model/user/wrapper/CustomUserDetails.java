@@ -18,11 +18,11 @@ public class CustomUserDetails implements UserDetails {
 
     private final Long userId;
     private final String username;
-    private final String password;     // opzionale: puoi lasciarlo null nei contesti JWT
+    private final String password;
     private final String email;
-    private final String role;         // es. "USER" → verrà trasformato in "ROLE_USER"
-    private final Long companyId;      // id azienda se disponibile
-    private final boolean working;     // opzionale, per controllare abilitazione
+    private final String role;
+    private final Long companyId;
+    private final boolean working;
 
     private final List<GrantedAuthority> authorities;
 

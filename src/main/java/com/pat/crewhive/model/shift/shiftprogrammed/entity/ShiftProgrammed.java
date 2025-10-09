@@ -21,7 +21,7 @@ import java.util.Set;
         @Index(name = "idx_shiftprogrammed_start", columnList = "start_shift")
 })
 public class ShiftProgrammed {
-
+//todo togli annotazioni json
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "shift_programmed_id", nullable = false)

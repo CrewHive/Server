@@ -27,7 +27,7 @@ public class PatchEventDTO {
     String name;
 
     @NoHtml
-    @Size(min = 0, max = 100)
+    @Size(max = 100)
     String description;
 
     @NotNull(message = "Event start time cannot be null")

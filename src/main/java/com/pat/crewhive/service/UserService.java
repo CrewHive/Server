@@ -212,13 +212,14 @@ public class UserService {
 
         userRepository.save(user);
 
+        //todo rimuovi una volta implementato il rotate token nel frontend
         String accessToken = jwtService
                 .generateToken(
                         user.getUserId(),
                         user.getUsername(),
                         user.getRole().getRole().getRoleName(),
                         user.getCompany().getCompanyId());
-                        /*user.getCompany() != null ? user.getCompany().getCompanyId() : null);*/
+                        /*todo perché non funzia questo? user.getCompany() != null ? user.getCompany().getCompanyId() : null);*/
 
         UpdateUsernameOutputDTO dto = new UpdateUsernameOutputDTO(newUsername, accessToken);
 
@@ -312,6 +313,7 @@ public class UserService {
 
         updateUser(user);
 
+        //todo rimuovi una volta implementato il rotate token nel frontend
         refreshTokenService.deleteTokenByUser(user);
         String rt = refreshTokenService.generateRefreshToken(user);
 
