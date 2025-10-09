@@ -3,10 +3,12 @@ version: "3.9"
 services:
   app:
     build: .
+    image: crewhive-testing
     ports:
       - "0.0.0.0:8080:8080"
     container_name: crewhive
-
+    depends_on:
+      - db
     environment:
       PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://ep-lucky-grass-a2xcikow.eu-central-1.pg.koyeb.app/koyebdb
@@ -14,7 +16,20 @@ services:
       SPRING_DATASOURCE_PASSWORD: npg_3Ow2FDQKauEz
       DB_POOL_MAX: 16
       DB_POOL_MIN: 2
-      SHOW_SQL: true
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY_ID}
-      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: AKIAWCQ4HW4ZBM6WDWX7
+      AWS_SECRET_ACCESS_KEY: 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
+      AWS_REGION: eu-north-1
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    container_name: crewhive-db
+    environment:
+      POSTGRES_DB: crewdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
