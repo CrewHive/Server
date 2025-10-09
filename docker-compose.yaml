@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    ports:
+      - "0.0.0.0:8080:8080"
+    container_name: crewhive
+
+    environment:
+      PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ep-lucky-grass-a2xcikow.eu-central-1.pg.koyeb.app/koyebdb
+      SPRING_DATASOURCE_USERNAME: crewhive_adm
+      SPRING_DATASOURCE_PASSWORD: npg_3Ow2FDQKauEz
+      DB_POOL_MAX: 16
+      DB_POOL_MIN: 2
+      SHOW_SQL: true
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY_ID}
+      AWS_REGION: ${AWS_REGION}
