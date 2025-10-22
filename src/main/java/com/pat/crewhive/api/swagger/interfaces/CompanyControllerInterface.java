@@ -1,11 +1,10 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.dto.auth.AuthResponseDTO;
-import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
-import com.pat.crewhive.dto.user.RemoveUserFromCompanyOutputDTO;
-import com.pat.crewhive.dto.company.SetCompanyDTO;
-import com.pat.crewhive.dto.company.UserIdAndUsernameAndHoursDTO;
+import com.pat.crewhive.dto.response.auth.AuthResponseDTO;
+import com.pat.crewhive.dto.request.company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.request.company.SetCompanyDTO;
+import com.pat.crewhive.dto.response.company.UserIdAndUsernameAndHoursDTO;
 import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;

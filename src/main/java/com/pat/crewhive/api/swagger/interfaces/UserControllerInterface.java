@@ -1,7 +1,7 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.dto.auth.AuthResponseDTO;
+import com.pat.crewhive.dto.response.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.dto.user.UpdatePasswordDTO;
 import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;

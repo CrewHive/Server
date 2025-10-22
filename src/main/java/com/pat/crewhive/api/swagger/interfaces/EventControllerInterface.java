@@ -1,8 +1,8 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.dto.event.CreateEventDTO;
-import com.pat.crewhive.dto.event.PatchEventDTO;
+import com.pat.crewhive.dto.request.event.CreateEventDTO;
+import com.pat.crewhive.dto.request.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.model.util.Period;

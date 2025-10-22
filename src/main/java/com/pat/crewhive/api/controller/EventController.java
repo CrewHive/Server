@@ -2,12 +2,11 @@ package com.pat.crewhive.api.controller;
 
 
 import com.pat.crewhive.api.swagger.interfaces.EventControllerInterface;
-import com.pat.crewhive.dto.event.CreateEventDTO;
-import com.pat.crewhive.dto.event.PatchEventDTO;
+import com.pat.crewhive.dto.request.event.CreateEventDTO;
+import com.pat.crewhive.dto.request.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.model.util.Period;
-import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import com.pat.crewhive.service.EventService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

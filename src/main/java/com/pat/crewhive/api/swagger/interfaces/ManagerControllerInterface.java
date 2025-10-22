@@ -1,8 +1,8 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.dto.manager.UpdateUserRoleDTO;
-import com.pat.crewhive.dto.manager.UpdateUserWorkInfoDTO;
+import com.pat.crewhive.dto.request.manager.UpdateUserRoleDTO;
+import com.pat.crewhive.dto.request.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import io.swagger.v3.oas.annotations.Operation;

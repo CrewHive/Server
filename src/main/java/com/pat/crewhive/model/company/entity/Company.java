@@ -1,7 +1,6 @@
 package com.pat.crewhive.model.company.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.pat.crewhive.dto.company.CompanyRegistrationDTO;
+import com.pat.crewhive.dto.request.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.json.AddressJSON;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.CompanyType;

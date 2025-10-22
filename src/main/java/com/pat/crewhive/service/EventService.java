@@ -1,8 +1,8 @@
 package com.pat.crewhive.service;
 
 
-import com.pat.crewhive.dto.event.CreateEventDTO;
-import com.pat.crewhive.dto.event.PatchEventDTO;
+import com.pat.crewhive.dto.request.event.CreateEventDTO;
+import com.pat.crewhive.dto.request.event.PatchEventDTO;
 import com.pat.crewhive.model.event.Event;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.Period;
@@ -16,9 +16,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.company;
+package com.pat.crewhive.dto.request.company;
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;

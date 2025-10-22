@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.event;
+package com.pat.crewhive.dto.request.event;
 
 import com.pat.crewhive.model.util.EventType;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;

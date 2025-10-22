@@ -1,16 +1,15 @@
 package com.pat.crewhive.service;
 
 
-import com.pat.crewhive.dto.auth.AuthRequestDTO;
-import com.pat.crewhive.dto.auth.AuthResponseDTO;
-import com.pat.crewhive.dto.auth.RegistrationDTO;
+import com.pat.crewhive.dto.request.auth.AuthRequestDTO;
+import com.pat.crewhive.dto.response.auth.AuthResponseDTO;
+import com.pat.crewhive.dto.request.auth.RegistrationDTO;
 import com.pat.crewhive.dto.user.LogoutDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.role.UserRole;
-import com.pat.crewhive.model.util.ContractType;
 import com.pat.crewhive.repository.UserRepository;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
