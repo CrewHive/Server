@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.shift.shift_template;
+package com.pat.crewhive.dto.request.shift.template;
 
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;

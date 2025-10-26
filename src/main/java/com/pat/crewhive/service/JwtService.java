@@ -36,12 +36,17 @@ public class JwtService {
      * Generates a JWT token for the given user details.
      *
      * @param userId   the ID of the user
-     * @param username the username of the user
+     * @param email    the email of the user
+     * @param firstName the first name of the user
+     * @param lastName the last name of the user
      * @param role     the role of the user
+     * @param companyId the company of the user
      * @return a JWT token as a String
      */
     public String generateToken(Long userId,
-                                String username,
+                                String email,
+                                String firstName,
+                                String lastName,
                                 String role,
                                 Long companyId) {
 
@@ -49,10 +54,12 @@ public class JwtService {
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role) // ROLE_USER, ROLE_MANAGER, ...
-                .claim("username", username)
+                .claim("email", email)
+                .claim("firstName", firstName)
+                .claim("lastName", lastName)
                 .claim("companyId", companyId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) //todo sistena la scadenza 1000 * 60 * 15
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
 

@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.shift.shift_template;
+package com.pat.crewhive.dto.request.shift.template;
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PatchShiftTemplateDTO extends CreateShiftTemplateDTO{
+public class PatchShiftTemplateDTO extends CreateShiftTemplateDTO {
 
     @NotBlank(message = "Shift name must not be blank")
     @NoHtml

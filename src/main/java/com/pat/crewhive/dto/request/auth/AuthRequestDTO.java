@@ -14,10 +14,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AuthRequestDTO {
 
-    @NotBlank(message = "Username cannot be blank")
+    @NotBlank(message = "Email cannot be blank")
     @NoHtml
-    @Size(min = 3, max = 32, message = "Username must be between 3 and 50 characters")
-    private String username;
+    @Size(min = 3, max = 32, message = "Email must be of an admissible format")
+    private String email;
 
     @NotBlank(message = "Password cannot be blank")
     @NoHtml

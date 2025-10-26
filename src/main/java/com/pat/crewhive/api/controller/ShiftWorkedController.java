@@ -2,7 +2,7 @@ package com.pat.crewhive.api.controller;
 
 
 import com.pat.crewhive.api.swagger.interfaces.ShiftWorkedControllerInterface;
-import com.pat.crewhive.dto.shift.shift_worked.CreateShiftWorkedDTO;
+import com.pat.crewhive.dto.request.shift.worked.CreateShiftWorkedDTO;
 import com.pat.crewhive.service.ShiftWorkedService;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;

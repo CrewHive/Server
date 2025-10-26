@@ -1,8 +1,8 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.dto.shift.shift_template.CreateShiftTemplateDTO;
-import com.pat.crewhive.dto.shift.shift_template.PatchShiftTemplateDTO;
+import com.pat.crewhive.dto.request.shift.template.CreateShiftTemplateDTO;
+import com.pat.crewhive.dto.request.shift.template.PatchShiftTemplateDTO;
 import com.pat.crewhive.model.shift.shifttemplate.entity.ShiftTemplate;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import io.swagger.v3.oas.annotations.Operation;

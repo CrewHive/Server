@@ -17,9 +17,9 @@ import java.util.List;
 public class CustomUserDetails implements UserDetails {
 
     private final Long userId;
-    private final String username;
-    private final String password;
     private final String email;
+    private final String firstName;
+    private final String lastName;
     private final String role;
     private final Long companyId;
     private final boolean working;
@@ -30,18 +30,19 @@ public class CustomUserDetails implements UserDetails {
      * Costruisce un CustomUserDetails a partire dai claim del token.
      */
     public CustomUserDetails(Long userId,
-                             String username,
                              String email,
+                             String firstName,
+                             String lastName,
                              String role,
                              Long companyId,
                              boolean working) {
         this.userId = userId;
-        this.username = username;
         this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.role = role;
         this.companyId = companyId;
         this.working = working;
-        this.password = null; // non serve in JWT stateless
 
         this.authorities = List.of(new SimpleGrantedAuthority(role));
     }
@@ -50,10 +51,12 @@ public class CustomUserDetails implements UserDetails {
      * Factory method comodo per costruire da claim.
      */
     public static CustomUserDetails fromClaims(Long userId,
-                                               String username,
+                                               String email,
+                                               String firstName,
+                                               String lastName,
                                                String role,
                                                Long companyId) {
-        return new CustomUserDetails(userId, username, null, role, companyId, true);
+        return new CustomUserDetails(userId, email, firstName, lastName, role, companyId, true);
     }
 
     /**
@@ -61,7 +64,7 @@ public class CustomUserDetails implements UserDetails {
      */
     @Override
     public String getUsername() {
-        return username;
+        return (firstName + " " + lastName);
     }
 
     /**
@@ -69,7 +72,7 @@ public class CustomUserDetails implements UserDetails {
      */
     @Override
     public String getPassword() {
-        return password;
+        return null;
     }
 
     /**
@@ -122,6 +125,14 @@ public class CustomUserDetails implements UserDetails {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
     }
 
     public String getRole() {

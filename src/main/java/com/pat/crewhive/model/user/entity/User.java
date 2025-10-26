@@ -38,8 +38,11 @@ public class User {
     @Column(name="email", unique = true)
     private String email;
 
-    @Column(name="username", nullable = false, unique = true)
-    private String username;
+    @Column(name="first_name", nullable = false)
+    private String firstName;
+
+    @Column(name="last_name", nullable = false)
+    private String lastName;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name="password", nullable = false)
@@ -89,9 +92,10 @@ public class User {
     @JsonManagedReference
     private Set<ShiftUser> shiftUsers = new HashSet<>();
 
-    public User(String username, String email, String password) {
+    public User(String email, String firstName, String lastName, String password) {
         this.email = email;
-        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.password = password;
         this.isWorking = false;
         this.workableHoursPerWeek = 0;

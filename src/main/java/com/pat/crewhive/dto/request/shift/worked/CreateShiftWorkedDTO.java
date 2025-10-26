@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.shift.shift_worked;
+package com.pat.crewhive.dto.request.shift.worked;
 
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;

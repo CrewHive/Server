@@ -42,7 +42,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         authService.register(rDTO);
 
-        log.info("User {} registered successfully", rDTO.getUsername());
+        log.info("User {} registered successfully", rDTO.getEmail());
 
         return ResponseEntity.ok().build();
     }
@@ -53,7 +53,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         AuthResponseDTO response = authService.login(request);
 
-        log.info("Login ok for user: {}", request.getUsername());
+        log.info("Login ok for user: {}", request.getEmail());
 
         return ResponseEntity.ok(response);
     }

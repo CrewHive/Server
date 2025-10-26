@@ -67,16 +67,16 @@ public class AuthService {
     @Transactional
     public AuthResponseDTO login(AuthRequestDTO request) {
 
-        String normalizedUsername = stringUtils.normalizeString(request.getUsername());
-        User user = userService.getUserByUsername(normalizedUsername);
+        String normalizedEmail = stringUtils.normalizeString(request.getEmail());
+        User user = userService.getUserByEmail(normalizedEmail);
 
         if (!passwordUtil.matches(request.getPassword(), user.getPassword())) {
-            log.error("Invalid password for user: {}", normalizedUsername);
+            log.error("Invalid password for user: {}", normalizedEmail);
 
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        log.info("User {} authenticated successfully", normalizedUsername);
+        log.info("User {} authenticated successfully", normalizedEmail);
 
         RefreshToken rt = refreshTokenService.getRefreshTokenByUser(user);
 
@@ -88,7 +88,7 @@ public class AuthService {
         Long company = user.getCompany() == null ? null : user.getCompany().getCompanyId();
 
         return new AuthResponseDTO(
-                jwtService.generateToken(user.getUserId(), normalizedUsername, user.getRole().getRole().getRoleName(), company),
+                jwtService.generateToken(user.getUserId(), normalizedEmail, user.getFirstName(), user.getLastName(), user.getRole().getRole().getRoleName(), company),
                 refreshTokenService.generateRefreshToken(user)
         );
     }
@@ -131,7 +131,7 @@ public class AuthService {
 
         String encodedPassword = passwordUtil.encodePassword(request.getPassword());
 
-        User newUser = new User(normalizedUsername, normalizedEmail, encodedPassword);
+        User newUser = new User(normalizedEmail, request.getFirstName(), request.getLastName(), encodedPassword);
 
         Role role = roleService.getOrCreateGlobalRoleUser();
 
@@ -171,13 +171,15 @@ public class AuthService {
         }
 
         Long userId = owner.getUserId();
+        String normalizedEmail = stringUtils.normalizeString(owner.getEmail());
+        String firstName = owner.getFirstName();
+        String lastName = owner.getLastName();
         String role = owner.getRole().getRole().getRoleName();
-        String username = owner.getUsername();
         Company company = owner.getCompany();
         Long companyId = (company != null) ? company.getCompanyId() : null;
 
 
-        String newAccessToken = jwtService.generateToken(userId, role, username, companyId);
+        String newAccessToken = jwtService.generateToken(userId, normalizedEmail, firstName, lastName, role, companyId);
 
         String newRefreshToken = refreshTokenService.rotateRefreshToken(rt);
 

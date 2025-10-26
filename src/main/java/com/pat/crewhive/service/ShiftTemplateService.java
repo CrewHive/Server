@@ -1,7 +1,7 @@
 package com.pat.crewhive.service;
 
-import com.pat.crewhive.dto.shift.shift_template.CreateShiftTemplateDTO;
-import com.pat.crewhive.dto.shift.shift_template.PatchShiftTemplateDTO;
+import com.pat.crewhive.dto.request.shift.template.CreateShiftTemplateDTO;
+import com.pat.crewhive.dto.request.shift.template.PatchShiftTemplateDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.shift.shifttemplate.entity.ShiftTemplate;
 import com.pat.crewhive.repository.ShiftTemplateRepository;

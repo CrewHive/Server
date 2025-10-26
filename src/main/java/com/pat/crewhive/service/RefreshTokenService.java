@@ -43,7 +43,7 @@ public class RefreshTokenService {
 
         repo.save(token);
 
-        log.info("Generated refresh token for user: {}", user.getUsername());
+        log.info("Generated refresh token for user: {}", user.getEmail());
         log.info("Expiration date: {}", token.getExpirationDate());
 
         return token.getToken();
@@ -62,7 +62,7 @@ public class RefreshTokenService {
         RefreshToken rt = repo.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
 
-        log.info("Found refresh token for user: {}", rt.getUser().getUsername());
+        log.info("Found refresh token for user: {}", rt.getUser().getEmail());
         log.info("Expiration date: {}", rt.getExpirationDate());
 
         return rt;
@@ -83,7 +83,7 @@ public class RefreshTokenService {
         if (rt.isEmpty() ) return null;
         if (isExpired(rt.get())) return null;
 
-        log.info("Found refresh token for user: {}", rt.get().getUser().getUsername());
+        log.info("Found refresh token for user: {}", rt.get().getUser().getEmail());
         log.info("Expiration date: {}", rt.get().getExpirationDate());
 
         return rt.get();
@@ -102,7 +102,7 @@ public class RefreshTokenService {
         RefreshToken rt = repo.findByTokenWithUserAndRole(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
 
-        log.info("Found refresh token for user: {}", rt.getUser().getUsername());
+        log.info("Found refresh token for user: {}", rt.getUser().getEmail());
         log.info("Expiration date: {}", rt.getExpirationDate());
 
         return rt;
@@ -152,7 +152,7 @@ public class RefreshTokenService {
 
         repo.save(rt);
 
-        log.info("Rotated refresh token for user: {}", rt.getUser().getUsername());
+        log.info("Rotated refresh token for user: {}", rt.getUser().getEmail());
         log.info("New expiration date: {}", rt.getExpirationDate());
 
         return rt.getToken();
@@ -174,7 +174,7 @@ public class RefreshTokenService {
             throw new IllegalArgumentException("Refresh token or user is not valid");
         }
 
-        log.info("Found owner for token: {}", rt.getUser().getUsername());
+        log.info("Found owner for token: {}", rt.getUser().getEmail());
 
         return rt.getUser();
     }
@@ -195,7 +195,7 @@ public class RefreshTokenService {
 
         repo.delete(rt);
 
-        log.info("Invalidated refresh token for user: {}", rt.getUser().getUsername());
+        log.info("Invalidated refresh token for user: {}", rt.getUser().getEmail());
     }
 
 
@@ -209,6 +209,6 @@ public class RefreshTokenService {
 
         repo.deleteByUser(user);
 
-        log.info("Deleted refresh token for user: {}", user.getUsername());
+        log.info("Deleted refresh token for user: {}", user.getEmail());
     }
 }

@@ -1,6 +1,6 @@
 package com.pat.crewhive.service;
 
-import com.pat.crewhive.dto.shift.shift_worked.CreateShiftWorkedDTO;
+import com.pat.crewhive.dto.request.shift.worked.CreateShiftWorkedDTO;
 import com.pat.crewhive.model.shift.shiftworked.entity.ShiftWorked;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.repository.ShiftWorkedRepository;

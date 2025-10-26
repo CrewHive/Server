@@ -74,12 +74,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             Long userId = Long.parseLong(sub);
-            String username = claims.get("username", String.class);
+            String email = claims.get("email").toString();
+            String firstName = claims.get("firstName", String.class);
+            String lastName = claims.get("lastName", String.class);
             String role = claims.get("role", String.class);
             Long companyId = claims.get("companyId", Long.class); // opzionale se lo metti nei claim
 
             // Costruisci un CUD leggero dai claim (nessun accesso lazy)
-            CustomUserDetails cud = CustomUserDetails.fromClaims(userId, username, role, companyId);
+            CustomUserDetails cud = CustomUserDetails.fromClaims(userId, email,firstName, lastName, role, companyId);
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(cud, null, cud.getAuthorities());

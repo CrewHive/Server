@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.shift.shift_programmed;
+package com.pat.crewhive.dto.request.shift.programmed;
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;

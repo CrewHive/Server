@@ -64,38 +64,7 @@ public interface UserControllerInterface {
     ResponseEntity<?> logout(@RequestBody @Valid LogoutDTO request);
 
 
-
-    @Operation(summary = "Update username",
-            description = "Updates the username of the currently authenticated user.",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Username updated successfully"),
-
-            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ApiError.class))),
-
-            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ApiError.class))),
-
-            @ApiResponse(responseCode = "404", description = "Not Found - User not found",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ApiError.class))),
-
-            @ApiResponse(responseCode = "409", description = "Conflict - Username already exists",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ApiError.class))),
-
-            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
-                    content = @Content(mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ApiError.class)))
-    })
-    ResponseEntity<UpdateUsernameOutputDTO> updateUsername(@AuthenticationPrincipal CustomUserDetails cud,
-                                                           @RequestBody @NoHtml @NotBlank String newUsername);
-
-
-
+    
     @Operation(summary = "Update password",
             description = "Updates the password of the currently authenticated user.",
             security = @SecurityRequirement(name = "bearerAuth"))

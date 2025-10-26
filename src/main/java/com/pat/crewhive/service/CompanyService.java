@@ -84,7 +84,7 @@ public class CompanyService {
         refreshTokenService.deleteTokenByUser(manager);
 
         return new AuthResponseDTO(
-                jwtService.generateToken(manager.getUserId(), manager.getUsername(), manager.getRole().getRole().getRoleName(), company.getCompanyId()),
+                jwtService.generateToken(manager.getUserId(), stringUtils.normalizeString(manager.getEmail()), manager.getFirstName(), manager.getLastName(), manager.getRole().getRole().getRoleName(), company.getCompanyId()),
                 refreshTokenService.generateRefreshToken(manager));
     }
 
@@ -150,7 +150,7 @@ public class CompanyService {
 
         User user = userService.getUserById(targetId);
 
-        log.info("User details retrieved for user: {}", user.getUsername());
+        log.info("User details retrieved for user: {}", user.getEmail());
 
         String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 

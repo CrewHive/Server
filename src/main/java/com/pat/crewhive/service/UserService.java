@@ -56,7 +56,7 @@ public class UserService {
     @Transactional
     public void updateUser(User user) {
 
-        log.info("User {} updated successfully", user.getUsername());
+        log.info("User {} updated successfully", user.getEmail());
 
         userRepository.save(user);
     }
@@ -111,22 +111,6 @@ public class UserService {
 
 
     /**
-     * Retrieves a User by its username.
-     *
-     * @param username the username of the user to retrieve
-     * @return the User object if found
-     * @throws ResourceNotFoundException if the user is not found
-     */
-    @Transactional(readOnly = true)
-    public User getUserByUsername(String username) {
-
-        username = stringUtils.normalizeString(username);
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    }
-
-
-    /**
      * Retrieves a User by its email.
      *
      * @param email the email of the user to retrieve
@@ -154,7 +138,7 @@ public class UserService {
 
         User user = getUserById(userId);
 
-        log.info("User details retrieved for user: {}", user.getUsername());
+        log.info("User details retrieved for user: {}", user.getEmail());
 
         String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 
@@ -190,68 +174,29 @@ public class UserService {
 
 
     /**
-     * Updates the username of a user.
-     *
-     * @param newUsername the new username to set
-     * @param oldUsername the current username of the user
-     * @throws ResourceAlreadyExistsException if the new username already exists
-     */
-    @Transactional
-    public UpdateUsernameOutputDTO updateUsername(String newUsername, String oldUsername) {
-
-        newUsername = stringUtils.normalizeString(newUsername);
-        oldUsername = stringUtils.normalizeString(oldUsername);
-
-        if (userRepository.findByUsername(newUsername).isPresent()) {
-            throw new ResourceAlreadyExistsException("Username already exists");
-        }
-
-        User user = getUserByUsername(oldUsername);
-        user.setUsername(newUsername);
-
-        userRepository.save(user);
-
-        //todo rimuovi una volta implementato il rotate token nel frontend
-        String accessToken = jwtService
-                .generateToken(
-                        user.getUserId(),
-                        user.getUsername(),
-                        user.getRole().getRole().getRoleName(),
-                        user.getCompany().getCompanyId());
-                        /*todo perché non funzia questo? user.getCompany() != null ? user.getCompany().getCompanyId() : null);*/
-
-        UpdateUsernameOutputDTO dto = new UpdateUsernameOutputDTO(newUsername, accessToken);
-
-        log.info("Updated username from {} to {}", oldUsername, newUsername);
-
-        return dto;
-    }
-
-
-    /**
      * Updates the user's password.
      *
      * @param newPassword the new password to set
      * @param oldPassword the current password of the user
-     * @param username    the username of the user
+     * @param email the email of the user
      */
     @Transactional
-    public void updatePassword(String newPassword, String oldPassword, String username) {
+    public void updatePassword(String newPassword, String oldPassword, String email) {
 
-        username = stringUtils.normalizeString(username);
+        email = stringUtils.normalizeString(email);
 
-        User user = getUserByUsername(username);
+        User user = getUserByEmail(email);
 
         if(!passwordUtil.isStrong(newPassword)) {
 
-            log.info("New password is not strong enough for user: {}", username);
+            log.info("New password is not strong enough for user: {}", email);
 
             throw new BadCredentialsException("Invalid password");
         }
 
         if(!passwordUtil.matches(oldPassword, user.getPassword())) {
 
-            log.info("Old password does not match for user: {}", username);
+            log.info("Old password does not match for user: {}", email);
 
             throw new BadCredentialsException("Old password does not match");
         }
@@ -259,7 +204,7 @@ public class UserService {
         user.setPassword(passwordUtil.encodePassword(newPassword));
 
         userRepository.save(user);
-        log.info("Updated password for user: {}", username);
+        log.info("Updated password for user: {}", email);
     }
 
 
@@ -287,7 +232,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        log.info("Updated time parameters for user: {}", user.getUsername());
+        log.info("Updated time parameters for user: {}", user.getEmail());
     }
 
 
@@ -319,7 +264,9 @@ public class UserService {
         return new AuthResponseDTO(
                 jwtService.generateToken(
                         user.getUserId(),
-                        user.getUsername(),
+                        stringUtils.normalizeString(user.getEmail()),
+                        user.getFirstName(),
+                        user.getLastName(),
                         "ROLE_USER",
                         null),
                 rt);

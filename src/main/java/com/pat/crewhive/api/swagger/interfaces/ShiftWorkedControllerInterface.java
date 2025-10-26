@@ -1,7 +1,7 @@
 package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.dto.shift.shift_worked.CreateShiftWorkedDTO;
+import com.pat.crewhive.dto.request.shift.worked.CreateShiftWorkedDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
