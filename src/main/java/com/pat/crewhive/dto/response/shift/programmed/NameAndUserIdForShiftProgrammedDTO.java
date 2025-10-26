@@ -11,9 +11,11 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsernameAndUserIdForShiftProgrammedDTO {
+public class NameAndUserIdForShiftProgrammedDTO {
 
-    private List<String> username;
+    private List<String> firstName;
+
+    private List<String> lastName;
 
     private List<Long> userId;
 

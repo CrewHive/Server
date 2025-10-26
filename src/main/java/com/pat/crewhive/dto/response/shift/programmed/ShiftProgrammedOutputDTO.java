@@ -17,5 +17,5 @@ public class ShiftProgrammedOutputDTO {
     //todo ritorna un DTO con le info dello shift programmato e la lista di utenti assegnati a quello shift
     private List<ShiftProgrammed> shifts;
 
-    private List<UsernameAndUserIdForShiftProgrammedDTO> usernames;
+    private List<NameAndUserIdForShiftProgrammedDTO> users;
 }

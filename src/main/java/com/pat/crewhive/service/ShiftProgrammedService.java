@@ -4,7 +4,7 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.request.shift.programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.request.shift.programmed.PatchShiftProgrammedDTO;
 import com.pat.crewhive.dto.response.shift.programmed.ShiftProgrammedOutputDTO;
-import com.pat.crewhive.dto.response.shift.programmed.UsernameAndUserIdForShiftProgrammedDTO;
+import com.pat.crewhive.dto.response.shift.programmed.NameAndUserIdForShiftProgrammedDTO;
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.Period;
@@ -101,20 +101,22 @@ public class ShiftProgrammedService {
 
         List<ShiftProgrammed> dbList = shiftProgrammedRepository.findByUserAndDateBetween(userId, from, to);
 
-        List<UsernameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
+        List<NameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
 
         dbList.forEach(shiftProgrammed -> {
 
-            List<String> usernames = new ArrayList<>();
+            List<String> firstNames = new ArrayList<>();
+            List<String>  lastNames = new ArrayList<>();
             List<Long> userIds   = new ArrayList<>();
 
             shiftProgrammed.getUsers().forEach(su -> {
                 var u = su.getUser();
                 userIds.add(u.getUserId());
-                usernames.add(u.getUsername());
+                firstNames.add(u.getFirstName());
+                lastNames.add(u.getLastName());
             });
 
-            result.add(new UsernameAndUserIdForShiftProgrammedDTO(usernames, userIds, shiftProgrammed.getShiftProgrammedId()));
+            result.add(new NameAndUserIdForShiftProgrammedDTO(firstNames, lastNames, userIds, shiftProgrammed.getShiftProgrammedId()));
         });
 
         return new ShiftProgrammedOutputDTO(dbList, result);
@@ -137,20 +139,22 @@ public class ShiftProgrammedService {
 
         List<ShiftProgrammed> dbList = shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to);
 
-        List<UsernameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
+        List<NameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
 
         dbList.forEach(shiftProgrammed -> {
 
-            List<String> usernames = new ArrayList<>();
+            List<String> firstNames = new ArrayList<>();
+            List<String>  lastNames = new ArrayList<>();
             List<Long> userIds   = new ArrayList<>();
 
             shiftProgrammed.getUsers().forEach(su -> {
                 var u = su.getUser();
                 userIds.add(u.getUserId());
-                usernames.add(u.getUsername());
+                firstNames.add(u.getFirstName());
+                lastNames.add(u.getLastName());
             });
 
-            result.add(new UsernameAndUserIdForShiftProgrammedDTO(usernames, userIds, shiftProgrammed.getShiftProgrammedId()));
+            result.add(new NameAndUserIdForShiftProgrammedDTO(firstNames, lastNames, userIds, shiftProgrammed.getShiftProgrammedId()));
         });
 
         return new ShiftProgrammedOutputDTO(dbList, result);

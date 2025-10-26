@@ -39,6 +39,8 @@ public class ShiftTemplateService {
     @Transactional(readOnly = true)
     public ShiftTemplate getShiftTemplate(String shiftName, Long companyId) {
 
+        //todo ritorna un dto
+
         log.info("Fetching Shift Template '{}' for company {}", shiftName, companyId);
 
         String normalizedShiftName = stringUtils.normalizeString(shiftName);
@@ -56,6 +58,8 @@ public class ShiftTemplateService {
      */
     @Transactional
     public ShiftTemplate createShiftTemplate(CreateShiftTemplateDTO dto) {
+
+        //todo ritorna un dto
 
         if (repo.existsByShiftNameAndCompanyCompanyId(dto.getShiftName(), dto.getCompanyId())) {
             throw new ResourceAlreadyExistsException("Shift template with name '" + dto.getShiftName() + "' already exists in company with ID " + dto.getCompanyId());
@@ -88,6 +92,8 @@ public class ShiftTemplateService {
      */
     @Transactional
     public ShiftTemplate patchShiftTemplate(PatchShiftTemplateDTO dto) {
+
+        //todo ritorna un dto
 
         log.info("Patching Shift Template for company {}", dto.getCompanyId());
 

@@ -126,18 +126,5 @@ public class RoleService {
                 .orElseGet(() -> roleRepository.save(new Role(name, null)));
     }
 
-    /**
-     * Retrieves or creates a global role for managers.
-     *
-     * @return the global role for managers
-     */
-    @Transactional
-    public Role getOrCreateGlobalRoleManager() {
-
-        //todo Ritorna un DTO
-        String name = "ROLE_MANAGER";
-        return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
-                .orElseGet(() -> roleRepository.save(new Role(name, null)));
-    }
 }
 
