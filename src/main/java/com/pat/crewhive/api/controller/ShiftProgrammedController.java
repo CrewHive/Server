@@ -4,7 +4,7 @@ package com.pat.crewhive.api.controller;
 import com.pat.crewhive.api.swagger.interfaces.ShiftProgrammedControllerInterface;
 import com.pat.crewhive.dto.request.shift.programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.request.shift.programmed.PatchShiftProgrammedDTO;
-import com.pat.crewhive.dto.shift.programmed.ShiftProgrammedOutputDTO;
+import com.pat.crewhive.dto.response.shift.programmed.ShiftProgrammedOutputDTO;
 import com.pat.crewhive.model.user.entity.User;
 import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.service.ShiftProgrammedService;

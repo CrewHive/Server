@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.shift.programmed;
+package com.pat.crewhive.dto.response.shift.programmed;
 
 import com.pat.crewhive.model.shift.shiftprogrammed.entity.ShiftProgrammed;
 import lombok.AllArgsConstructor;

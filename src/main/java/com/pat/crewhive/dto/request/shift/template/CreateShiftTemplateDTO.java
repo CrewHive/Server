@@ -23,7 +23,6 @@ public class CreateShiftTemplateDTO {
     @Size(min = 1, max = 32, message = "Shift name must be between 1 and 32 characters")
     private String shiftName;
 
-    @NotBlank(message = "Description must not be blank")
     @NoHtml
     @Size(min = 1, max = 255, message = "Description must be between 1 and 255 characters")
     private String description;

@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.user;
+package com.pat.crewhive.dto.response.user;
 
 import com.pat.crewhive.model.util.ContractType;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,9 @@ public class UserWithTimeParamsDTO {
 
     private Long userId;
 
-    private String username;
+    private String firstName;
+
+    private String lastName;
 
     private String email;
 

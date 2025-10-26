@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.user;
+package com.pat.crewhive.dto.request.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

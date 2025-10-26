@@ -4,8 +4,8 @@ import com.pat.crewhive.api.swagger.interfaces.CompanyControllerInterface;
 import com.pat.crewhive.dto.response.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.request.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.request.company.SetCompanyDTO;
-import com.pat.crewhive.dto.response.company.UserIdAndUsernameAndHoursDTO;
-import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
+import com.pat.crewhive.dto.response.company.UserIdAndNameAndHoursDTO;
+import com.pat.crewhive.dto.response.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.service.CompanyService;
 import jakarta.validation.Valid;
@@ -32,12 +32,12 @@ public class CompanyController implements CompanyControllerInterface {
     @Override
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @GetMapping(path = "/{companyId}/users", produces = "application/json")
-    public ResponseEntity<List<UserIdAndUsernameAndHoursDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                              @PathVariable @NotNull Long companyId) {
+    public ResponseEntity<List<UserIdAndNameAndHoursDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                          @PathVariable @NotNull Long companyId) {
 
         Long managerId = cud.getUserId();
 
-        List<UserIdAndUsernameAndHoursDTO> users = companyService.getAllUsersInCompany(managerId, companyId);
+        List<UserIdAndNameAndHoursDTO> users = companyService.getAllUsersInCompany(managerId, companyId);
 
         log.info("Fetched {} users for company ID: {}", users.size(), companyId);
 

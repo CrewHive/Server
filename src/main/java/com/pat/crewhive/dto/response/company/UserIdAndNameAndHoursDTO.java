@@ -9,11 +9,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserIdAndUsernameAndHoursDTO {
+public class UserIdAndNameAndHoursDTO {
 
     private Long userId;
 
-    private String username;
+    private String firstName;
+
+    private String lastName;
 
     private int workableHoursPerWeek;
 }

@@ -14,6 +14,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PatchShiftTemplateDTO extends CreateShiftTemplateDTO {
 
+
+    //todo ma cosa cazzo hai scritto
     @NotBlank(message = "Shift name must not be blank")
     @NoHtml
     @Size(min = 3, max = 32, message = "Shift name must be between 3 and 32 characters")

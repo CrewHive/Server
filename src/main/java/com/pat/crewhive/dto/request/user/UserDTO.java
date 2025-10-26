@@ -1,4 +1,4 @@
-package com.pat.crewhive.dto.user;
+package com.pat.crewhive.dto.request.user;
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
@@ -19,10 +19,15 @@ public class UserDTO {
     @Size(min = 1, max = 6)
     private String email;
 
-    @NotBlank(message = "Username cannot be blank")
+    @NotBlank(message = "First name cannot be blank")
     @NoHtml
     @Size(min = 3, max = 32)
-    private String username;
+    private String firstName;
+
+    @NotBlank(message = "Last name cannot be blank")
+    @NoHtml
+    @Size(min = 3, max = 32)
+    private String lastName;
 
     @NotBlank(message = "Role cannot be blank")
     @NoHtml

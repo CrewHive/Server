@@ -4,7 +4,7 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.request.auth.AuthRequestDTO;
 import com.pat.crewhive.dto.response.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.request.auth.RegistrationDTO;
-import com.pat.crewhive.dto.user.LogoutDTO;
+import com.pat.crewhive.dto.request.user.LogoutDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.refresh_token.entity.RefreshToken;
 import com.pat.crewhive.model.user.entity.User;
@@ -103,13 +103,6 @@ public class AuthService {
     @Transactional
     public void register(RegistrationDTO request) {
 
-        String normalizedUsername = stringUtils.normalizeString(request.getUsername());
-        if (userRepository.existsByUsername(normalizedUsername)) {
-
-            log.error("Username already registered: {}", normalizedUsername);
-            throw new ResourceAlreadyExistsException("Username already registered");
-        }
-
         String normalizedEmail = stringUtils.normalizeString(request.getEmail());
         if (!emailUtil.isValidEmail(normalizedEmail)) {
 
@@ -125,7 +118,7 @@ public class AuthService {
 
         if (!passwordUtil.isStrong(request.getPassword())) {
 
-            log.error("Weak password provided for user: {}", normalizedUsername);
+            log.error("Weak password provided for user: {}", normalizedEmail);
             throw new BadCredentialsException("Weak password provided");
         }
 

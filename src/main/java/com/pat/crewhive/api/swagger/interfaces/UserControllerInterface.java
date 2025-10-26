@@ -2,12 +2,10 @@ package com.pat.crewhive.api.swagger.interfaces;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
 import com.pat.crewhive.dto.response.auth.AuthResponseDTO;
-import com.pat.crewhive.dto.user.LogoutDTO;
-import com.pat.crewhive.dto.user.UpdatePasswordDTO;
-import com.pat.crewhive.dto.user.UpdateUsernameOutputDTO;
-import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
+import com.pat.crewhive.dto.request.user.LogoutDTO;
+import com.pat.crewhive.dto.request.user.UpdatePasswordDTO;
+import com.pat.crewhive.dto.response.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
-import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,7 +61,7 @@ public interface UserControllerInterface {
     ResponseEntity<?> logout(@RequestBody @Valid LogoutDTO request);
 
 
-    
+
     @Operation(summary = "Update password",
             description = "Updates the password of the currently authenticated user.",
             security = @SecurityRequirement(name = "bearerAuth"))

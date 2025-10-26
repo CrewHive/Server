@@ -3,8 +3,8 @@ package com.pat.crewhive.service;
 import com.pat.crewhive.dto.response.auth.AuthResponseDTO;
 import com.pat.crewhive.dto.request.company.CompanyRegistrationDTO;
 import com.pat.crewhive.dto.request.company.SetCompanyDTO;
-import com.pat.crewhive.dto.response.company.UserIdAndUsernameAndHoursDTO;
-import com.pat.crewhive.dto.user.UserWithTimeParamsDTO;
+import com.pat.crewhive.dto.response.company.UserIdAndNameAndHoursDTO;
+import com.pat.crewhive.dto.response.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.model.company.entity.Company;
 import com.pat.crewhive.model.role.entity.Role;
 import com.pat.crewhive.model.user.entity.User;
@@ -112,7 +112,7 @@ public class CompanyService {
      * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
      */
     @Transactional(readOnly = true)
-    public List<UserIdAndUsernameAndHoursDTO> getAllUsersInCompany(Long managerId, Long companyId) {
+    public List<UserIdAndNameAndHoursDTO> getAllUsersInCompany(Long managerId, Long companyId) {
 
         log.info("Retrieving all users in company with ID: {}", companyId);
 
@@ -125,7 +125,7 @@ public class CompanyService {
         var users = userService.getAllUsersInCompany(companyId);
 
         return users.stream()
-                .map(user -> new UserIdAndUsernameAndHoursDTO(user.getUserId(), user.getUsername(), user.getWorkableHoursPerWeek()))
+                .map(user -> new UserIdAndNameAndHoursDTO(user.getUserId(), user.getFirstName(), user.getLastName(), user.getWorkableHoursPerWeek()))
                 .toList();
     }
 
@@ -156,7 +156,8 @@ public class CompanyService {
 
         return new UserWithTimeParamsDTO(
                 user.getUserId(),
-                user.getUsername(),
+                user.getFirstName(),
+                user.getLastName(),
                 user.getEmail(),
                 companyName,
                 user.getContractType(),

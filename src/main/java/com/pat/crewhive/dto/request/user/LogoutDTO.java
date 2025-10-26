@@ -1,10 +1,9 @@
-package com.pat.crewhive.dto.user;
+package com.pat.crewhive.dto.request.user;
 
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
