@@ -14,6 +14,8 @@ import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.service.utils.DateUtils;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +56,7 @@ public class ShiftProgrammedService {
      * @throws IllegalArgumentException if the start time is after the end time.
      */
     @Transactional
+    @CacheEvict(value = {"shiftsByUser", "shiftsByCompany"}, allEntries = true)
     public Long createShift(CreateShiftProgrammedDTO createShiftProgrammedDTO) {
 
         log.info("Creating shift with name: {}", createShiftProgrammedDTO.getName());
@@ -92,6 +95,7 @@ public class ShiftProgrammedService {
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "shiftsByUser", key = "#period + '-' + #userId")
     public ShiftProgrammedOutputDTO getShiftsByPeriodAndUser(Period period, Long userId) {
 
         log.info("Fetching shifts for user ID: {}", userId);
@@ -130,6 +134,7 @@ public class ShiftProgrammedService {
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "shiftsByCompany", key = "#period + '-' + #companyId")
     public ShiftProgrammedOutputDTO getShiftsByPeriodAndCompany(Period period, Long companyId) {
 
         log.info("Fetching shifts for company ID: {}", companyId);
@@ -168,6 +173,7 @@ public class ShiftProgrammedService {
      * @throws ResourceNotFoundException if the shift does not exist.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "usersInShift", key = "#shiftId")
     public List<User> getUsersInShift(Long shiftId) {
 
         // todo ritorna un dto
@@ -191,6 +197,10 @@ public class ShiftProgrammedService {
      * @throws IllegalArgumentException if the start time is after the end time.
      */
     @Transactional
+    @CacheEvict(
+            value = {"shiftsByUser", "shiftsByCompany", "usersInShift"},
+            allEntries = true
+    )
     public Long patchShift(PatchShiftProgrammedDTO dto) {
 
         log.info("Patching shift with id: {}", dto.getShiftProgrammedId());
@@ -251,6 +261,10 @@ public class ShiftProgrammedService {
      * @throws ResourceNotFoundException if the shift does not exist.
      */
     @Transactional
+    @CacheEvict(
+            value = {"shiftsByUser", "shiftsByCompany", "usersInShift"},
+            allEntries = true
+    )
     public void deleteShift(Long shiftId) {
 
         log.info("Deleting shift with id: {}", shiftId);

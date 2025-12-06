@@ -14,6 +14,7 @@ import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,6 +113,7 @@ public class CompanyService {
      * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
      */
     @Transactional(readOnly = true)
+    @Cacheable(key = "#companyId - #managerId", value = "usersInCompany")
     public List<UserIdAndNameAndHoursDTO> getAllUsersInCompany(Long managerId, Long companyId) {
 
         log.info("Retrieving all users in company with ID: {}", companyId);

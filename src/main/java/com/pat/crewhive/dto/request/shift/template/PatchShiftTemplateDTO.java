@@ -15,9 +15,9 @@ import lombok.Setter;
 public class PatchShiftTemplateDTO extends CreateShiftTemplateDTO {
 
 
-    //todo ma cosa cazzo hai scritto
+    //TODO: Immagino sia per fare il controllo che tra il nome vecchio e il nuovo
     @NotBlank(message = "Shift name must not be blank")
     @NoHtml
-    @Size(min = 3, max = 32, message = "Shift name must be between 3 and 32 characters")
+    @Size(min = 3, max = 32, message = "Old shift name must be between 3 and 32 characters")
     private String oldShiftName;
 }
