@@ -14,12 +14,16 @@ import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -31,19 +35,25 @@ public class CompanyService {
     private final RoleRepository roleRepository;
     private final StringUtils stringUtils;
     private final RefreshTokenService refreshTokenService;
+    /**
+     * Self injection of Company Servic
+     */
+    private final CompanyService self;
 
     public CompanyService(CompanyRepository companyRepository,
                           UserService userService,
                           StringUtils stringUtils,
                           RoleRepository roleRepository,
                           JwtService jwtService,
-                          RefreshTokenService refreshTokenService) {
+                          RefreshTokenService refreshTokenService,
+                          CompanyService self) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
         this.roleRepository = roleRepository;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.self = self;
     }
 
     /**
@@ -97,10 +107,24 @@ public class CompanyService {
      * @throws ResourceAlreadyExistsException if the company does not exist.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "companyById", key = "#companyId")
     public Company getCompanyById(Long companyId) {
 
         return companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceAlreadyExistsException("Company with ID " + companyId + " does not exist."));
+    }
+
+
+    /**
+     * Retrieves a company by the userId
+     * @param requestedUserId the ID whom we want to know the company
+     * @return the user's company
+     */
+    @Transactional(readOnly = true)
+    @Cacheable(value = "companyByUserId", key = "#requestedUserId")
+    public Company getCompanyByUserId(Long requestedUserId) {
+
+        return userService.getUserById(requestedUserId).getCompany();
     }
 
 
@@ -113,12 +137,12 @@ public class CompanyService {
      * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
      */
     @Transactional(readOnly = true)
-    @Cacheable(key = "#companyId - #managerId", value = "usersInCompany")
+    @Cacheable(value = "usersInCompany", key = "#companyId")
     public List<UserIdAndNameAndHoursDTO> getAllUsersInCompany(Long managerId, Long companyId) {
 
         log.info("Retrieving all users in company with ID: {}", companyId);
 
-        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+        if(!isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
 
             log.error("Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
@@ -142,9 +166,10 @@ public class CompanyService {
      * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "userInCompany", key = "#companyId + ':' + #targetId")
     public UserWithTimeParamsDTO getCompanyUserWithInformation(Long managerId, Long companyId, Long targetId) {
 
-        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+        if(!isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
 
             log.error("Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
@@ -177,26 +202,33 @@ public class CompanyService {
      * Checks if a user is part of a specific company.
      *
      * @param userId The ID of the user to check.
-     * @param companyName The name of the company to check against.
-     * @return true if the user is part of the company, false otherwise.
+     * @param companyId The id of the company to check.
+     * @return True if the user is part of the company, false otherwise.
      */
     @Transactional(readOnly = true)
-    public boolean isPartOfCompany(Long userId, String companyName) {
-
+    public boolean isPartOfCompany(Long userId, Long companyId) {
         User user = userService.getUserById(userId);
-        return user.getCompany() != null && user.getCompany().getName().equals(companyName);
+        return user.getCompany() != null &&
+                user.getCompany().getCompanyId().equals(companyId);
     }
 
     /**
      * Sets a company for a user.
      *
      * @param request The request containing user ID and company name.
+     * @param companyId The ID of the company
+     * @param managerId The ID of the manager to check if he's part of the company.
      * @throws ResourceAlreadyExistsException if the company does not exist.
      */
     @Transactional
-    public void setCompany(SetCompanyDTO request, Long managerId) {
+    @Caching(evict = {
+            @CacheEvict(value = "companyById", key = "#companyId"),
+            @CacheEvict(value = "usersInCompany", key = "#companyId"),
+            @CacheEvict(value = "companyByUserId", key = "#request.userId")
+    })
+    public void setCompany(SetCompanyDTO request, Long companyId, Long managerId) {
 
-        if(!isPartOfCompany(managerId, request.getCompanyName())) {
+        if(!self.isPartOfCompany(managerId, companyId)) {
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
@@ -226,15 +258,20 @@ public class CompanyService {
      * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "companyById", key = "#companyId"),
+            @CacheEvict(value = "usersInCompany", key = "#companyId"),
+            @CacheEvict(value = "companyByUserId", allEntries = true)
+    })
     public void deleteCompany(Long companyId, Long managerId) {
 
-        if(!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+        if(!self.isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
 
             log.error("Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
-        removeCompanyFromUsers(companyId);
+        self.removeCompanyFromUsers(companyId);
 
         companyRepository.deleteById(companyId);
 
@@ -252,13 +289,18 @@ public class CompanyService {
      * @throws ResourceNotFoundException if the user does not belong to the specified company or doesn't have one.
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "userInCompany", key = "#companyId + ':' + #userId"),
+            @CacheEvict(value = "usersInCompany", key = "#companyId"),
+            @CacheEvict(value = "companyByUserId", key = "#userId")
+    })
     public void removeUserFromCompany(Long userId, Long managerId, Long companyId) {
 
         if (userId.equals(managerId)) {
             throw new AuthorizationDeniedException("Managers cannot remove themselves from the company.");
         }
 
-        if (!isPartOfCompany(managerId, getCompanyById(companyId).getName())) {
+        if (!isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
             throw new AuthorizationDeniedException("Not allowed");
         }
 
@@ -278,6 +320,10 @@ public class CompanyService {
      * @param companyId The ID of the company to remove from users.
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "usersInCompany", key = "#companyId"),
+            @CacheEvict(value = "companyByUserId", allEntries = true)
+    })
     public void removeCompanyFromUsers(Long companyId) {
 
         var users = userService.getAllUsersInCompany(companyId);

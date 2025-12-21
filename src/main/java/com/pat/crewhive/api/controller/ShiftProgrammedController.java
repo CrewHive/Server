@@ -6,12 +6,14 @@ import com.pat.crewhive.dto.request.shift.programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.request.shift.programmed.PatchShiftProgrammedDTO;
 import com.pat.crewhive.dto.response.shift.programmed.ShiftProgrammedOutputDTO;
 import com.pat.crewhive.model.user.entity.User;
+import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.service.ShiftProgrammedService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,18 +31,18 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @PostMapping("/create")
-    public ResponseEntity<Long> createShift(@RequestBody @Valid CreateShiftProgrammedDTO dto) {
+    public ResponseEntity<Long> createShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                            @RequestBody @Valid CreateShiftProgrammedDTO dto) {
 
         log.info("Received request to create shift: {}", dto.getName());
 
-        return ResponseEntity.ok(shiftProgrammedService.createShift(dto));
+        return ResponseEntity.ok(shiftProgrammedService.createShift(cud.getUserId(), dto));
     }
 
     @Override
     @GetMapping("/period/{period}/user/{userId}")
     public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
                                                                           @PathVariable @NotNull Long userId) {
-
         log.info("Received request to get shifts for user {} in period {}", userId, period);
 
         return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndUser(period, userId));
@@ -48,13 +50,13 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
 
     @Override
-    @GetMapping("/period/{period}/company/{companyId}")
-    public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@PathVariable @NotNull Period period,
-                                                                                     @PathVariable @NotNull Long companyId) {
+    @GetMapping("/period/{period}/company}")
+    public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                                @PathVariable @NotNull Period period) {
 
-        log.info("Received request to get shifts for company {} in period {}",  companyId, period);
+        log.info("Received request to get shifts for company {} in period {}",  cud.getCompanyId(), period);
 
-        return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndCompany(period, companyId));
+        return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndCompany(period, cud.getUserId()));
     }
 
 
@@ -70,20 +72,22 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @PatchMapping("/patch")
-    public ResponseEntity<Long> patchShift(@RequestBody @Valid PatchShiftProgrammedDTO dto) {
+    public ResponseEntity<Long> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                           @RequestBody @Valid PatchShiftProgrammedDTO dto) {
 
         log.info("Received request to patch shift: {}", dto.getName());
 
-        return ResponseEntity.ok(shiftProgrammedService.patchShift(dto));
+        return ResponseEntity.ok(shiftProgrammedService.patchShift(cud.getUserId(), dto));
     }
 
     @Override
     @DeleteMapping("/delete/{shiftId}")
-    public ResponseEntity<?> deleteShift(@PathVariable @NotNull Long shiftId) {
+    public ResponseEntity<?> deleteShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                         @PathVariable @NotNull Long shiftId) {
 
         log.info("Received request to delete shift: {}", shiftId);
 
-        shiftProgrammedService.deleteShift(shiftId);
+        shiftProgrammedService.deleteShift(cud.getUserId(), shiftId);
         return ResponseEntity.ok().build();
     }
 }

@@ -11,11 +11,13 @@ import com.pat.crewhive.model.util.Period;
 import com.pat.crewhive.repository.ShiftProgrammedRepository;
 import com.pat.crewhive.repository.ShiftUserRepository;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.service.utils.CacheKeys;
 import com.pat.crewhive.service.utils.DateUtils;
 import com.pat.crewhive.service.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,47 +37,67 @@ public class ShiftProgrammedService {
     private final StringUtils stringUtils;
     private final UserService userService;
     private final DateUtils dateUtils;
+    private final CompanyService companyService;
 
     public ShiftProgrammedService(ShiftProgrammedRepository shiftProgrammedRepository,
-                                    ShiftUserRepository shiftUserRepository,
+                                  ShiftUserRepository shiftUserRepository,
                                   StringUtils stringUtils,
                                   UserService userService,
-                                  DateUtils dateUtils) {
+                                  DateUtils dateUtils,
+                                  CompanyService companyService) {
         this.shiftProgrammedRepository = shiftProgrammedRepository;
         this.shiftUserRepository = shiftUserRepository;
         this.stringUtils = stringUtils;
         this.userService = userService;
         this.dateUtils = dateUtils;
+        this.companyService = companyService;
     }
 
 
     /**
      * Create a new programmed shift and associate it with users.
-     * @param createShiftProgrammedDTO The DTO containing shift details.
+     * @param creatorUserId the ID of the user who created the shift
+     * @param dto The DTO containing shift details.
      * @return The ID of the created shift.
      * @throws IllegalArgumentException if the start time is after the end time.
      */
     @Transactional
-    @CacheEvict(value = {"shiftsByUser", "shiftsByCompany"}, allEntries = true)
-    public Long createShift(CreateShiftProgrammedDTO createShiftProgrammedDTO) {
+    @Caching(evict = {
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#creatorUserId, T(com.pat.crewhive.model.util.Period).DAY)"),
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#creatorUserId, T(com.pat.crewhive.model.util.Period).WEEK)"),
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#creatorUserId, T(com.pat.crewhive.model.util.Period).MONTH)"),
 
-        log.info("Creating shift with name: {}", createShiftProgrammedDTO.getName());
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#creatorUserId, T(com.pat.crewhive.model.util.Period).DAY)"),
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#creatorUserId, T(com.pat.crewhive.model.util.Period).WEEK)"),
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#creatorUserId, T(com.pat.crewhive.model.util.Period).MONTH)")
+    })
+    public Long createShift(
+            Long creatorUserId,
+            CreateShiftProgrammedDTO dto) {
 
-        String normalizedShiftName = stringUtils.normalizeString(createShiftProgrammedDTO.getName());
-        createShiftProgrammedDTO.setName(normalizedShiftName);
+        log.info("Creating shift with name: {}", dto.getName());
 
-        if (createShiftProgrammedDTO.getStart().isAfter(createShiftProgrammedDTO.getEnd())) {
+        String normalizedShiftName = stringUtils.normalizeString(dto.getName());
+        dto.setName(normalizedShiftName);
+
+        if (dto.getStart().isAfter(dto.getEnd())) {
             throw new IllegalArgumentException("Shift start time cannot be after end time");
         }
 
-        List<User> users = userService.getUsersByIds(createShiftProgrammedDTO.getUserId());
+        List<User> users = userService.getUsersByIds(dto.getUserId());
 
         ShiftProgrammed shiftProgrammed = new ShiftProgrammed();
-        shiftProgrammed.setShiftName(createShiftProgrammedDTO.getName());
-        shiftProgrammed.setDescription(createShiftProgrammedDTO.getDescription());
-        shiftProgrammed.setStart(createShiftProgrammedDTO.getStart());
-        shiftProgrammed.setEnd(createShiftProgrammedDTO.getEnd());
-        shiftProgrammed.setColor(createShiftProgrammedDTO.getColor());
+        shiftProgrammed.setShiftName(dto.getName());
+        shiftProgrammed.setDescription(dto.getDescription());
+        shiftProgrammed.setStart(dto.getStart());
+        shiftProgrammed.setEnd(dto.getEnd());
+        shiftProgrammed.setColor(dto.getColor());
 
         for (User u: users) {
             shiftProgrammed.addUser(u);
@@ -95,8 +117,13 @@ public class ShiftProgrammedService {
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "shiftsByUser", key = "#period + '-' + #userId")
-    public ShiftProgrammedOutputDTO getShiftsByPeriodAndUser(Period period, Long userId) {
+    @Cacheable(
+            value = "shiftsByUser",
+            key = "#userId + ':' + #period"
+    )
+    public ShiftProgrammedOutputDTO getShiftsByPeriodAndUser(
+            Period period,
+            Long userId) {
 
         log.info("Fetching shifts for user ID: {}", userId);
 
@@ -130,12 +157,19 @@ public class ShiftProgrammedService {
     /**
      * Retrieve shifts for a specific company within a defined period.
      * @param period The period to filter shifts (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
-     * @param companyId The ID of the company whose shifts are to be retrieved.
+     * @param requesterUserId The ID of the user in the company.
      * @return A list of ShiftProgrammed entities matching the criteria.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "shiftsByCompany", key = "#period + '-' + #companyId")
-    public ShiftProgrammedOutputDTO getShiftsByPeriodAndCompany(Period period, Long companyId) {
+    @Cacheable(
+            value = "shiftsByCompany",
+            key = "#requesterUserId + ':' + #period"
+    )
+    public ShiftProgrammedOutputDTO getShiftsByPeriodAndCompany(
+            Period period,
+            Long requesterUserId) {
+
+        Long companyId = companyService.getCompanyByUserId(requesterUserId).getCompanyId();
 
         log.info("Fetching shifts for company ID: {}", companyId);
 
@@ -173,7 +207,10 @@ public class ShiftProgrammedService {
      * @throws ResourceNotFoundException if the shift does not exist.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "usersInShift", key = "#shiftId")
+    @Cacheable(
+            value = "usersInShift",
+            key = "#shiftId"
+    )
     public List<User> getUsersInShift(Long shiftId) {
 
         // todo ritorna un dto
@@ -191,17 +228,33 @@ public class ShiftProgrammedService {
 
     /**
      * Update an existing programmed shift with new details.
+     * @param requesterUserId the ID of the manager who patched the shift
      * @param dto The DTO containing updated shift details.
      * @return The ID of the updated shift.
      * @throws ResourceNotFoundException if the shift does not exist.
      * @throws IllegalArgumentException if the start time is after the end time.
      */
     @Transactional
-    @CacheEvict(
-            value = {"shiftsByUser", "shiftsByCompany", "usersInShift"},
-            allEntries = true
-    )
-    public Long patchShift(PatchShiftProgrammedDTO dto) {
+    @Caching(evict = {
+            @CacheEvict(value = "usersInShift", key = "#dto.shiftProgrammedId"),
+
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#requesterUserId, T(com.pat.crewhive.model.util.Period).DAY)"),
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#requesterUserId, T(com.pat.crewhive.model.util.Period).WEEK)"),
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#requesterUserId, T(com.pat.crewhive.model.util.Period).MONTH)"),
+
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.model.util.Period).DAY)"),
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.model.util.Period).WEEK)"),
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.model.util.Period).MONTH)")
+    })
+    public Long patchShift(
+            Long requesterUserId,
+            PatchShiftProgrammedDTO dto) {
 
         log.info("Patching shift with id: {}", dto.getShiftProgrammedId());
 
@@ -257,15 +310,31 @@ public class ShiftProgrammedService {
 
     /**
      * Delete a programmed shift by its ID.
+     * @param requesterUserId the ID of the user who wants to delete the shift
      * @param shiftId The ID of the shift to delete.
      * @throws ResourceNotFoundException if the shift does not exist.
      */
     @Transactional
-    @CacheEvict(
-            value = {"shiftsByUser", "shiftsByCompany", "usersInShift"},
-            allEntries = true
-    )
-    public void deleteShift(Long shiftId) {
+    @Caching(evict = {
+            @CacheEvict(value = "usersInShift", key = "#shiftId"),
+
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#requesterUserId, T(com.pat.crewhive.model.util.Period).DAY)"),
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#requesterUserId, T(com.pat.crewhive.model.util.Period).WEEK)"),
+            @CacheEvict(value = "shiftsByUser",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByUser(#requesterUserId, T(com.pat.crewhive.model.util.Period).MONTH)"),
+
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.model.util.Period).DAY)"),
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.model.util.Period).WEEK)"),
+            @CacheEvict(value = "shiftsByCompany",
+                    key = "T(com.pat.crewhive.service.utils.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.model.util.Period).MONTH)")
+    })
+    public void deleteShift(
+            Long requesterUserId,
+            Long shiftId) {
 
         log.info("Deleting shift with id: {}", shiftId);
 

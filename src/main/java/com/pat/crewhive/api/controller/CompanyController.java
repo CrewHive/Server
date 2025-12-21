@@ -81,8 +81,9 @@ public class CompanyController implements CompanyControllerInterface {
                                         @RequestBody @Valid SetCompanyDTO request) {
 
         Long managerId = cud.getUserId();
+        Long companyId = cud.getCompanyId();
 
-        companyService.setCompany(request, managerId);
+        companyService.setCompany(request, companyId, managerId);
 
         log.info("Company set for user ID: {}", request.getUserId());
 

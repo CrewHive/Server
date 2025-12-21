@@ -1,4 +1,4 @@
-package com.pat.crewhive.config;
+package com.pat.crewhive.config.cache;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,7 @@ public class RedisCacheConfig {
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
         return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(10))
+                .entryTtl(Duration.ofMinutes(30))
                 .disableCachingNullValues()
                 .serializeKeysWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(

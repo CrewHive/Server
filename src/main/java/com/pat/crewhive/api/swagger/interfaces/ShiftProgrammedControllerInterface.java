@@ -5,6 +5,7 @@ import com.pat.crewhive.dto.request.shift.programmed.CreateShiftProgrammedDTO;
 import com.pat.crewhive.dto.request.shift.programmed.PatchShiftProgrammedDTO;
 import com.pat.crewhive.dto.response.shift.programmed.ShiftProgrammedOutputDTO;
 import com.pat.crewhive.model.user.entity.User;
+import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
 import com.pat.crewhive.model.util.Period;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,6 +18,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
@@ -46,7 +49,8 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Long> createShift(@RequestBody @Valid CreateShiftProgrammedDTO dto);
+    ResponseEntity<Long> createShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                     @RequestBody @Valid CreateShiftProgrammedDTO dto);
 
 
     @Operation(summary = "Get programmed shifts by period and user",
@@ -98,8 +102,8 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@PathVariable @NotNull Period period,
-                                                                      @PathVariable @NotNull Long companyId);
+    ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                         @PathVariable @NotNull Period period);
 
 
 
@@ -158,7 +162,8 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Long> patchShift(@RequestBody @Valid PatchShiftProgrammedDTO dto);
+    ResponseEntity<Long> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                    @RequestBody @Valid PatchShiftProgrammedDTO dto);
 
 
     @Operation(summary = "Delete a programmed shift",
@@ -187,5 +192,6 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> deleteShift(@PathVariable @NotNull Long shiftId);
+    ResponseEntity<?> deleteShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                  @PathVariable @NotNull Long shiftId);
 }
