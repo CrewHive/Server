@@ -1,8 +1,8 @@
 package com.pat.crewhive.security.filter;
 
-import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
-import com.pat.crewhive.service.JwtService;
+import com.pat.crewhive.security.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

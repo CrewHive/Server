@@ -1,0 +1,45 @@
+package com.pat.crewhive.shiftprogrammed;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pat.crewhive.user.User;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "shift_user", indexes = {
+        @Index(name = "idx_shiftuser", columnList = "shift_programmed_id"),
+        @Index(name = "idx_shiftuser_user_id", columnList = "user_id")
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "uc_shiftuser", columnNames = {"shift_programmed_id", "user_id"})
+})
+@NoArgsConstructor
+@Getter
+@Setter
+public class ShiftUser {
+
+    @EmbeddedId
+    private ShiftUserId id = new ShiftUserId();
+
+    //todo per il refactoring per la beta togliere jsonignore e comincia a creare i dto per i service e a modificare le query per dare le info che servono
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "shift_programmed_id", nullable = false)
+    @JsonIgnore
+    @MapsId("shiftProgrammedId")
+    @JsonBackReference
+    private ShiftProgrammed shift;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    @MapsId("userId")
+    @JsonBackReference
+    private User user;
+
+    public ShiftUser(ShiftProgrammed shift, User user) {
+        this.shift = shift;
+        this.user = user;
+    }
+}
