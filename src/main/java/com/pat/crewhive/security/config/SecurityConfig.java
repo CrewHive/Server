@@ -114,7 +114,7 @@ public class SecurityConfig {
         CorsConfiguration cfg = new CorsConfiguration();
 
         cfg.setAllowCredentials(true);
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "QUERY", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         cfg.setExposedHeaders(List.of("Authorization")); // Per il token JWT
         // Preflight cache
