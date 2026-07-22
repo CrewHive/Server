@@ -4,6 +4,8 @@ package com.pat.crewhive.authuser;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -39,14 +41,9 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         authService.register(rDTO);
 
-        URI location = ServletUriComponentsBuilder
-                .fromPath("/api/user/me")
-                .build()
-                .toUri();
-
         log.info("User {} registered successfully", rDTO.getEmail());
 
-        return ResponseEntity.created(location).build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
