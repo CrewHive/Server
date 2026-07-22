@@ -130,6 +130,22 @@ public class RefreshTokenService {
     }
 
     /**
+     * Returns the user's current valid refresh token, or issues a new one if none exists.
+     * Unlike {@link #generateRefreshToken(User)}, an existing valid token is left untouched
+     * instead of being deleted and replaced.
+     *
+     * @param user The user whose refresh token is requested.
+     * @return The existing valid refresh token, or a newly issued one.
+     */
+    @Transactional
+    public String getOrIssueRefreshToken(User user) {
+
+        RefreshToken rt = getRefreshTokenByUser(user);
+
+        return (rt != null) ? rt.getToken() : generateRefreshToken(user);
+    }
+
+    /**
      * Rotates the given refresh token by generating a new token and updating the expiration date.
      *
      * @param rt The refresh token to rotate.

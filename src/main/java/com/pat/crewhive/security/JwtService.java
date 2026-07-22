@@ -49,8 +49,7 @@ public class JwtService {
                                 String lastName,
                                 String role,
                                 Long companyId) {
-
-        //todo implementa frontend per rotate token
+        
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role) // ROLE_USER, ROLE_MANAGER, ...
@@ -59,7 +58,7 @@ public class JwtService {
                 .claim("lastName", lastName)
                 .claim("companyId", companyId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) //todo sistena la scadenza 1000 * 60 * 15
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 15))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
 

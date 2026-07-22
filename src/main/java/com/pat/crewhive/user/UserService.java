@@ -256,10 +256,6 @@ public class UserService {
 
         updateUser(user);
 
-        //todo rimuovi una volta implementato il rotate token nel frontend
-        refreshTokenService.deleteTokenByUser(user);
-        String rt = refreshTokenService.generateRefreshToken(user);
-
         return new AuthResponseDTO(
                 jwtService.generateToken(
                         user.getUserId(),
@@ -268,7 +264,7 @@ public class UserService {
                         user.getLastName(),
                         "ROLE_USER",
                         null),
-                rt);
+                refreshTokenService.getOrIssueRefreshToken(user));
     }
 
 
