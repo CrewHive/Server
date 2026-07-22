@@ -21,7 +21,6 @@ public class AuthUserController implements AuthUserControllerInterface {
 
     private final AuthService authService;
 
-    @Autowired
     public AuthUserController(AuthService authService) {
         this.authService = authService;
     }

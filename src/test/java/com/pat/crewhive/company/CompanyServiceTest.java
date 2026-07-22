@@ -42,14 +42,14 @@ class CompanyServiceTest {
     @Mock
     private RefreshTokenService refreshTokenService;
     @Mock
-    private CompanyService self;
+    private CompanyAccessService companyAccessService;
 
     private CompanyService companyService;
 
     @BeforeEach
     void setUp() {
         companyService = new CompanyService(
-                companyRepository, userService, stringUtils, roleRepository, jwtService, refreshTokenService, self
+                companyRepository, userService, stringUtils, roleRepository, jwtService, refreshTokenService, companyAccessService
         );
     }
 

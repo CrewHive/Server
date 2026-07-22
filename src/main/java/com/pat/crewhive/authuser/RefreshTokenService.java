@@ -17,7 +17,6 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository repo;
 
-    @Autowired
     public RefreshTokenService(RefreshTokenRepository repo) {
         this.repo = repo;
     }

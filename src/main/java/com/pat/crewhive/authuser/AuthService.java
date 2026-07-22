@@ -35,7 +35,6 @@ public class AuthService {
     private final EmailUtil emailUtil;
     private final StringUtils stringUtils;
 
-    @Autowired
     public AuthService(UserService userService,
                        JwtService jwtService,
                        RefreshTokenService refreshTokenService,

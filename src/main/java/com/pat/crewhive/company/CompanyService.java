@@ -19,9 +19,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -33,10 +31,7 @@ public class CompanyService {
     private final RoleRepository roleRepository;
     private final StringUtils stringUtils;
     private final RefreshTokenService refreshTokenService;
-    /**
-     * Self injection of Company Servic
-     */
-    private final CompanyService self;
+    private final CompanyAccessService companyAccessService;
 
     public CompanyService(CompanyRepository companyRepository,
                           UserService userService,
@@ -44,14 +39,14 @@ public class CompanyService {
                           RoleRepository roleRepository,
                           JwtService jwtService,
                           RefreshTokenService refreshTokenService,
-                          CompanyService self) {
+                          CompanyAccessService companyAccessService) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
         this.roleRepository = roleRepository;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
-        this.self = self;
+        this.companyAccessService = companyAccessService;
     }
 
     /**
@@ -102,12 +97,8 @@ public class CompanyService {
      * @return The Company object if found.
      * @throws ResourceAlreadyExistsException if the company does not exist.
      */
-    @Transactional(readOnly = true)
-    @Cacheable(value = "companyById", key = "#companyId")
     public Company getCompanyById(Long companyId) {
-
-        return companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceAlreadyExistsException("Company with ID " + companyId + " does not exist."));
+        return companyAccessService.getCompanyById(companyId);
     }
 
 
@@ -138,7 +129,7 @@ public class CompanyService {
 
         log.info("Retrieving all users in company with ID: {}", companyId);
 
-        if(!isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
+        if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
 
             log.error("Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
@@ -165,7 +156,7 @@ public class CompanyService {
     @Cacheable(value = "userInCompany", key = "#companyId + ':' + #targetId")
     public UserWithTimeParamsDTO getCompanyUserWithInformation(Long managerId, Long companyId, Long targetId) {
 
-        if(!isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
+        if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
 
             log.error("Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
@@ -195,20 +186,6 @@ public class CompanyService {
 
 
     /**
-     * Checks if a user is part of a specific company.
-     *
-     * @param userId The ID of the user to check.
-     * @param companyId The id of the company to check.
-     * @return True if the user is part of the company, false otherwise.
-     */
-    @Transactional(readOnly = true)
-    public boolean isPartOfCompany(Long userId, Long companyId) {
-        User user = userService.getUserById(userId);
-        return user.getCompany() != null &&
-                user.getCompany().getCompanyId().equals(companyId);
-    }
-
-    /**
      * Sets a company for a user.
      *
      * @param request The request containing user ID and company name.
@@ -224,7 +201,7 @@ public class CompanyService {
     })
     public void setCompany(SetCompanyDTO request, Long companyId, Long managerId) {
 
-        if(!self.isPartOfCompany(managerId, companyId)) {
+        if(companyAccessService.isNotPartOfCompany(managerId, companyId)) {
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
@@ -261,13 +238,13 @@ public class CompanyService {
     })
     public void deleteCompany(Long companyId, Long managerId) {
 
-        if(!self.isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
+        if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
 
             log.error("Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
-        self.removeCompanyFromUsers(companyId);
+        companyAccessService.removeCompanyFromUsers(companyId);
 
         companyRepository.deleteById(companyId);
 
@@ -296,7 +273,7 @@ public class CompanyService {
             throw new AuthorizationDeniedException("Managers cannot remove themselves from the company.");
         }
 
-        if (!isPartOfCompany(managerId, self.getCompanyById(companyId).getCompanyId())) {
+        if (companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
             throw new AuthorizationDeniedException("Not allowed");
         }
 
@@ -307,28 +284,5 @@ public class CompanyService {
         }
 
         userService.leaveCompany(userId);
-    }
-
-
-    /**
-     * Removes the association of a company from all users linked to it.
-     *
-     * @param companyId The ID of the company to remove from users.
-     */
-    @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "usersInCompany", key = "#companyId"),
-            @CacheEvict(value = "companyByUserId", allEntries = true)
-    })
-    public void removeCompanyFromUsers(Long companyId) {
-
-        var users = userService.getAllUsersInCompany(companyId);
-
-        for (User user : users) {
-            user.setCompany(null);
-            userService.updateUser(user);
-        }
-
-        log.info("Removed company {} from all associated users", companyId);
     }
 }
