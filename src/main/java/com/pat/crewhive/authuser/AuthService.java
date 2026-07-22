@@ -97,6 +97,7 @@ public class AuthService {
      * @param request The registration request containing username, email, and password.
      * @throws BadCredentialsException if the email format is invalid or the password is weak.
      * @throws ResourceAlreadyExistsException if the username or email already exist.
+     * @return The ID of the newly registered user.
      */
     @Transactional
     public void register(RegistrationDTO request) {

@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @Slf4j
 @RestController
@@ -36,9 +39,14 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         authService.register(rDTO);
 
+        URI location = ServletUriComponentsBuilder
+                .fromPath("/api/user/me")
+                .build()
+                .toUri();
+
         log.info("User {} registered successfully", rDTO.getEmail());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.created(location).build();
     }
 
     @Override
