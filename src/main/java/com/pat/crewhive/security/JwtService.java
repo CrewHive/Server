@@ -49,7 +49,7 @@ public class JwtService {
                                 String lastName,
                                 String role,
                                 Long companyId) {
-        
+
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role) // ROLE_USER, ROLE_MANAGER, ...

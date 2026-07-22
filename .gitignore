@@ -33,5 +33,7 @@ build/
 
 *.pem
 
+.claude/
+
 ### VS Code ###
 .vscode/
