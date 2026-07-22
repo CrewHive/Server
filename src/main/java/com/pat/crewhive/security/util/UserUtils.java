@@ -1,7 +1,7 @@
 package com.pat.crewhive.security.util;
 
-import com.pat.crewhive.dto.user.UserDTO;
-import com.pat.crewhive.model.user.wrapper.CustomUserDetails;
+import com.pat.crewhive.user.UserDTO;
+import com.pat.crewhive.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -62,7 +62,8 @@ public final class UserUtils {
 
         return (cud != null ? new UserDTO(
                 cud.getEmail(),
-                cud.getUsername(),
+                cud.getFirstName(),
+                cud.getLastName(),
                 cud.getRole(),
                 cud.getCompanyId()
         ) : null);

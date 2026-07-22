@@ -1,4 +1,4 @@
-# 🚀 CrewHive — Server
+# 🚀 CrewHive - Server
 
 ### 🎯 Obiettivo del progetto
 Backend **RESTful** della piattaforma **CrewHive**, dedicato alla **gestione di turni, eventi e presenze** in contesti aziendali.  

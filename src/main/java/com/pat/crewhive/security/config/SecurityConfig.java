@@ -3,8 +3,8 @@ package com.pat.crewhive.security.config;
 import com.pat.crewhive.security.exception.handler.RestAccessDeniedHandler;
 import com.pat.crewhive.security.exception.handler.RestAuthenticationEntryPoint;
 import com.pat.crewhive.security.filter.JwtAuthenticationFilter;
-import com.pat.crewhive.service.JwtService;
-import com.pat.crewhive.service.UserService;
+import com.pat.crewhive.security.JwtService;
+import com.pat.crewhive.user.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -114,7 +114,7 @@ public class SecurityConfig {
         CorsConfiguration cfg = new CorsConfiguration();
 
         cfg.setAllowCredentials(true);
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "QUERY", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         cfg.setExposedHeaders(List.of("Authorization")); // Per il token JWT
         // Preflight cache
