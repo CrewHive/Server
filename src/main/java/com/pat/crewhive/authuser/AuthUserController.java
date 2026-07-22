@@ -1,12 +1,14 @@
 package com.pat.crewhive.authuser;
 
 
+import com.pat.crewhive.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -26,11 +28,12 @@ public class AuthUserController implements AuthUserControllerInterface {
 
     @Override
     @PostMapping("/rotate")
-    public ResponseEntity<AuthResponseDTO> rotate(@RequestBody @Valid RotateRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> rotate(@AuthenticationPrincipal CustomUserDetails cud,
+                                                  @RequestBody @Valid RotateRequestDTO request) {
 
         AuthResponseDTO response = authService.rotate_token(request.getRefreshToken());
 
-        log.info("Token ok for user:");
+        log.info("Token ok for user: {}", cud.getUsername());
 
         return ResponseEntity.ok(response);
     }
