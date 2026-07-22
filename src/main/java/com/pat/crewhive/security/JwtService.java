@@ -22,7 +22,6 @@ public class JwtService {
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
 
-    @Autowired
     public JwtService(PrivateKey privateKey,
                       PublicKey publicKey) {
 
