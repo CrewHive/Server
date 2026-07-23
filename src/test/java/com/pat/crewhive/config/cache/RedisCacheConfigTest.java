@@ -8,6 +8,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +41,7 @@ class RedisCacheConfigTest {
     @Test
     void roundTripsListOfDtosThroughObjectClassLikeSpringCacheDoes() {
         List<UserIdAndNameAndHoursDTO> list = List.of(
-                new UserIdAndNameAndHoursDTO(1L, "Mario", "Rossi", 40)
+                new UserIdAndNameAndHoursDTO(UUID.randomUUID(), "Mario", "Rossi", 40)
         );
 
         ByteBuffer bytes = valuePair.write(list);
