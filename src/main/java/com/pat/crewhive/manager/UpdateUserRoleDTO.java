@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -23,5 +25,5 @@ public class UpdateUserRoleDTO {
     private String newRole;
 
     @NotEmpty(message = "User ID cannot be empty")
-    private Long userId;
+    private UUID userId;
 }

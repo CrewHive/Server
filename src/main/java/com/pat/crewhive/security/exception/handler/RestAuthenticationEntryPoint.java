@@ -1,5 +1,6 @@
 package com.pat.crewhive.security.exception.handler;
 
+import org.jspecify.annotations.NonNull;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +26,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
-                         AuthenticationException ex) throws IOException {
+                         @NonNull AuthenticationException ex) throws IOException {
 
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Unauthorized");
         pd.setTitle("Unauthorized");

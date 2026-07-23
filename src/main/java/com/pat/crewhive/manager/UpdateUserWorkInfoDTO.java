@@ -4,13 +4,13 @@ import com.pat.crewhive.user.ContractType;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,8 +19,7 @@ import java.math.BigDecimal;
 public class UpdateUserWorkInfoDTO {
 
     @NotNull(message = "Target user ID is required")
-    @Positive(message = "Target user ID must be a positive number")
-    Long targetUserId;
+    UUID targetUserId;
 
     @NotNull(message = "Contract type is required")
     ContractType contractType;

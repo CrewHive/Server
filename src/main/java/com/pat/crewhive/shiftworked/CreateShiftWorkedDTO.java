@@ -12,6 +12,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -37,6 +38,6 @@ public class CreateShiftWorkedDTO {
     private BigDecimal extraHours;
 
     @NotNull(message = "User ID must not be null")
-    private Long userId;
+    private UUID userId;
 
 }

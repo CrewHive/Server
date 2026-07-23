@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,7 +20,7 @@ import java.util.Set;
 public class PatchShiftProgrammedDTO {
 
     @NotNull(message = "Shift ID cannot be null")
-    Long shiftProgrammedId;
+    UUID shiftProgrammedId;
 
     @NotBlank(message = "Shift name cannot be blank")
     @NoHtml
@@ -40,5 +41,5 @@ public class PatchShiftProgrammedDTO {
     @Size(min = 6, max = 6)
     String color;
 
-    Set<Long> userId;
+    Set<UUID> userId;
 }

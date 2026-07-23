@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,7 +69,7 @@ public class UserService {
      * @throws ResourceNotFoundException if the user is not found
      */
     @Transactional(readOnly = true)
-    public User getUserById(Long id) {
+    public User getUserById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
@@ -82,7 +83,7 @@ public class UserService {
      * @throws ResourceNotFoundException if any of the users are not found
      */
     @Transactional(readOnly = true)
-    public List<User> getUsersByIds(Set<Long> ids) {
+    public List<User> getUsersByIds(Set<UUID> ids) {
 
         if (ids == null || ids.isEmpty()) {
 
@@ -95,11 +96,11 @@ public class UserService {
         List<User> users = userRepository.findAllByIds(ids);
         if (users.size() != ids.size()) {
             // calcola gli ID mancanti per un messaggio più utile
-            Set<Long> foundIds = users.stream()
+            Set<UUID> foundIds = users.stream()
                     .map(User::getUserId)
                     .collect(Collectors.toSet());
 
-            Set<Long> missing = new HashSet<>(ids);
+            Set<UUID> missing = new HashSet<>(ids);
             missing.removeAll(foundIds);
             throw new ResourceNotFoundException("Users not found: " + missing);
         }
@@ -132,7 +133,7 @@ public class UserService {
      * @throws ResourceNotFoundException if the user is not found
      */
     @Transactional(readOnly = true)
-    public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(Long userId) {
+    public UserWithTimeParamsDTO getUserWithTimeParamsByUsername(UUID userId) {
 
         User user = getUserById(userId);
 
@@ -164,7 +165,7 @@ public class UserService {
      * @return a list of User objects belonging to the specified company
      */
     @Transactional(readOnly = true)
-    public List<User> getAllUsersInCompany(Long companyId) {
+    public List<User> getAllUsersInCompany(UUID companyId) {
 
         log.info("Retrieving all users in company with ID: {}", companyId);
 
@@ -215,7 +216,7 @@ public class UserService {
      * @throws ResourceNotFoundException if the user is not found in the specified company
      */
     @Transactional
-    public void updateUserTimeParams(UpdateUserWorkInfoDTO dto, Long companyId) {
+    public void updateUserTimeParams(UpdateUserWorkInfoDTO dto, UUID companyId) {
 
         User user = getUserById(dto.getTargetUserId());
 
@@ -242,7 +243,7 @@ public class UserService {
      * @throws ResourceAlreadyExistsException if the user is not part of any company
      */
     @Transactional
-    public AuthResponseDTO leaveCompany(Long userId) {
+    public AuthResponseDTO leaveCompany(UUID userId) {
 
         User user = getUserById(userId);
 
@@ -274,7 +275,7 @@ public class UserService {
      * @param userId the username of the user to delete
      */
     @Transactional
-    public void deleteAccount(Long userId) {
+    public void deleteAccount(UUID userId) {
 
         User user = getUserById(userId);
 

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface ShiftUserRepository extends JpaRepository<ShiftUser, ShiftUserId> {
 
@@ -16,16 +17,16 @@ public interface ShiftUserRepository extends JpaRepository<ShiftUser, ShiftUserI
         from ShiftUser su
         join su.user u
         where su.shift.shiftProgrammedId = :shiftId
-        order by u.username asc
+        order by u.email asc
         """)
-    List<User> findUsersByShiftId(@Param("shiftId") Long shiftId);
+    List<User> findUsersByShiftId(@Param("shiftId") UUID shiftId);
 
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from ShiftUser su where su.shift.shiftProgrammedId = :shiftId")
-    int deleteByShiftId(@Param("shiftId") Long shiftId);
+    int deleteByShiftId(@Param("shiftId") UUID shiftId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from ShiftUser su where su.user.userId = :userId")
-    int deleteByUserId(@Param("userId") Long userId);
+    int deleteByUserId(@Param("userId") UUID userId);
 }

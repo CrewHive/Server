@@ -1,5 +1,6 @@
 package com.pat.crewhive.user;
 
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,29 +11,25 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
+    @NullMarked
     @EntityGraph(attributePaths = {"role", "role.role", "shiftUsers", "shiftUsers.shift"})
-    Optional<User> findById(Long id);
+    Optional<User> findById(UUID id);
 
-    List<User> findAllByCompany_CompanyId(Long companyId);
+    List<User> findAllByCompany_CompanyId(UUID companyId);
 
     @EntityGraph(attributePaths = {"role", "role.role"})
     Optional<User> findByEmail(String email);
 
-    @EntityGraph(attributePaths = {"role", "role.role", "shiftUsers", "shiftUsers.shift"})
-    Optional<User> findByUsername(String username);
-
     @EntityGraph(attributePaths = {"role", "role.role"})
     @Query("select u from User u where u.userId in :ids")
-    List<User> findAllByIds(@Param("ids") Set<Long> ids);
+    List<User> findAllByIds(@Param("ids") Set<UUID> ids);
 
     boolean existsByEmail(String email);
-
-    boolean existsByUsername(String username);
-
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """

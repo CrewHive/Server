@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 public class ShiftTemplateService {
@@ -34,7 +36,7 @@ public class ShiftTemplateService {
      * @throws ResourceNotFoundException if the shift template does not exist in the company.
      */
     @Transactional(readOnly = true)
-    public ShiftTemplate getShiftTemplate(String shiftName, Long companyId) {
+    public ShiftTemplate getShiftTemplate(String shiftName, UUID companyId) {
 
         //todo ritorna un dto
 
@@ -129,7 +131,7 @@ public class ShiftTemplateService {
      * @throws ResourceNotFoundException if the shift template does not exist in the company.
      */
     @Transactional
-    public void deleteShiftTemplate(String shiftName, Long companyId) {
+    public void deleteShiftTemplate(String shiftName, UUID companyId) {
 
         log.info("Deleting Shift Template '{}' for company {}", shiftName, companyId);
 

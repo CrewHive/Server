@@ -1,11 +1,13 @@
 package com.pat.crewhive.security;
 
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * CustomUserDetails implementa UserDetails e adatta i dati utente
@@ -16,12 +18,12 @@ import java.util.List;
  */
 public class CustomUserDetails implements UserDetails {
 
-    private final Long userId;
+    private final UUID userId;
     private final String email;
     private final String firstName;
     private final String lastName;
     private final String role;
-    private final Long companyId;
+    private final UUID companyId;
     private final boolean working;
 
     private final List<GrantedAuthority> authorities;
@@ -29,12 +31,12 @@ public class CustomUserDetails implements UserDetails {
     /**
      * Costruisce un CustomUserDetails a partire dai claim del token.
      */
-    public CustomUserDetails(Long userId,
+    public CustomUserDetails(UUID userId,
                              String email,
                              String firstName,
                              String lastName,
                              String role,
-                             Long companyId,
+                             UUID companyId,
                              boolean working) {
         this.userId = userId;
         this.email = email;
@@ -50,12 +52,12 @@ public class CustomUserDetails implements UserDetails {
     /**
      * Factory method comodo per costruire da claim.
      */
-    public static CustomUserDetails fromClaims(Long userId,
+    public static CustomUserDetails fromClaims(UUID userId,
                                                String email,
                                                String firstName,
                                                String lastName,
                                                String role,
-                                               Long companyId) {
+                                               UUID companyId) {
         return new CustomUserDetails(userId, email, firstName, lastName, role, companyId, true);
     }
 
@@ -63,6 +65,7 @@ public class CustomUserDetails implements UserDetails {
      * Il nome utente usato da Spring Security.
      */
     @Override
+    @NullMarked
     public String getUsername() {
         return (firstName + " " + lastName);
     }
@@ -80,6 +83,7 @@ public class CustomUserDetails implements UserDetails {
      * Qui trasformiamo il campo role (es. "USER") in "ROLE_USER".
      */
     @Override
+    @NullMarked
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
@@ -119,7 +123,7 @@ public class CustomUserDetails implements UserDetails {
     }
 
 
-    public Long getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
@@ -139,7 +143,7 @@ public class CustomUserDetails implements UserDetails {
         return role;
     }
 
-    public Long getCompanyId() {
+    public UUID getCompanyId() {
         return companyId;
     }
 

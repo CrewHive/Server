@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetTime;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,9 +25,9 @@ import java.time.OffsetTime;
 public class ShiftTemplate {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name="shift_id", nullable = false)
-    private Long shiftId;
+    private UUID shiftId;
 
     @Column(name = "shift_name", nullable = false)
     private String shiftName;

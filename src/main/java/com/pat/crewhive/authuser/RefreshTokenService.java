@@ -41,7 +41,7 @@ public class RefreshTokenService {
         repo.save(token);
 
         log.info("Generated refresh token for user: {}", user.getEmail());
-        log.info("Expiration date: {}", token.getExpirationDate());
+        log.info("generateRefreshToken: Expiration date: {}", token.getExpirationDate());
 
         return token.getToken();
     }
@@ -59,8 +59,8 @@ public class RefreshTokenService {
         RefreshToken rt = repo.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
 
-        log.info("Found refresh token for user: {}", rt.getUser().getEmail());
-        log.info("Expiration date: {}", rt.getExpirationDate());
+        log.info("getRefreshToken: Found refresh token for user: {}", rt.getUser().getEmail());
+        log.info("getRefreshToken: Expiration date: {}", rt.getExpirationDate());
 
         return rt;
     }
@@ -80,8 +80,8 @@ public class RefreshTokenService {
         if (rt.isEmpty() ) return null;
         if (isExpired(rt.get())) return null;
 
-        log.info("Found refresh token for user: {}", rt.get().getUser().getEmail());
-        log.info("Expiration date: {}", rt.get().getExpirationDate());
+        log.info("getRefreshTokenByUser: Found refresh token for user: {}", rt.get().getUser().getEmail());
+        log.info("getRefreshTokenByUser: Expiration date: {}", rt.get().getExpirationDate());
 
         return rt.get();
     }
@@ -99,8 +99,8 @@ public class RefreshTokenService {
         RefreshToken rt = repo.findByTokenWithUserAndRole(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
 
-        log.info("Found refresh token for user: {}", rt.getUser().getEmail());
-        log.info("Expiration date: {}", rt.getExpirationDate());
+        log.info("getRefreshTokenByTokenWithUserAndRole: Found refresh token for user: {}", rt.getUser().getEmail());
+        log.info("getRefreshTokenByTokenWithUserAndRole: Expiration date: {}", rt.getExpirationDate());
 
         return rt;
     }
@@ -117,13 +117,13 @@ public class RefreshTokenService {
 
         if (rt == null) {
 
-            log.error("Refresh token is null");
+            log.error("isExpired: Refresh token is null");
             throw new IllegalArgumentException("Refresh token is not valid");
         }
 
-        log.info("Checking expiration");
-        log.info("Expiration date: {}", rt.getExpirationDate());
-        log.info("Is expired: {}", rt.getExpirationDate().isBefore(LocalDate.now()));
+        log.info("isExpired: Checking expiration");
+        log.info("isExpired: Expiration date: {}", rt.getExpirationDate());
+        log.info("isExpired: Is expired: {}", rt.getExpirationDate().isBefore(LocalDate.now()));
 
         return rt.getExpirationDate().isBefore(LocalDate.now());
     }
@@ -156,7 +156,7 @@ public class RefreshTokenService {
 
         if (rt == null) {
 
-            log.error("Refresh token is null");
+            log.error("rotateRefreshToken: Refresh token is null");
             throw new IllegalArgumentException("Refresh token is not valid");
         }
 
@@ -165,8 +165,8 @@ public class RefreshTokenService {
 
         repo.save(rt);
 
-        log.info("Rotated refresh token for user: {}", rt.getUser().getEmail());
-        log.info("New expiration date: {}", rt.getExpirationDate());
+        log.info("rotateRefreshToken: Rotated refresh token for user: {}", rt.getUser().getEmail());
+        log.info("rotateRefreshToken: New expiration date: {}", rt.getExpirationDate());
 
         return rt.getToken();
     }
@@ -183,11 +183,11 @@ public class RefreshTokenService {
 
         if (rt == null || rt.getUser() == null) {
 
-            log.error("Refresh token or user is null");
+            log.error("getOwner: Refresh token or user is null");
             throw new IllegalArgumentException("Refresh token or user is not valid");
         }
 
-        log.info("Found owner for token: {}", rt.getUser().getEmail());
+        log.info("getOwner: Found owner for token: {}", rt.getUser().getEmail());
 
         return rt.getUser();
     }
@@ -202,13 +202,13 @@ public class RefreshTokenService {
 
         if (rt == null) {
 
-            log.error("Refresh token is null");
+            log.error("invalidateRefreshToken: Refresh token is null");
             throw new ResourceNotFoundException("Refresh token not found");
         }
 
         repo.delete(rt);
 
-        log.info("Invalidated refresh token for user: {}", rt.getUser().getEmail());
+        log.info("invalidateRefreshToken: Invalidated refresh token for user: {}", rt.getUser().getEmail());
     }
 
 
@@ -222,6 +222,6 @@ public class RefreshTokenService {
 
         repo.deleteByUser(user);
 
-        log.info("Deleted refresh token for user: {}", user.getEmail());
+        log.info("deleteTokenByUser: Deleted refresh token for user: {}", user.getEmail());
     }
 }

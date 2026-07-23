@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 
 @Getter
@@ -39,5 +40,5 @@ public class CreateShiftProgrammedDTO {
     @Size(min = 6, max = 6)
     String color;
 
-    Set<Long> userId;
+    Set<UUID> userId;
 }

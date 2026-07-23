@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -71,8 +72,8 @@ public class ShiftProgrammedService {
             @CacheEvict(value = "shiftsByCompany",
                     key = "T(com.pat.crewhive.shiftprogrammed.CacheKeys).shiftsByCompany(#creatorUserId, T(com.pat.crewhive.common.Period).MONTH)")
     })
-    public Long createShift(
-            Long creatorUserId,
+    public UUID createShift(
+            UUID creatorUserId,
             CreateShiftProgrammedDTO dto) {
 
         log.info("Creating shift with name: {}", dto.getName());
@@ -117,7 +118,7 @@ public class ShiftProgrammedService {
     )
     public ShiftProgrammedOutputDTO getShiftsByPeriodAndUser(
             Period period,
-            Long userId) {
+            UUID userId) {
 
         log.info("Fetching shifts for user ID: {}", userId);
 
@@ -132,7 +133,7 @@ public class ShiftProgrammedService {
 
             List<String> firstNames = new ArrayList<>();
             List<String>  lastNames = new ArrayList<>();
-            List<Long> userIds   = new ArrayList<>();
+            List<UUID> userIds   = new ArrayList<>();
 
             shiftProgrammed.getUsers().forEach(su -> {
                 var u = su.getUser();
@@ -161,9 +162,9 @@ public class ShiftProgrammedService {
     )
     public ShiftProgrammedOutputDTO getShiftsByPeriodAndCompany(
             Period period,
-            Long requesterUserId) {
+            UUID requesterUserId) {
 
-        Long companyId = companyService.getCompanyByUserId(requesterUserId).getCompanyId();
+        UUID companyId = companyService.getCompanyByUserId(requesterUserId).getCompanyId();
 
         log.info("Fetching shifts for company ID: {}", companyId);
 
@@ -178,7 +179,7 @@ public class ShiftProgrammedService {
 
             List<String> firstNames = new ArrayList<>();
             List<String>  lastNames = new ArrayList<>();
-            List<Long> userIds   = new ArrayList<>();
+            List<UUID> userIds   = new ArrayList<>();
 
             shiftProgrammed.getUsers().forEach(su -> {
                 var u = su.getUser();
@@ -205,14 +206,14 @@ public class ShiftProgrammedService {
             value = "usersInShift",
             key = "#shiftId"
     )
-    public List<User> getUsersInShift(Long shiftId) {
+    public List<User> getUsersInShift(UUID shiftId) {
 
         // todo ritorna un dto
-        log.info("Fetching users in shift with id: {}", shiftId);
+        log.info("getUsersInShift: Fetching users in shift with id: {}", shiftId);
 
         if (!shiftProgrammedRepository.existsById(shiftId)) {
 
-            log.error("Shift with id {} does not exist", shiftId);
+            log.error("getUsersInShift: Shift with id {} does not exist", shiftId);
             throw new ResourceNotFoundException("Shift not found with ID: " + shiftId);
         }
 
@@ -246,8 +247,8 @@ public class ShiftProgrammedService {
             @CacheEvict(value = "shiftsByCompany",
                     key = "T(com.pat.crewhive.shiftprogrammed.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.common.Period).MONTH)")
     })
-    public Long patchShift(
-            Long requesterUserId,
+    public UUID patchShift(
+            UUID requesterUserId,
             PatchShiftProgrammedDTO dto) {
 
         log.info("Patching shift with id: {}", dto.getShiftProgrammedId());
@@ -270,15 +271,15 @@ public class ShiftProgrammedService {
 
         if (dto.getUserId() != null) {
 
-            Set<Long> newIds = dto.getUserId();
+            Set<UUID> newIds = dto.getUserId();
 
-            Set<Long> current = shift.getUsers().stream()
+            Set<UUID> current = shift.getUsers().stream()
                     .map(su -> su.getUser().getUserId())
                     .collect(Collectors.toSet());
 
             // Rimuovi quelli non più presenti
             if (!current.isEmpty()) {
-                Set<Long> toRemove = new HashSet<>(current);
+                Set<UUID> toRemove = new HashSet<>(current);
                 toRemove.removeAll(newIds);
                 if (!toRemove.isEmpty()) {
                     userService.getUsersByIds(toRemove).forEach(shift::removeUser);
@@ -286,7 +287,7 @@ public class ShiftProgrammedService {
             }
             // Aggiungi i nuovi
             if (!newIds.isEmpty()) {
-                Set<Long> toAdd = new HashSet<>(newIds);
+                Set<UUID> toAdd = new HashSet<>(newIds);
                 toAdd.removeAll(current);
                 if (!toAdd.isEmpty()) {
                     userService.getUsersByIds(toAdd).forEach(shift::addUser);
@@ -327,14 +328,14 @@ public class ShiftProgrammedService {
                     key = "T(com.pat.crewhive.shiftprogrammed.CacheKeys).shiftsByCompany(#requesterUserId, T(com.pat.crewhive.common.Period).MONTH)")
     })
     public void deleteShift(
-            Long requesterUserId,
-            Long shiftId) {
+            UUID requesterUserId,
+            UUID shiftId) {
 
-        log.info("Deleting shift with id: {}", shiftId);
+        log.info("deleteShift: Deleting shift with id: {}", shiftId);
 
         if (!shiftProgrammedRepository.existsById(shiftId)) {
 
-            log.error("Shift with id {} does not exist", shiftId);
+            log.error("deleteShift: Shift with id {} does not exist", shiftId);
             throw new ResourceNotFoundException("Shift not found with ID: " + shiftId);
         }
 

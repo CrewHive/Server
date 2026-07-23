@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -55,7 +56,7 @@ public class CompanyService {
      * @param request The company registration request containing company details.
      */
     @Transactional
-    public AuthResponseDTO registerCompany(Long managerId, CompanyRegistrationDTO request) {
+    public AuthResponseDTO registerCompany(UUID managerId, CompanyRegistrationDTO request) {
 
         log.error("Attempting to register company with name: {}", request.getCompanyName());
 
@@ -97,7 +98,7 @@ public class CompanyService {
      * @return The Company object if found.
      * @throws ResourceAlreadyExistsException if the company does not exist.
      */
-    public Company getCompanyById(Long companyId) {
+    public Company getCompanyById(UUID companyId) {
         return companyAccessService.getCompanyById(companyId);
     }
 
@@ -109,7 +110,7 @@ public class CompanyService {
      */
     @Transactional(readOnly = true)
     @Cacheable(value = "companyByUserId", key = "#requestedUserId")
-    public Company getCompanyByUserId(Long requestedUserId) {
+    public Company getCompanyByUserId(UUID requestedUserId) {
 
         return userService.getUserById(requestedUserId).getCompany();
     }
@@ -125,17 +126,17 @@ public class CompanyService {
      */
     @Transactional(readOnly = true)
     @Cacheable(value = "usersInCompany", key = "#companyId")
-    public List<UserIdAndNameAndHoursDTO> getAllUsersInCompany(Long managerId, Long companyId) {
+    public List<UserIdAndNameAndHoursDTO> getAllUsersInCompany(UUID managerId, UUID companyId) {
 
         log.info("Retrieving all users in company with ID: {}", companyId);
 
         if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
 
-            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            log.error("getAllUsersInCompany: Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
-        var users = userService.getAllUsersInCompany(companyId);
+        List<User> users = userService.getAllUsersInCompany(companyId);
 
         return users.stream()
                 .map(user -> new UserIdAndNameAndHoursDTO(user.getUserId(), user.getFirstName(), user.getLastName(), user.getWorkableHoursPerWeek()))
@@ -154,17 +155,17 @@ public class CompanyService {
      */
     @Transactional(readOnly = true)
     @Cacheable(value = "userInCompany", key = "#companyId + ':' + #targetId")
-    public UserWithTimeParamsDTO getCompanyUserWithInformation(Long managerId, Long companyId, Long targetId) {
+    public UserWithTimeParamsDTO getCompanyUserWithInformation(UUID managerId, UUID companyId, UUID targetId) {
 
         if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
 
-            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            log.error("getCompanyUserWithInformation: Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
         User user = userService.getUserById(targetId);
 
-        log.info("User details retrieved for user: {}", user.getEmail());
+        log.info("getCompanyUserWithInformation: User details retrieved for user: {}", user.getEmail());
 
         String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 
@@ -199,7 +200,7 @@ public class CompanyService {
             @CacheEvict(value = "usersInCompany", key = "#companyId"),
             @CacheEvict(value = "companyByUserId", key = "#request.userId")
     })
-    public void setCompany(SetCompanyDTO request, Long companyId, Long managerId) {
+    public void setCompany(SetCompanyDTO request, UUID companyId, UUID managerId) {
 
         if(companyAccessService.isNotPartOfCompany(managerId, companyId)) {
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
@@ -236,11 +237,11 @@ public class CompanyService {
             @CacheEvict(value = "usersInCompany", key = "#companyId"),
             @CacheEvict(value = "companyByUserId", allEntries = true)
     })
-    public void deleteCompany(Long companyId, Long managerId) {
+    public void deleteCompany(UUID companyId, UUID managerId) {
 
         if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
 
-            log.error("Manager {} may be not part of company {}", managerId, companyId);
+            log.error("deleteCompany: Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
@@ -267,7 +268,7 @@ public class CompanyService {
             @CacheEvict(value = "usersInCompany", key = "#companyId"),
             @CacheEvict(value = "companyByUserId", key = "#userId")
     })
-    public void removeUserFromCompany(Long userId, Long managerId, Long companyId) {
+    public void removeUserFromCompany(UUID userId, UUID managerId, UUID companyId) {
 
         if (userId.equals(managerId)) {
             throw new AuthorizationDeniedException("Managers cannot remove themselves from the company.");

@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 @Tag(name = "Event management", description = "Operations related to event management")
 public interface EventControllerInterface {
@@ -45,7 +46,7 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Long> createEvent(@AuthenticationPrincipal CustomUserDetails cud,
+    ResponseEntity<UUID> createEvent(@AuthenticationPrincipal CustomUserDetails cud,
                                      @RequestBody @Valid CreateEventDTO dto);
 
 
@@ -73,7 +74,7 @@ public interface EventControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable @NotNull Period temp,
-                                                         @PathVariable @NotNull Long userId);
+                                                         @PathVariable @NotNull UUID userId);
 
 
     @Operation(summary = "Get all events by user",
@@ -98,7 +99,7 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable @NotNull Long eventId);
+    ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable @NotNull UUID eventId);
 
 
     @Operation(summary = "Get all public events by company and period",
@@ -149,7 +150,7 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Long> patchEvent(@RequestBody @Valid PatchEventDTO dto);
+    ResponseEntity<UUID> patchEvent(@RequestBody @Valid PatchEventDTO dto);
 
 
     @Operation(summary = "Delete an event",
@@ -174,6 +175,6 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<String> deleteEvent(@PathVariable @NotNull Long eventId);
+    ResponseEntity<String> deleteEvent(@PathVariable @NotNull UUID eventId);
 
 }

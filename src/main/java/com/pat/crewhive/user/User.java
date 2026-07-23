@@ -29,10 +29,10 @@ import java.util.*;
 public class User {
 //todo modifica annotazioni json
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Setter(AccessLevel.NONE)
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(name="email", unique = true)
     private String email;

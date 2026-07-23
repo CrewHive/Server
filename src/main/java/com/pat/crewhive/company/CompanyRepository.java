@@ -6,8 +6,9 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
-public interface CompanyRepository extends JpaRepository<Company, Long> {
+public interface CompanyRepository extends JpaRepository<Company, UUID> {
 
     Optional<Company> findByName(String name);
 

@@ -10,6 +10,8 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 /**
  * Cached/transactional operations that {@link CompanyService} needs to call on itself.
  * Extracted into a separate bean so those calls go through the Spring proxy
@@ -37,7 +39,7 @@ public class CompanyAccessService {
      */
     @Transactional(readOnly = true)
     @Cacheable(value = "companyById", key = "#companyId")
-    public Company getCompanyById(Long companyId) {
+    public Company getCompanyById(UUID companyId) {
 
         return companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceAlreadyExistsException("Company with ID " + companyId + " does not exist."));
@@ -51,7 +53,7 @@ public class CompanyAccessService {
      * @return True if the user is part of the company, false otherwise.
      */
     @Transactional(readOnly = true)
-    public boolean isNotPartOfCompany(Long userId, Long companyId) {
+    public boolean isNotPartOfCompany(UUID userId, UUID companyId) {
         User user = userService.getUserById(userId);
         return user.getCompany() == null ||
                 !user.getCompany().getCompanyId().equals(companyId);
@@ -67,7 +69,7 @@ public class CompanyAccessService {
             @CacheEvict(value = "usersInCompany", key = "#companyId"),
             @CacheEvict(value = "companyByUserId", allEntries = true)
     })
-    public void removeCompanyFromUsers(Long companyId) {
+    public void removeCompanyFromUsers(UUID companyId) {
 
         var users = userService.getAllUsersInCompany(companyId);
 

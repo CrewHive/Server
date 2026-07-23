@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 @Embeddable
 @NoArgsConstructor
@@ -16,8 +17,8 @@ import java.util.Objects;
 public class EventUsersId implements Serializable {
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(name = "event_id", nullable = false)
-    private Long eventId;
+    private UUID eventId;
 }

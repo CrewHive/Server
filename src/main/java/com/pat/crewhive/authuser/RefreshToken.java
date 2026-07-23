@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,9 +23,9 @@ import java.time.LocalDate;
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "refresh_token_id", nullable = false)
-    private Long refreshTokenId;
+    private UUID refreshTokenId;
 
     @Column(name = "token", nullable = false)
     private String token;

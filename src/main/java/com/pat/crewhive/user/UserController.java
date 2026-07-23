@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/user")
@@ -28,7 +30,7 @@ public class UserController implements UserControllerInterface {
     @GetMapping(path ="/me", produces = "application/json")
     public ResponseEntity<UserWithTimeParamsDTO> getUser(@AuthenticationPrincipal CustomUserDetails cud) {
 
-        Long userId = cud.getUserId();
+        UUID userId = cud.getUserId();
         UserWithTimeParamsDTO dto = userService.getUserWithTimeParamsByUsername(userId);
 
         log.info("User details retrieved for user: {}", cud.getEmail());

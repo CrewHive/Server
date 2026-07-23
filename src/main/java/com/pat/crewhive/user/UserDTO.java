@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -34,5 +36,5 @@ public class UserDTO {
     @Size(min = 3, max = 32)
     private String role;
 
-    private Long companyId;
+    private UUID companyId;
 }

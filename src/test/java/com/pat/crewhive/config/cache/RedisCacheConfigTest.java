@@ -32,6 +32,7 @@ class RedisCacheConfigTest {
 
         assertThat(result).isInstanceOf(Company.class);
         Company roundTripped = (Company) result;
+        assert roundTripped != null;
         assertThat(roundTripped.getName()).isEqualTo("Acme");
         assertThat(roundTripped.getCompanyType()).isEqualTo(CompanyType.RESTAURANT);
     }
@@ -44,11 +45,12 @@ class RedisCacheConfigTest {
 
         ByteBuffer bytes = valuePair.write(list);
         Object result = valuePair.read(bytes);
+        assert result != null;
 
         assertThat(result).isInstanceOf(List.class);
         List<?> roundTripped = (List<?>) result;
         assertThat(roundTripped).hasSize(1);
-        assertThat(roundTripped.get(0)).isInstanceOf(UserIdAndNameAndHoursDTO.class);
-        assertThat(((UserIdAndNameAndHoursDTO) roundTripped.get(0)).getFirstName()).isEqualTo("Mario");
+        assertThat(roundTripped.getFirst()).isInstanceOf(UserIdAndNameAndHoursDTO.class);
+        assertThat(((UserIdAndNameAndHoursDTO) roundTripped.getFirst()).getFirstName()).isEqualTo("Mario");
     }
 }

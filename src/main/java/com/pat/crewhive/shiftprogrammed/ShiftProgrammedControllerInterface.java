@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.UUID;
 
 @Tag(name = "Shift Programmed", description = "Endpoints for managing programmed shifts")
 public interface ShiftProgrammedControllerInterface {
@@ -46,7 +47,7 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Long> createShift(@AuthenticationPrincipal CustomUserDetails cud,
+    ResponseEntity<UUID> createShift(@AuthenticationPrincipal CustomUserDetails cud,
                                      @RequestBody @Valid CreateShiftProgrammedDTO dto);
 
 
@@ -73,7 +74,7 @@ public interface ShiftProgrammedControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
-                                                                      @PathVariable @NotNull Long userId);
+                                                                      @PathVariable @NotNull UUID userId);
 
 
 
@@ -126,7 +127,7 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull Long shiftId);
+    ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull UUID shiftId);
 
 
     @Operation(summary = "Update an existing programmed shift",
@@ -159,7 +160,7 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<Long> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
+    ResponseEntity<UUID> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
                                     @RequestBody @Valid PatchShiftProgrammedDTO dto);
 
 
@@ -190,5 +191,5 @@ public interface ShiftProgrammedControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> deleteShift(@AuthenticationPrincipal CustomUserDetails cud,
-                                  @PathVariable @NotNull Long shiftId);
+                                  @PathVariable @NotNull UUID shiftId);
 }
