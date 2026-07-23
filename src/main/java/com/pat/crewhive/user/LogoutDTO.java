@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -16,7 +18,7 @@ import lombok.Setter;
 public class LogoutDTO {
 
     @NotNull
-    private Long userId;
+    private UUID userId;
 
     @NotBlank(message = "Refresh token cannot be blank")
     @NoHtml

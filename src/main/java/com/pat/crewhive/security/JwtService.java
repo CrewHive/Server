@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -42,12 +43,12 @@ public class JwtService {
      * @param companyId the company of the user
      * @return a JWT token as a String
      */
-    public String generateToken(Long userId,
+    public String generateToken(UUID userId,
                                 String email,
                                 String firstName,
                                 String lastName,
                                 String role,
-                                Long companyId) {
+                                UUID companyId) {
 
         String jwt = Jwts.builder()
                 .setSubject(String.valueOf(userId))

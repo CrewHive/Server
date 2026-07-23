@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/shift-template")
@@ -25,7 +27,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @GetMapping("/get/{shiftName}/company/{companyId}")
     public ResponseEntity<ShiftTemplate> getShiftTemplate(@PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
-                                                          @PathVariable @NotNull Long companyId) {
+                                                          @PathVariable @NotNull UUID companyId) {
 
         log.info("Received request to get shift template '{}' for company ID {}", shiftName, companyId);
 
@@ -62,7 +64,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @DeleteMapping("/delete/{shiftName}/company/{companyId}")
     public ResponseEntity<?> deleteShiftTemplate(@PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
-                                                 @PathVariable @NotNull Long companyId) {
+                                                 @PathVariable @NotNull UUID companyId) {
 
         log.info("Received request to delete shift template '{}' for company ID {}", shiftName, companyId);
 

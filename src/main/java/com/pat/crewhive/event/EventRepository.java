@@ -8,8 +8,9 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface EventRepository extends JpaRepository<Event, Long> {
+public interface EventRepository extends JpaRepository<Event, UUID> {
 
     @EntityGraph(attributePaths = {"users", "users.user"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("""
@@ -21,7 +22,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
       order by e.start asc
   """)
     List<Event> findWithParticipantsByUserAndDateBetween(
-            @Param("userId") Long userId,
+            @Param("userId") UUID userId,
             @Param("from")   LocalDate from,
             @Param("to")     LocalDate to
     );
@@ -38,12 +39,12 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   """)
     List<Event> findPublicWithParticipantsByCompanyAndDateBetween(
             @Param("eventType") EventType eventType,
-            @Param("companyId") Long companyId,
+            @Param("companyId") UUID companyId,
             @Param("from")      LocalDate from,
             @Param("to")        LocalDate to
     );
 
     @EntityGraph(attributePaths = {"users", "users.user"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("select distinct e from Event e where e.eventId = :id")
-    Optional<Event> findByIdWithParticipants(@Param("id") Long id);
+    Optional<Event> findByIdWithParticipants(@Param("id") UUID id);
 }

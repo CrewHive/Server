@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,7 +18,7 @@ public class NameAndUserIdForShiftProgrammedDTO {
 
     private List<String> lastName;
 
-    private List<Long> userId;
+    private List<UUID> userId;
 
-    private Long shiftProgrammedId;
+    private UUID shiftProgrammedId;
 }

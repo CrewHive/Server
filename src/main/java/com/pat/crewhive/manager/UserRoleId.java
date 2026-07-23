@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 
 @AllArgsConstructor
@@ -20,7 +21,7 @@ import java.util.Objects;
 public class UserRoleId implements Serializable {
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(name = "role_id", nullable = false)
     private Long roleId;

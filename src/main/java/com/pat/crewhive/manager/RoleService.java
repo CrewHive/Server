@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 public class RoleService {
@@ -38,7 +40,7 @@ public class RoleService {
      * @throws ResourceAlreadyExistsException if the role already exists for the given company
      */
     @Transactional
-    public void createRole(String roleName, Long companyId) {
+    public void createRole(String roleName, UUID companyId) {
 
         String normalizedRole = stringUtils.normalizeRole(roleName);
 
@@ -65,7 +67,7 @@ public class RoleService {
      * @throws ResourceNotFoundException if the role is not found
      */
     @Transactional
-    public void updateUserRole(Long targetId, String newRole, Long companyId) {
+    public void updateUserRole(UUID targetId, String newRole, UUID companyId) {
 
         String normalizedRole = stringUtils.normalizeRole(newRole);
 
@@ -91,7 +93,7 @@ public class RoleService {
      * @throws IllegalStateException if the role is assigned to users
      */
     @Transactional
-    public void deleteRole(String roleName, Long companyId) {
+    public void deleteRole(String roleName, UUID companyId) {
 
         String normalizedRole = stringUtils.normalizeRole(roleName);
 

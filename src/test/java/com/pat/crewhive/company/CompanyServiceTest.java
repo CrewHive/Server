@@ -17,6 +17,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,7 +55,7 @@ class CompanyServiceTest {
         );
     }
 
-    private User buildManager(Long userId) {
+    private User buildManager(UUID userId) {
         User user = new User("manager@example.com", "Mario", "Rossi", "encoded-pwd");
         ReflectionTestUtils.setField(user, "userId", userId);
         Role role = new Role("ROLE_USER", null);
@@ -68,20 +70,21 @@ class CompanyServiceTest {
     @Test
     void registerCompany_reusesExistingRefreshToken_insteadOfDeletingIt() {
         CompanyRegistrationDTO request = new CompanyRegistrationDTO("Acme", CompanyType.RESTAURANT, null);
-        User manager = buildManager(10L);
+        UUID managerId = UUID.randomUUID();
+        User manager = buildManager(managerId);
         Role managerRole = new Role("ROLE_MANAGER", null);
 
         when(stringUtils.normalizeString("Acme")).thenReturn("acme");
         when(companyRepository.existsByName("acme")).thenReturn(false);
-        when(userService.getUserById(10L)).thenReturn(manager);
+        when(userService.getUserById(managerId)).thenReturn(manager);
         when(roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull("ROLE_MANAGER"))
                 .thenReturn(java.util.Optional.of(managerRole));
         when(stringUtils.normalizeString("manager@example.com")).thenReturn("manager@example.com");
-        when(jwtService.generateToken(eq(10L), anyString(), anyString(), anyString(), eq("ROLE_MANAGER"), any()))
+        when(jwtService.generateToken(eq(managerId), anyString(), anyString(), anyString(), eq("ROLE_MANAGER"), any()))
                 .thenReturn("access-jwt");
         when(refreshTokenService.getOrIssueRefreshToken(manager)).thenReturn("reused-refresh-token");
 
-        AuthResponseDTO result = companyService.registerCompany(10L, request);
+        AuthResponseDTO result = companyService.registerCompany(managerId, request);
 
         assertThat(result.getAccessToken()).isEqualTo("access-jwt");
         assertThat(result.getRefreshToken()).isEqualTo("reused-refresh-token");
@@ -97,7 +100,7 @@ class CompanyServiceTest {
         when(stringUtils.normalizeString("Acme")).thenReturn("acme");
         when(companyRepository.existsByName("acme")).thenReturn(true);
 
-        assertThatThrownBy(() -> companyService.registerCompany(10L, request))
+        assertThatThrownBy(() -> companyService.registerCompany(UUID.randomUUID(), request))
                 .isInstanceOf(ResourceAlreadyExistsException.class);
 
         verifyNoInteractions(userService, jwtService, refreshTokenService);

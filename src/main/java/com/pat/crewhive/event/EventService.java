@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.pat.crewhive.event.EventType.PUBLIC;
@@ -51,7 +52,7 @@ public class EventService {
      * @throws IllegalArgumentException if the start date is after the end date.
      */
     @Transactional
-    public Long createEvent(CreateEventDTO createEventDTO, String role) {
+    public UUID createEvent(CreateEventDTO createEventDTO, String role) {
 
         log.info("Creating event with name: {}", createEventDTO.getName());
 
@@ -93,7 +94,7 @@ public class EventService {
      * @return List of events within the specified period for the user.
      */
     @Transactional(readOnly = true)
-    public List<Event> getEventsByPeriodAndUser(Period period, Long userId) {
+    public List<Event> getEventsByPeriodAndUser(Period period, UUID userId) {
 
         //todo ritorna un DTO
         log.info("Fetching events for userId: {} with eventTemp: {}", userId, period);
@@ -111,7 +112,7 @@ public class EventService {
      * @return List of events associated with the user.
      */
     @Transactional(readOnly = true)
-    public List<Event> getUserEvents(Long userId) {
+    public List<Event> getUserEvents(UUID userId) {
 
         //todo ritorna un DTO
         log.info("Fetching all events for userId: {}", userId);
@@ -126,7 +127,7 @@ public class EventService {
      * @return List of public events.
      */
     @Transactional(readOnly = true)
-    public List<Event> getPublicEventsByCompanyAndPeriod(Long companyId, Period period) {
+    public List<Event> getPublicEventsByCompanyAndPeriod(UUID companyId, Period period) {
 
         //todo ritorna un DTO
         log.info("Fetching all public events");
@@ -146,7 +147,7 @@ public class EventService {
      * @throws IllegalArgumentException if the start date is after the end date.
      */
     @Transactional
-    public Long patchEvent(PatchEventDTO dto) {
+    public UUID patchEvent(PatchEventDTO dto) {
 
         log.info("Patching event with ID: {}", dto.getEventId());
 
@@ -167,15 +168,15 @@ public class EventService {
         event.setColor(dto.getColor());
         event.setEventType(dto.getEventType());
 
-        Set<Long> newUserIds = dto.getUserId();
+        Set<UUID> newUserIds = dto.getUserId();
         if (newUserIds != null) {
 
-            Set<Long> existingIds = event.getUsers().stream()
+            Set<UUID> existingIds = event.getUsers().stream()
                     .map(eu -> eu.getUser().getUserId())
                     .collect(Collectors.toSet());
 
             // rimuovi i non più presenti
-            Set<Long> toRemove = new HashSet<>(existingIds);
+            Set<UUID> toRemove = new HashSet<>(existingIds);
             toRemove.removeAll(newUserIds);
             if (!toRemove.isEmpty()) {
                 List<User> usersToRemove = userService.getUsersByIds(toRemove);
@@ -183,7 +184,7 @@ public class EventService {
             }
 
             // aggiungi i nuovi mancanti
-            Set<Long> toAdd = new HashSet<>(newUserIds);
+            Set<UUID> toAdd = new HashSet<>(newUserIds);
             toAdd.removeAll(existingIds);
             if (!toAdd.isEmpty()) {
                 List<User> usersToAdd = userService.getUsersByIds(toAdd);
@@ -203,7 +204,7 @@ public class EventService {
      * @throws ResourceNotFoundException if the event does not exist.
      */
     @Transactional
-    public void deleteEvent(Long eventId) {
+    public void deleteEvent(UUID eventId) {
 
         log.info("Deleting event with ID: {}", eventId);
 

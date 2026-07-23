@@ -8,6 +8,7 @@ import org.hibernate.annotations.Type;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,10 +19,10 @@ import java.util.Set;
 public class Company {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "company_id", nullable = false)
     @Setter(AccessLevel.NONE)
-    private Long companyId;
+    private UUID companyId;
 
     @Column(name = "name", nullable = false, unique = true)
     private String name;

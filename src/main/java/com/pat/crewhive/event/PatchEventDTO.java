@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,7 +20,7 @@ import java.util.Set;
 public class PatchEventDTO {
 
     @NotNull(message = "Event ID cannot be null")
-    Long eventId;
+    UUID eventId;
 
     @NotBlank(message = "Event name cannot be blank")
     @NoHtml
@@ -43,5 +44,5 @@ public class PatchEventDTO {
     @NotNull(message = "Event type cannot be null")
     EventType eventType;
 
-    Set<Long> userId;
+    Set<UUID> userId;
 }

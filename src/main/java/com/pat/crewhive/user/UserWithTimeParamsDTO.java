@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class UserWithTimeParamsDTO {
 
-    private Long userId;
+    private UUID userId;
 
     private String firstName;
 

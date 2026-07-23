@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 
 @NoArgsConstructor
 @Getter
@@ -20,7 +22,7 @@ public class UserRole {
 
     @Id
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @OneToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -38,8 +40,7 @@ public class UserRole {
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof UserRole)) return false;
-        UserRole other = (UserRole) o;
+        if (!(o instanceof UserRole other)) return false;
         return userId != null && userId.equals(other.userId);
     }
     @Override public int hashCode() { return 31; }

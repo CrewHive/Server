@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -42,5 +43,5 @@ public class CreateEventDTO {
     EventType eventType;
 
     @NotNull(message = "Event must have at least one user")
-    Set<Long> userId;
+    Set<UUID> userId;
 }

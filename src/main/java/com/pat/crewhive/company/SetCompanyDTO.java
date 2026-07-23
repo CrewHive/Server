@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,5 +23,5 @@ public class SetCompanyDTO {
     private String companyName;
 
     @NotNull(message = "User ID is required")
-    private Long userId;
+    private UUID userId;
 }

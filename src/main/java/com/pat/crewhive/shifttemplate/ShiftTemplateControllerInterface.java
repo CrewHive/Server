@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.UUID;
+
 @Tag(name = "Shift template management", description = "Operations related to shift templates")
 public interface ShiftTemplateControllerInterface {
 
@@ -51,7 +53,7 @@ public interface ShiftTemplateControllerInterface {
     })
     ResponseEntity<ShiftTemplate> getShiftTemplate(
             @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
-            @PathVariable @NotNull Long companyId
+            @PathVariable @NotNull UUID companyId
     );
 
 
@@ -154,6 +156,6 @@ public interface ShiftTemplateControllerInterface {
     })
     ResponseEntity<?> deleteShiftTemplate(
             @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
-            @PathVariable @NotNull Long companyId
+            @PathVariable @NotNull UUID companyId
     );
 }

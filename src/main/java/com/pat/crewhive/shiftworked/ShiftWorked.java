@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 
 @NoArgsConstructor
@@ -27,10 +28,10 @@ public class ShiftWorked {
     private static final RoundingMode HOURS_ROUNDING = RoundingMode.HALF_UP;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shift_worked_id", nullable = false)
     @Setter(AccessLevel.NONE)
-    private Long shiftWorkedId;
+    private UUID shiftWorkedId;
 
     @Column(name = "shift_name", nullable = false)
     private String shiftName;

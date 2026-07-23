@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -26,7 +27,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @PostMapping("/create")
-    public ResponseEntity<Long> createShift(@AuthenticationPrincipal CustomUserDetails cud,
+    public ResponseEntity<UUID> createShift(@AuthenticationPrincipal CustomUserDetails cud,
                                             @RequestBody @Valid CreateShiftProgrammedDTO dto) {
 
         log.info("Received request to create shift: {}", dto.getName());
@@ -37,7 +38,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
     @Override
     @GetMapping("/period/{period}/user/{userId}")
     public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
-                                                                          @PathVariable @NotNull Long userId) {
+                                                                          @PathVariable @NotNull UUID userId) {
         log.info("Received request to get shifts for user {} in period {}", userId, period);
 
         return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndUser(period, userId));
@@ -57,7 +58,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @GetMapping("/users/{shiftId}")
-    public ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull Long shiftId) {
+    public ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull UUID shiftId) {
 
         log.info("Received request to get users for shift {}", shiftId);
 
@@ -67,7 +68,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @PatchMapping("/patch")
-    public ResponseEntity<Long> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
+    public ResponseEntity<UUID> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
                                            @RequestBody @Valid PatchShiftProgrammedDTO dto) {
 
         log.info("Received request to patch shift: {}", dto.getName());
@@ -78,7 +79,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
     @Override
     @DeleteMapping("/delete/{shiftId}")
     public ResponseEntity<?> deleteShift(@AuthenticationPrincipal CustomUserDetails cud,
-                                         @PathVariable @NotNull Long shiftId) {
+                                         @PathVariable @NotNull UUID shiftId) {
 
         log.info("Received request to delete shift: {}", shiftId);
 

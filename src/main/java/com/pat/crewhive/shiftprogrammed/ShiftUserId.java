@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Embeddable
 @Getter
@@ -15,8 +16,8 @@ import java.io.Serializable;
 public class ShiftUserId implements Serializable {
 
     @Column(name = "shift_programmed_id", nullable = false)
-    private Long shiftProgrammedId;
+    private UUID shiftProgrammedId;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 }

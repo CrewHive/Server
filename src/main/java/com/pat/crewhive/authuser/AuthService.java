@@ -15,7 +15,6 @@ import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,7 +81,7 @@ public class AuthService {
             refreshTokenService.invalidateRefreshToken(rt);
         }
 
-        Long company = user.getCompany() == null ? null : user.getCompany().getCompanyId();
+        UUID company = user.getCompany() == null ? null : user.getCompany().getCompanyId();
 
         return new AuthResponseDTO(
                 jwtService.generateToken(user.getUserId(), normalizedEmail, user.getFirstName(), user.getLastName(), user.getRole().getRole().getRoleName(), company),
@@ -96,7 +95,6 @@ public class AuthService {
      * @param request The registration request containing username, email, and password.
      * @throws BadCredentialsException if the email format is invalid or the password is weak.
      * @throws ResourceAlreadyExistsException if the username or email already exist.
-     * @return The ID of the newly registered user.
      */
     @Transactional
     public void register(RegistrationDTO request) {
@@ -161,13 +159,13 @@ public class AuthService {
             throw new InvalidTokenException("Invalid refresh token");
         }
 
-        Long userId = owner.getUserId();
+        UUID userId = owner.getUserId();
         String normalizedEmail = stringUtils.normalizeString(owner.getEmail());
         String firstName = owner.getFirstName();
         String lastName = owner.getLastName();
         String role = owner.getRole().getRole().getRoleName();
         Company company = owner.getCompany();
-        Long companyId = (company != null) ? company.getCompanyId() : null;
+        UUID companyId = (company != null) ? company.getCompanyId() : null;
 
 
         String newAccessToken = jwtService.generateToken(userId, normalizedEmail, firstName, lastName, role, companyId);

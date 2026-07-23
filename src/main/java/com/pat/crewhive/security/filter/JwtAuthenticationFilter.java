@@ -1,7 +1,6 @@
 package com.pat.crewhive.security.filter;
 
 import com.pat.crewhive.security.CustomUserDetails;
-import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.security.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -9,12 +8,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -45,9 +46,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain chain)
             throws ServletException, IOException {
 
         // Se già autenticato, prosegui
@@ -73,12 +74,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            Long userId = Long.parseLong(sub);
+            UUID userId = UUID.fromString(sub);
             String email = claims.get("email").toString();
             String firstName = claims.get("firstName", String.class);
             String lastName = claims.get("lastName", String.class);
             String role = claims.get("role", String.class);
-            Long companyId = claims.get("companyId", Long.class); // opzionale se lo metti nei claim
+            String companyIdClaim = claims.get("companyId", String.class); // opzionale se lo metti nei claim
+            UUID companyId = companyIdClaim != null ? UUID.fromString(companyIdClaim) : null;
 
             // Costruisci un CUD leggero dai claim (nessun accesso lazy)
             CustomUserDetails cud = CustomUserDetails.fromClaims(userId, email,firstName, lastName, role, companyId);

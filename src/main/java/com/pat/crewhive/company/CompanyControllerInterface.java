@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.UUID;
 
 @Tag(name = "Company management", description = "Operations related to company management")
 public interface CompanyControllerInterface {
@@ -83,7 +84,7 @@ public interface CompanyControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<List<UserIdAndNameAndHoursDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                   @PathVariable @NotNull Long companyId);
+                                                                   @PathVariable @NotNull UUID companyId);
 
 
     @Operation(summary = "Get user information in a company",
@@ -113,8 +114,8 @@ public interface CompanyControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<UserWithTimeParamsDTO> getUserInformation(@AuthenticationPrincipal CustomUserDetails cud,
-                                                             @PathVariable @NotNull Long companyId,
-                                                             @PathVariable @NotNull Long targetId);
+                                                             @PathVariable @NotNull UUID companyId,
+                                                             @PathVariable @NotNull UUID targetId);
 
 
     @Operation(summary = "Set company for user",
@@ -175,8 +176,8 @@ public interface CompanyControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                     @PathVariable @NotNull Long userId,
-                                                                     @PathVariable @NotNull Long companyId);
+                                                                     @PathVariable @NotNull UUID userId,
+                                                                     @PathVariable @NotNull UUID companyId);
 
 
 
@@ -207,5 +208,5 @@ public interface CompanyControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> deleteCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                   @PathVariable @NotNull Long companyId);
+                                   @PathVariable @NotNull UUID companyId);
 }

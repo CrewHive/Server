@@ -16,6 +16,7 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 @NoArgsConstructor
 @Getter
@@ -32,9 +33,9 @@ import java.util.Set;
 public class Event {
     //todo togli annotazioni json
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "event_id", nullable = false)
-    private Long eventId;
+    private UUID eventId;
 
     @Version
     @Column(name = "version", nullable = false)

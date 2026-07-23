@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -28,9 +29,9 @@ public class CompanyController implements CompanyControllerInterface {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @GetMapping(path = "/{companyId}/users", produces = "application/json")
     public ResponseEntity<List<UserIdAndNameAndHoursDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                          @PathVariable @NotNull Long companyId) {
+                                                                          @PathVariable @NotNull UUID companyId) {
 
-        Long managerId = cud.getUserId();
+        UUID managerId = cud.getUserId();
 
         List<UserIdAndNameAndHoursDTO> users = companyService.getAllUsersInCompany(managerId, companyId);
 
@@ -43,10 +44,10 @@ public class CompanyController implements CompanyControllerInterface {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @GetMapping(path = "/{companyId}/user/{targetId}/info", produces = "application/json")
     public ResponseEntity<UserWithTimeParamsDTO> getUserInformation(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                          @PathVariable @NotNull Long companyId,
-                                                                          @PathVariable @NotNull Long targetId) {
+                                                                          @PathVariable @NotNull UUID companyId,
+                                                                          @PathVariable @NotNull UUID targetId) {
 
-        Long managerId = cud.getUserId();
+        UUID managerId = cud.getUserId();
 
         UserWithTimeParamsDTO user = companyService.getCompanyUserWithInformation(managerId, companyId, targetId);
 
@@ -60,7 +61,7 @@ public class CompanyController implements CompanyControllerInterface {
     public ResponseEntity<AuthResponseDTO> registerCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                              @RequestBody @Valid CompanyRegistrationDTO request) {
 
-        Long managerId = cud.getUserId();
+        UUID managerId = cud.getUserId();
 
         AuthResponseDTO dto = companyService.registerCompany(managerId, request);
 
@@ -75,8 +76,8 @@ public class CompanyController implements CompanyControllerInterface {
     public ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                         @RequestBody @Valid SetCompanyDTO request) {
 
-        Long managerId = cud.getUserId();
-        Long companyId = cud.getCompanyId();
+        UUID managerId = cud.getUserId();
+        UUID companyId = cud.getCompanyId();
 
         companyService.setCompany(request, companyId, managerId);
 
@@ -90,10 +91,10 @@ public class CompanyController implements CompanyControllerInterface {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @DeleteMapping(path = "/{companyId}/remove/{userId}", produces = "application/json")
     public ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                            @PathVariable @NotNull Long userId,
-                                                                            @PathVariable @NotNull Long companyId) {
+                                                                            @PathVariable @NotNull UUID userId,
+                                                                            @PathVariable @NotNull UUID companyId) {
 
-        Long managerId = cud.getUserId();
+        UUID managerId = cud.getUserId();
 
         companyService.removeUserFromCompany(userId, managerId, companyId);
 
@@ -107,9 +108,9 @@ public class CompanyController implements CompanyControllerInterface {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @DeleteMapping(path = "/{companyId}/delete", produces = "application/json")
     public ResponseEntity<?> deleteCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                           @PathVariable @NotNull Long companyId) {
+                                           @PathVariable @NotNull UUID companyId) {
 
-        Long managerId = cud.getUserId();
+        UUID managerId = cud.getUserId();
 
         companyService.deleteCompany(companyId, managerId);
 

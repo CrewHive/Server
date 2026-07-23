@@ -9,15 +9,16 @@ import org.springframework.stereotype.Component;
 public class HtmlSanitizer {
 
     private static final Safelist NONE = Safelist.none();
+    private static final Safelist BASIC = Safelist.basic();
 
     public String stripAll(String input) {
         if (input == null) return null;
         return Jsoup.clean(input, NONE);
     }
 
-    //todo+ se in futuro volessi consentire poche tag
-    // public String basic(String input) {
-    //     if (input == null) return null;
-    //     return Jsoup.clean(input, BASIC);
-    // }
+    // todo se in futuro volessi consentire poche tag
+    public String basic(String input) {
+        if (input == null) return null;
+        return Jsoup.clean(input, BASIC);
+    }
 }

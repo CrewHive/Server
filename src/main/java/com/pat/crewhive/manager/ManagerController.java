@@ -11,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/manager")
@@ -44,7 +46,7 @@ public class ManagerController implements ManagerControllerInterface {
     public ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
                                             @RequestBody @Valid UpdateUserRoleDTO updateUserRoleDTO) {
 
-        Long targetId = updateUserRoleDTO.getUserId();
+        UUID targetId = updateUserRoleDTO.getUserId();
 
         roleService.updateUserRole(targetId, updateUserRoleDTO.getNewRole(), cud.getCompanyId());
 
@@ -59,7 +61,7 @@ public class ManagerController implements ManagerControllerInterface {
     public ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
                                                 @RequestBody @Valid UpdateUserWorkInfoDTO dto) {
 
-        Long companyId = cud.getCompanyId();
+        UUID companyId = cud.getCompanyId();
 
         userService.updateUserTimeParams(dto, companyId);
 
@@ -74,7 +76,7 @@ public class ManagerController implements ManagerControllerInterface {
     public ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
                                         @PathVariable @NoHtml @NotBlank(message = "The role name is required") String roleName) {
 
-        Long companyId = cud.getCompanyId();
+        UUID companyId = cud.getCompanyId();
 
         roleService.deleteRole(roleName, companyId);
 

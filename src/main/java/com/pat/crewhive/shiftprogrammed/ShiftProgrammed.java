@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 @NoArgsConstructor
 @Getter
@@ -22,10 +23,10 @@ import java.util.Set;
 public class ShiftProgrammed {
 //todo togli annotazioni json
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shift_programmed_id", nullable = false)
     @Setter(AccessLevel.NONE)
-    private Long shiftProgrammedId;
+    private UUID shiftProgrammedId;
 
     @Version
     @Column(name = "version", nullable = false)

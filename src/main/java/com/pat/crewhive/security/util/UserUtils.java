@@ -5,6 +5,9 @@ import com.pat.crewhive.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Objects;
+import java.util.UUID;
+
 /**
  * Utility per accedere ai dati dell'utente corrente dal SecurityContext.
  */
@@ -72,7 +75,7 @@ public final class UserUtils {
     /**
      * Id dell'utente corrente, o null se non autenticato.
      */
-    public static Long getCurrentUserId() {
+    public static UUID getCurrentUserId() {
 
         CustomUserDetails cud = getCustomUserDetails();
 
@@ -109,7 +112,7 @@ public final class UserUtils {
         String normalizedRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
         return cud != null && cud.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(normalizedRole));
+                .anyMatch(a -> Objects.equals(a.getAuthority(), normalizedRole));
     }
 }
 

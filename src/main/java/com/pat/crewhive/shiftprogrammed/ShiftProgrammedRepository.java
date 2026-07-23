@@ -7,12 +7,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface ShiftProgrammedRepository extends JpaRepository<ShiftProgrammed, Long> {
+public interface ShiftProgrammedRepository extends JpaRepository<ShiftProgrammed, UUID> {
 
     @EntityGraph(attributePaths = {"users.user"})
     @Query("select sp from ShiftProgrammed sp where sp.shiftProgrammedId = :id")
-    Optional<ShiftProgrammed> findByIdWithWorkers(@Param("id") Long id);
+    Optional<ShiftProgrammed> findByIdWithWorkers(@Param("id") UUID id);
 
     @EntityGraph(attributePaths = {"users.user"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("""
@@ -24,7 +25,7 @@ public interface ShiftProgrammedRepository extends JpaRepository<ShiftProgrammed
         order by sp.start asc
         """)
     List<ShiftProgrammed> findByUserAndDateBetween(
-            @Param("userId") Long userId,
+            @Param("userId") UUID userId,
             @Param("from")   java.time.LocalDate from,
             @Param("to")     java.time.LocalDate to
     );
@@ -39,7 +40,7 @@ public interface ShiftProgrammedRepository extends JpaRepository<ShiftProgrammed
         order by sp.start asc
         """)
     List<ShiftProgrammed> findByCompanyAndDateBetween(
-            @Param("companyId") Long companyId,
+            @Param("companyId") UUID companyId,
             @Param("from")      java.time.LocalDate from,
             @Param("to")        java.time.LocalDate to
     );

@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -29,7 +30,7 @@ class RefreshTokenServiceTest {
         refreshTokenService = new RefreshTokenService(repo);
     }
 
-    private User buildUser(Long userId) {
+    private User buildUser(UUID userId) {
         User user = new User("mario.rossi@example.com", "Mario", "Rossi", "encoded-pwd");
         ReflectionTestUtils.setField(user, "userId", userId);
         return user;
@@ -41,8 +42,8 @@ class RefreshTokenServiceTest {
 
     @Test
     void getOrIssueRefreshToken_returnsExistingTokenUnchanged_whenAValidTokenExists() {
-        User user = buildUser(10L);
-        RefreshToken existing = new RefreshToken(1L, "existing-token", user, LocalDate.now().plusDays(1));
+        User user = buildUser(UUID.randomUUID());
+        RefreshToken existing = new RefreshToken(UUID.randomUUID(), "existing-token", user, LocalDate.now().plusDays(1));
 
         when(repo.findByUser(user)).thenReturn(java.util.Optional.of(existing));
 
@@ -56,7 +57,7 @@ class RefreshTokenServiceTest {
 
     @Test
     void getOrIssueRefreshToken_issuesNewToken_whenNoValidTokenExists() {
-        User user = buildUser(10L);
+        User user = buildUser(UUID.randomUUID());
 
         when(repo.findByUser(user)).thenReturn(java.util.Optional.empty());
 

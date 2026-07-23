@@ -15,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,6 +44,9 @@ class UserServiceTest {
 
     private UserService userService;
 
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID COMPANY_ID = UUID.randomUUID();
+
     @BeforeEach
     void setUp() {
         userService = new UserService(
@@ -49,14 +54,14 @@ class UserServiceTest {
         );
     }
 
-    private User buildUser(Long userId, Company company) {
+    private User buildUser(UUID userId, Company company) {
         User user = new User("mario.rossi@example.com", "Mario", "Rossi", "encoded-pwd");
         ReflectionTestUtils.setField(user, "userId", userId);
         user.setCompany(company);
         return user;
     }
 
-    private Company buildCompany(Long companyId, User... members) {
+    private Company buildCompany(UUID companyId, User... members) {
         Company company = new Company();
         ReflectionTestUtils.setField(company, "companyId", companyId);
         for (User member : members) {
@@ -71,17 +76,17 @@ class UserServiceTest {
 
     @Test
     void leaveCompany_reusesExistingRefreshToken_insteadOfDeletingAndRegeneratingIt() {
-        Company company = buildCompany(1L);
-        User user = buildUser(10L, company);
+        Company company = buildCompany(COMPANY_ID);
+        User user = buildUser(USER_ID, company);
         company.getUsers().add(user);
 
-        when(userRepository.findById(10L)).thenReturn(java.util.Optional.of(user));
+        when(userRepository.findById(USER_ID)).thenReturn(java.util.Optional.of(user));
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
-        when(jwtService.generateToken(eq(10L), anyString(), anyString(), anyString(), eq("ROLE_USER"), isNull()))
+        when(jwtService.generateToken(eq(USER_ID), anyString(), anyString(), anyString(), eq("ROLE_USER"), isNull()))
                 .thenReturn("access-jwt");
         when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
 
-        AuthResponseDTO result = userService.leaveCompany(10L);
+        AuthResponseDTO result = userService.leaveCompany(USER_ID);
 
         assertThat(result.getAccessToken()).isEqualTo("access-jwt");
         assertThat(result.getRefreshToken()).isEqualTo("reused-refresh-token");
@@ -92,31 +97,31 @@ class UserServiceTest {
 
     @Test
     void leaveCompany_removesUserFromCompanyAndDeletesShifts() {
-        Company company = buildCompany(1L);
-        User user = buildUser(10L, company);
+        Company company = buildCompany(COMPANY_ID);
+        User user = buildUser(USER_ID, company);
         company.getUsers().add(user);
 
-        when(userRepository.findById(10L)).thenReturn(java.util.Optional.of(user));
+        when(userRepository.findById(USER_ID)).thenReturn(java.util.Optional.of(user));
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
         when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), anyString(), any()))
                 .thenReturn("access-jwt");
         when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
 
-        userService.leaveCompany(10L);
+        userService.leaveCompany(USER_ID);
 
         assertThat(user.getCompany()).isNull();
         assertThat(company.getUsers()).doesNotContain(user);
-        verify(shiftUserRepository).deleteByUserId(10L);
+        verify(shiftUserRepository).deleteByUserId(USER_ID);
         verify(userRepository).save(user);
     }
 
     @Test
     void leaveCompany_throwsResourceNotFoundException_whenUserHasNoCompany() {
-        User user = buildUser(10L, null);
+        User user = buildUser(USER_ID, null);
 
-        when(userRepository.findById(10L)).thenReturn(java.util.Optional.of(user));
+        when(userRepository.findById(USER_ID)).thenReturn(java.util.Optional.of(user));
 
-        assertThatThrownBy(() -> userService.leaveCompany(10L))
+        assertThatThrownBy(() -> userService.leaveCompany(USER_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User has no company");
 

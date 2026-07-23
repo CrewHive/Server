@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -39,5 +40,5 @@ public class CreateShiftTemplateDTO {
     private OffsetTime end;
 
     @NotNull(message = "Company ID must not be null")
-    private Long companyId;
+    private UUID companyId;
 }
