@@ -26,7 +26,7 @@ public class CompanyController implements CompanyControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping(path = "/{companyId}/users", produces = "application/json")
     public ResponseEntity<List<UserIdAndNameAndHoursDTO>> getCompanyUsers(@AuthenticationPrincipal CustomUserDetails cud,
                                                                           @PathVariable @NotNull UUID companyId) {
@@ -41,7 +41,7 @@ public class CompanyController implements CompanyControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping(path = "/{companyId}/user/{targetId}/info", produces = "application/json")
     public ResponseEntity<UserWithTimeParamsDTO> getUserInformation(@AuthenticationPrincipal CustomUserDetails cud,
                                                                           @PathVariable @NotNull UUID companyId,
@@ -71,7 +71,7 @@ public class CompanyController implements CompanyControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping(path = "/set", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> setCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                         @RequestBody @Valid SetCompanyDTO request) {
@@ -88,7 +88,7 @@ public class CompanyController implements CompanyControllerInterface {
 
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping(path = "/{companyId}/remove/{userId}", produces = "application/json")
     public ResponseEntity<?> removeFromCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                                                             @PathVariable @NotNull UUID userId,
@@ -105,7 +105,7 @@ public class CompanyController implements CompanyControllerInterface {
 
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping(path = "/{companyId}/delete", produces = "application/json")
     public ResponseEntity<?> deleteCompany(@AuthenticationPrincipal CustomUserDetails cud,
                                            @PathVariable @NotNull UUID companyId) {

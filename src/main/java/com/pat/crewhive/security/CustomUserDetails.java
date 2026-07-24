@@ -89,7 +89,6 @@ public class CustomUserDetails implements UserDetails {
 
     /**
      * Le authority (ruoli) con cui l'utente è autenticato.
-     * Qui trasformiamo il campo role (es. "USER") in "ROLE_USER".
      */
     @Override
     @NullMarked
