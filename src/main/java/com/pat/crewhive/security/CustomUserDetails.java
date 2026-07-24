@@ -6,6 +6,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +26,8 @@ public class CustomUserDetails implements UserDetails {
     private final String role;
     private final UUID companyId;
     private final boolean working;
+    private final String jti;
+    private final Date tokenExpiration;
 
     private final List<GrantedAuthority> authorities;
 
@@ -37,7 +40,9 @@ public class CustomUserDetails implements UserDetails {
                              String lastName,
                              String role,
                              UUID companyId,
-                             boolean working) {
+                             boolean working,
+                             String jti,
+                             Date tokenExpiration) {
         this.userId = userId;
         this.email = email;
         this.firstName = firstName;
@@ -45,6 +50,8 @@ public class CustomUserDetails implements UserDetails {
         this.role = role;
         this.companyId = companyId;
         this.working = working;
+        this.jti = jti;
+        this.tokenExpiration = tokenExpiration;
 
         this.authorities = List.of(new SimpleGrantedAuthority(role));
     }
@@ -57,8 +64,10 @@ public class CustomUserDetails implements UserDetails {
                                                String firstName,
                                                String lastName,
                                                String role,
-                                               UUID companyId) {
-        return new CustomUserDetails(userId, email, firstName, lastName, role, companyId, true);
+                                               UUID companyId,
+                                               String jti,
+                                               Date tokenExpiration) {
+        return new CustomUserDetails(userId, email, firstName, lastName, role, companyId, true, jti, tokenExpiration);
     }
 
     /**
@@ -147,4 +156,11 @@ public class CustomUserDetails implements UserDetails {
         return companyId;
     }
 
+    public String getJti() {
+        return jti;
+    }
+
+    public Date getTokenExpiration() {
+        return tokenExpiration;
+    }
 }

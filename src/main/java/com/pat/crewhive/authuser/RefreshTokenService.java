@@ -40,7 +40,7 @@ public class RefreshTokenService {
 
         repo.save(token);
 
-        log.info("Generated refresh token for user: {}", user.getEmail());
+        log.info("generateRefreshToken: Generated refresh token for user: {}", user.getEmail());
         log.info("generateRefreshToken: Expiration date: {}", token.getExpirationDate());
 
         return token.getToken();

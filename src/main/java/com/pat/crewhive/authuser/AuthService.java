@@ -1,6 +1,7 @@
 package com.pat.crewhive.authuser;
 
 
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.user.LogoutDTO;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.user.User;
@@ -19,6 +20,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Slf4j
@@ -33,6 +35,7 @@ public class AuthService {
     private final PasswordUtil passwordUtil;
     private final EmailUtil emailUtil;
     private final StringUtils stringUtils;
+    private final TokenBlackListService tokenBlackListService;
 
     public AuthService(UserService userService,
                        JwtService jwtService,
@@ -41,7 +44,8 @@ public class AuthService {
                        RoleService roleService,
                        PasswordUtil passwordUtil,
                        EmailUtil emailUtil,
-                       StringUtils stringUtils) {
+                       StringUtils stringUtils,
+                       TokenBlackListService tokenBlackListService) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
@@ -50,6 +54,7 @@ public class AuthService {
         this.passwordUtil = passwordUtil;
         this.emailUtil = emailUtil;
         this.stringUtils = stringUtils;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
 
@@ -183,7 +188,7 @@ public class AuthService {
      * @throws InvalidTokenException if the refresh token is invalid or does not belong to the user.
      */
     @Transactional
-    public void logout(LogoutDTO request) {
+    public void logout(LogoutDTO request, String jti, Date tokenExpiration) {
 
         if (request.getRefreshToken() == null || request.getRefreshToken().isBlank()) throw new InvalidTokenException("Refresh Token is missing");
 
@@ -201,6 +206,8 @@ public class AuthService {
         }
 
         refreshTokenService.invalidateRefreshToken(rt);
+        tokenBlackListService.revoke(jti, tokenExpiration);
+
         log.info("User {} logged out successfully", request.getUserId());
     }
 }

@@ -5,6 +5,7 @@ import com.pat.crewhive.manager.Role;
 import com.pat.crewhive.manager.RoleService;
 import com.pat.crewhive.manager.UserRole;
 import com.pat.crewhive.security.JwtService;
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
@@ -56,6 +57,8 @@ class AuthServiceTest {
     private EmailUtil emailUtil;
     @Mock
     private StringUtils stringUtils;
+    @Mock
+    private TokenBlackListService tokenBlackListService;
 
     // Built by hand instead of @InjectMocks: with 8 collaborators the automatic
     // field/constructor injection Mockito does is harder to follow than just calling
@@ -73,7 +76,7 @@ class AuthServiceTest {
     void setUp() {
         authService = new AuthService(
                 userService, jwtService, refreshTokenService, userRepository,
-                roleService, passwordUtil, emailUtil, stringUtils
+                roleService, passwordUtil, emailUtil, stringUtils, tokenBlackListService
         );
     }
 

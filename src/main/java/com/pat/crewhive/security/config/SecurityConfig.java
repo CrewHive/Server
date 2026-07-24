@@ -1,5 +1,6 @@
 package com.pat.crewhive.security.config;
 
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.security.exception.handler.RestAccessDeniedHandler;
 import com.pat.crewhive.security.exception.handler.RestAuthenticationEntryPoint;
 import com.pat.crewhive.security.filter.JwtAuthenticationFilter;
@@ -29,15 +30,18 @@ import static org.springframework.http.HttpMethod.POST;
 public class SecurityConfig {
 
     private final JwtService jwtService;
+    private final TokenBlackListService tokenBlackListService;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
 
     public SecurityConfig(JwtService jwtService,
                           RestAuthenticationEntryPoint restAuthenticationEntryPoint,
-                          RestAccessDeniedHandler restAccessDeniedHandler) {
+                          RestAccessDeniedHandler restAccessDeniedHandler,
+                          TokenBlackListService tokenBlackListService) {
         this.jwtService = jwtService;
         this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
         this.restAccessDeniedHandler = restAccessDeniedHandler;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
     @Bean
@@ -98,7 +102,7 @@ public class SecurityConfig {
 
         // JWT filter
         http.addFilterBefore(
-                new JwtAuthenticationFilter(jwtService),
+                new JwtAuthenticationFilter(jwtService, tokenBlackListService),
                 UsernamePasswordAuthenticationFilter.class
         );
 

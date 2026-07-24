@@ -40,9 +40,10 @@ public class UserController implements UserControllerInterface {
 
     @Override
     @PostMapping(path = "/logout", produces = "application/json")
-    public ResponseEntity<?> logout(@RequestBody @Valid LogoutDTO request) {
+    public ResponseEntity<?> logout(@AuthenticationPrincipal CustomUserDetails cud,
+                                    @RequestBody @Valid LogoutDTO request) {
 
-        authService.logout(request);
+        authService.logout(request, cud.getJti(), cud.getTokenExpiration());
         log.info("Logout ok for user: {}", request.getUserId());
 
         return ResponseEntity.ok().build();

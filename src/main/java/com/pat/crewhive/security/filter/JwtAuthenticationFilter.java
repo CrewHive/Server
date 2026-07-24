@@ -2,6 +2,7 @@ package com.pat.crewhive.security.filter;
 
 import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.security.JwtService;
+import com.pat.crewhive.security.TokenBlackListService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,15 +16,19 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.UUID;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final TokenBlackListService tokenBlackListService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                   TokenBlackListService tokenBlackListService) {
         this.jwtService = jwtService;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
     @Override
@@ -59,6 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
+            SecurityContextHolder.clearContext();
             chain.doFilter(request, response);
             return;
         }
@@ -67,9 +73,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.validateToken(token);
 
+            String jti = claims.getId();
+
+            if (tokenBlackListService.isRevoked(jti)) {
+                log.warn("token has been revoked {}", claims.getSubject());
+                SecurityContextHolder.clearContext();
+                chain.doFilter(request, response);
+                return;
+            }
+
             String sub = claims.getSubject();
             if (sub == null) {
                 log.warn("Invalid token subject");
+                SecurityContextHolder.clearContext();
                 chain.doFilter(request, response);
                 return;
             }
@@ -79,11 +95,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String firstName = claims.get("firstName", String.class);
             String lastName = claims.get("lastName", String.class);
             String role = claims.get("role", String.class);
-            String companyIdClaim = claims.get("companyId", String.class); // opzionale se lo metti nei claim
+            String companyIdClaim = claims.get("companyId", String.class);
             UUID companyId = companyIdClaim != null ? UUID.fromString(companyIdClaim) : null;
+            Date tokenExpiration = claims.getExpiration();
 
             // Costruisci un CUD leggero dai claim (nessun accesso lazy)
-            CustomUserDetails cud = CustomUserDetails.fromClaims(userId, email,firstName, lastName, role, companyId);
+            CustomUserDetails cud = CustomUserDetails.fromClaims(userId, email,firstName, lastName, role, companyId, jti, tokenExpiration);
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(cud, null, cud.getAuthorities());

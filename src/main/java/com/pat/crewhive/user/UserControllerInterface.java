@@ -55,7 +55,8 @@ public interface UserControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> logout(@RequestBody @Valid LogoutDTO request);
+    ResponseEntity<?> logout(@AuthenticationPrincipal CustomUserDetails cud,
+                             @RequestBody @Valid LogoutDTO request);
 
 
 

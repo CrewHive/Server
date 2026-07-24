@@ -51,6 +51,7 @@ public class JwtService {
                                 UUID companyId) {
 
         String jwt = Jwts.builder()
+                .setId(UUID.randomUUID().toString())
                 .setSubject(String.valueOf(userId))
                 .claim("role", role) // ROLE_USER, ROLE_MANAGER, ...
                 .claim("email", email)
@@ -62,7 +63,7 @@ public class JwtService {
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
 
-        log.info("Generated JWT token: {}", jwt);
+        log.info("Generated JWT token for user with mail: {}", email);
         return jwt;
     }
 
