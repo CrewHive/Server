@@ -28,7 +28,7 @@ public class ManagerController implements ManagerControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping(path = "/create-role", produces = "application/json")
     public ResponseEntity<?> createRole(@AuthenticationPrincipal CustomUserDetails cud,
                                         @RequestBody @NoHtml @NotBlank(message = "The role name is required") String roleName) {
@@ -41,7 +41,7 @@ public class ManagerController implements ManagerControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PatchMapping(path = "/update-user-role", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
                                             @RequestBody @Valid UpdateUserRoleDTO updateUserRoleDTO) {
@@ -56,7 +56,7 @@ public class ManagerController implements ManagerControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PatchMapping(path = "/update-user-work-info", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateUserWorkInfo(@AuthenticationPrincipal CustomUserDetails cud,
                                                 @RequestBody @Valid UpdateUserWorkInfoDTO dto) {
@@ -71,7 +71,7 @@ public class ManagerController implements ManagerControllerInterface {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping(path = "/delete-role/{roleName}", produces = "application/json")
     public ResponseEntity<?> deleteRole(@AuthenticationPrincipal CustomUserDetails cud,
                                         @PathVariable @NoHtml @NotBlank(message = "The role name is required") String roleName) {

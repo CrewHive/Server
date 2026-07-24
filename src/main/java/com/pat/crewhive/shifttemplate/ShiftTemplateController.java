@@ -24,7 +24,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/get/{shiftName}/company/{companyId}")
     public ResponseEntity<ShiftTemplate> getShiftTemplate(@PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
                                                           @PathVariable @NotNull UUID companyId) {
@@ -37,7 +37,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/create")
     public ResponseEntity<ShiftTemplate> createShiftTemplate(@RequestBody @Valid CreateShiftTemplateDTO request) {
 
@@ -49,7 +49,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PatchMapping("/update")
     public ResponseEntity<ShiftTemplate> updateShiftTemplate(@RequestBody @Valid PatchShiftTemplateDTO request) {
 
@@ -61,7 +61,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/delete/{shiftName}/company/{companyId}")
     public ResponseEntity<?> deleteShiftTemplate(@PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
                                                  @PathVariable @NotNull UUID companyId) {
