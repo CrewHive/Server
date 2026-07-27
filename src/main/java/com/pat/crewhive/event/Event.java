@@ -59,9 +59,9 @@ public class Event {
     @Column(name = "color", nullable = false)
     private String color;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "event_type", nullable = false)
-    private EventType eventType;
+    @OneToOne(optional = false)
+    @JoinColumn(name = "event_type_id", nullable = false)
+    private EventTypeEntity eventType;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
@@ -108,7 +108,7 @@ public class Event {
                          String description,
                          OffsetDateTime startEvent, OffsetDateTime endEvent,
                          String color,
-                         EventType eventType) {
+                         EventTypeEntity eventType) {
 
         for (User u : user) {
             addUser(u);
