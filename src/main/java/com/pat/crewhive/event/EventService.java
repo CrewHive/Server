@@ -27,21 +27,35 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final EventUsersRepository eventUsersRepository;
+    private final EventTypeRepository eventTypeRepository;
     private final UserService userService;
     private final StringUtils stringUtils;
     private final DateUtils dateUtils;
 
     public EventService(EventRepository eventRepository,
                         EventUsersRepository eventUsersRepository,
+                        EventTypeRepository eventTypeRepository,
                         UserService userService,
                         StringUtils stringUtils,
                         DateUtils dateUtils) {
 
         this.eventRepository = eventRepository;
         this.eventUsersRepository = eventUsersRepository;
+        this.eventTypeRepository = eventTypeRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
         this.dateUtils = dateUtils;
+    }
+
+
+    /**
+     * Resolve a domain {@link EventType} to a managed {@link EventTypeEntity} reference,
+     * without hitting the database (the id is fixed and known at compile time).
+     * @param eventType the domain event type
+     * @return a JPA reference usable to set the event_type_id FK
+     */
+    private EventTypeEntity toEntityReference(EventType eventType) {
+        return eventTypeRepository.getReferenceById(eventType.getId());
     }
 
 
@@ -75,7 +89,7 @@ public class EventService {
         event.setStart(createEventDTO.getStart());
         event.setEnd(createEventDTO.getEnd());
         event.setColor(createEventDTO.getColor());
-        event.setEventType(createEventDTO.getEventType());
+        event.setEventType(toEntityReference(createEventDTO.getEventType()));
 
         for (User user : users) {
             event.addUser(user);
@@ -135,7 +149,7 @@ public class EventService {
         LocalDate from = dateUtils.getStartDateForPeriod(period);
         LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        return eventRepository.findPublicWithParticipantsByCompanyAndDateBetween(PUBLIC, companyId, from, to);
+        return eventRepository.findPublicWithParticipantsByCompanyAndDateBetween(PUBLIC.getId(), companyId, from, to);
     }
 
 
@@ -166,7 +180,7 @@ public class EventService {
         event.setStart(dto.getStart());
         event.setEnd(dto.getEnd());
         event.setColor(dto.getColor());
-        event.setEventType(dto.getEventType());
+        event.setEventType(toEntityReference(dto.getEventType()));
 
         Set<UUID> newUserIds = dto.getUserId();
         if (newUserIds != null) {

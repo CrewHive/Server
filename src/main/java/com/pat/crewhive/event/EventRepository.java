@@ -32,16 +32,16 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
       select distinct e
       from Event e
       join e.users eu
-      where e.eventType = :eventType
+      where e.eventType.id = :eventTypeId
         and eu.user.company.companyId = :companyId
         and e.date between :from and :to
       order by e.start asc
   """)
     List<Event> findPublicWithParticipantsByCompanyAndDateBetween(
-            @Param("eventType") EventType eventType,
-            @Param("companyId") UUID companyId,
-            @Param("from")      LocalDate from,
-            @Param("to")        LocalDate to
+            @Param("eventTypeId") Short eventTypeId,
+            @Param("companyId")   UUID companyId,
+            @Param("from")        LocalDate from,
+            @Param("to")          LocalDate to
     );
 
     @EntityGraph(attributePaths = {"users", "users.user"}, type = EntityGraph.EntityGraphType.LOAD)
