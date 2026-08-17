@@ -1,13 +1,13 @@
 package com.pat.crewhive.event;
 
-
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.DateUtils;
 import com.pat.crewhive.common.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +21,10 @@ import java.util.stream.Collectors;
 
 import static com.pat.crewhive.event.EventType.PUBLIC;
 
-@Slf4j
 @Service
 public class EventService {
+
+    private static final Logger log = LoggerFactory.getLogger(EventService.class);
 
     private final EventRepository eventRepository;
     private final EventUsersRepository eventUsersRepository;
@@ -68,28 +69,27 @@ public class EventService {
     @Transactional
     public UUID createEvent(CreateEventDTO createEventDTO, String role) {
 
-        log.info("Creating event with name: {}", createEventDTO.getName());
+        log.info("Creating event with name: {}", createEventDTO.name());
 
-        String normalizedEventName = stringUtils.normalizeString(createEventDTO.getName());
-        createEventDTO.setName(normalizedEventName);
+        String normalizedEventName = stringUtils.normalizeString(createEventDTO.name());
 
-        if (createEventDTO.getStart().isAfter(createEventDTO.getEnd())) {
+        if (createEventDTO.start().isAfter(createEventDTO.end())) {
             throw new IllegalArgumentException("L'inizio deve essere prima della fine");
         }
 
-        if (role.equals("ROLE_USER") && createEventDTO.getEventType() == PUBLIC) {
+        if (role.equals("ROLE_USER") && createEventDTO.eventType() == PUBLIC) {
             throw new AuthorizationDeniedException("Non sei autorizzato a creare eventi pubblici");
         }
 
-        List<User> users = userService.getUsersByIds(createEventDTO.getUserId());
+        List<User> users = userService.getUsersByIds(createEventDTO.userId());
 
         Event event = new Event();
-        event.setEventName(createEventDTO.getName());
-        event.setDescription(createEventDTO.getDescription());
-        event.setStart(createEventDTO.getStart());
-        event.setEnd(createEventDTO.getEnd());
-        event.setColor(createEventDTO.getColor());
-        event.setEventType(toEntityReference(createEventDTO.getEventType()));
+        event.setEventName(normalizedEventName);
+        event.setDescription(createEventDTO.description());
+        event.setStart(createEventDTO.start());
+        event.setEnd(createEventDTO.end());
+        event.setColor(createEventDTO.color());
+        event.setEventType(toEntityReference(createEventDTO.eventType()));
 
         for (User user : users) {
             event.addUser(user);
@@ -163,26 +163,25 @@ public class EventService {
     @Transactional
     public UUID patchEvent(PatchEventDTO dto) {
 
-        log.info("Patching event with ID: {}", dto.getEventId());
+        log.info("Patching event with ID: {}", dto.eventId());
 
-        if (dto.getStart().isAfter(dto.getEnd())) {
+        if (dto.start().isAfter(dto.end())) {
             throw new IllegalArgumentException("L'inizio deve essere prima della fine");
         }
 
-        Event event = eventRepository.findByIdWithParticipants(dto.getEventId())
-                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + dto.getEventId()));
+        Event event = eventRepository.findByIdWithParticipants(dto.eventId())
+                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + dto.eventId()));
 
-        String normalizedEventName = stringUtils.normalizeString(dto.getName());
-        dto.setName(normalizedEventName);
+        String normalizedEventName = stringUtils.normalizeString(dto.name());
 
-        event.setEventName(dto.getName());
-        event.setDescription(dto.getDescription());
-        event.setStart(dto.getStart());
-        event.setEnd(dto.getEnd());
-        event.setColor(dto.getColor());
-        event.setEventType(toEntityReference(dto.getEventType()));
+        event.setEventName(normalizedEventName);
+        event.setDescription(dto.description());
+        event.setStart(dto.start());
+        event.setEnd(dto.end());
+        event.setColor(dto.color());
+        event.setEventType(toEntityReference(dto.eventType()));
 
-        Set<UUID> newUserIds = dto.getUserId();
+        Set<UUID> newUserIds = dto.userId();
         if (newUserIds != null) {
 
             Set<UUID> existingIds = event.getUsers().stream()

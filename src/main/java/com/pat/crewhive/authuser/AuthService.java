@@ -15,7 +15,8 @@ import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.UUID;
 
-@Slf4j
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserService userService;
     private final UserRepository userRepository;
@@ -68,10 +70,10 @@ public class AuthService {
     @Transactional
     public AuthResponseDTO login(AuthRequestDTO request) {
 
-        String normalizedEmail = stringUtils.normalizeString(request.getEmail());
+        String normalizedEmail = stringUtils.normalizeString(request.email());
         User user = userService.getUserByEmail(normalizedEmail);
 
-        if (passwordUtil.NotMatches(request.getPassword(), user.getPassword())) {
+        if (passwordUtil.NotMatches(request.password(), user.getPassword())) {
             log.error("Invalid password for user: {}", normalizedEmail);
 
             throw new BadCredentialsException("Invalid credentials");
@@ -104,7 +106,7 @@ public class AuthService {
     @Transactional
     public void register(RegistrationDTO request) {
 
-        String normalizedEmail = stringUtils.normalizeString(request.getEmail());
+        String normalizedEmail = stringUtils.normalizeString(request.email());
         if (!emailUtil.isValidEmail(normalizedEmail)) {
 
             log.error("Invalid email format: {}", normalizedEmail);
@@ -117,15 +119,15 @@ public class AuthService {
             throw new ResourceAlreadyExistsException("Email already registered");
         }
 
-        if (!passwordUtil.isStrong(request.getPassword())) {
+        if (!passwordUtil.isStrong(request.password())) {
 
             log.error("Weak password provided for user: {}", normalizedEmail);
             throw new BadCredentialsException("Weak password provided");
         }
 
-        String encodedPassword = passwordUtil.encodePassword(request.getPassword());
+        String encodedPassword = passwordUtil.encodePassword(request.password());
 
-        User newUser = new User(normalizedEmail, request.getFirstName(), request.getLastName(), encodedPassword);
+        User newUser = new User(normalizedEmail, request.firstName(), request.lastName(), encodedPassword);
 
         Role role = roleService.getOrCreateGlobalRoleUser();
 
@@ -190,9 +192,9 @@ public class AuthService {
     @Transactional
     public void logout(LogoutDTO request, String jti, Date tokenExpiration) {
 
-        if (request.getRefreshToken() == null || request.getRefreshToken().isBlank()) throw new InvalidTokenException("Refresh Token is missing");
+        if (request.refreshToken() == null || request.refreshToken().isBlank()) throw new InvalidTokenException("Refresh Token is missing");
 
-        RefreshToken rt = refreshTokenService.getRefreshToken(request.getRefreshToken());
+        RefreshToken rt = refreshTokenService.getRefreshToken(request.refreshToken());
 
         if (rt == null || refreshTokenService.isExpired(rt)) {
 
@@ -200,7 +202,7 @@ public class AuthService {
         }
 
         User owner = refreshTokenService.getOwner(rt);
-        if (owner == null || !owner.getUserId().equals(request.getUserId())) {
+        if (owner == null || !owner.getUserId().equals(request.userId())) {
 
             throw new InvalidTokenException("Refresh Token does not belong to user");
         }
@@ -208,7 +210,7 @@ public class AuthService {
         refreshTokenService.invalidateRefreshToken(rt);
         tokenBlackListService.revoke(jti, tokenExpiration);
 
-        log.info("User {} logged out successfully", request.getUserId());
+        log.info("User {} logged out successfully", request.userId());
     }
 }
 

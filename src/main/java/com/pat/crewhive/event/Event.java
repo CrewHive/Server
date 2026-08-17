@@ -6,10 +6,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -18,9 +14,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-@NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "event", indexes = {
         @Index(name = "idx_event_start_event", columnList = "start_event"),
@@ -67,6 +60,80 @@ public class Event {
     @JsonManagedReference
     private Set<EventUsers> users = new HashSet<>();
 
+    public Event() {
+    }
+
+    public UUID getEventId() {
+        return eventId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public String getEventName() {
+        return eventName;
+    }
+
+    public void setEventName(String eventName) {
+        this.eventName = eventName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public OffsetDateTime getStart() {
+        return start;
+    }
+
+    public void setStart(OffsetDateTime start) {
+        this.start = start;
+    }
+
+    public OffsetDateTime getEnd() {
+        return end;
+    }
+
+    public void setEnd(OffsetDateTime end) {
+        this.end = end;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public EventTypeEntity getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(EventTypeEntity eventType) {
+        this.eventType = eventType;
+    }
+
+    public Set<EventUsers> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<EventUsers> users) {
+        this.users = users;
+    }
 
     /**
      * Add a user to the event and the event to the user

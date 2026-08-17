@@ -1,15 +1,6 @@
 package com.pat.crewhive.user;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class RemoveUserFromCompanyOutputDTO {
-
-    private String accessToken;
+public record RemoveUserFromCompanyOutputDTO(
+        String accessToken
+) {
 }

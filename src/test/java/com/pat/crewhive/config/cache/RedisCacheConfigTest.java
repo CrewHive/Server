@@ -52,6 +52,6 @@ class RedisCacheConfigTest {
         List<?> roundTripped = (List<?>) result;
         assertThat(roundTripped).hasSize(1);
         assertThat(roundTripped.getFirst()).isInstanceOf(UserIdAndNameAndHoursDTO.class);
-        assertThat(((UserIdAndNameAndHoursDTO) roundTripped.getFirst()).getFirstName()).isEqualTo("Mario");
+        assertThat(((UserIdAndNameAndHoursDTO) roundTripped.getFirst()).firstName()).isEqualTo("Mario");
     }
 }

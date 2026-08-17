@@ -5,17 +5,19 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@Slf4j
 @RestController
 @RequestMapping("/shift-template")
 public class ShiftTemplateController implements ShiftTemplateControllerInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(ShiftTemplateController.class);
 
     private final ShiftTemplateService shiftTemplateService;
 
@@ -41,7 +43,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     @PostMapping("/create")
     public ResponseEntity<ShiftTemplate> createShiftTemplate(@RequestBody @Valid CreateShiftTemplateDTO request) {
 
-        log.info("Received request to create shift template '{}' for company ID {}", request.getShiftName(), request.getCompanyId());
+        log.info("Received request to create shift template '{}' for company ID {}", request.shiftName(), request.companyId());
 
         ShiftTemplate st = shiftTemplateService.createShiftTemplate(request);
 
@@ -53,7 +55,7 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     @PatchMapping("/update")
     public ResponseEntity<ShiftTemplate> updateShiftTemplate(@RequestBody @Valid PatchShiftTemplateDTO request) {
 
-        log.info("Received request to update shift template '{}' for company ID {}", request.getShiftName(), request.getCompanyId());
+        log.info("Received request to update shift template '{}' for company ID {}", request.shiftName(), request.companyId());
 
         ShiftTemplate st = shiftTemplateService.patchShiftTemplate(request);
 

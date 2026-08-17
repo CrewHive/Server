@@ -2,35 +2,26 @@ package com.pat.crewhive.common;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.annotation.Nullable;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDate;
 
-@Getter
-@Setter
-public class ContractJSON {
+public record ContractJSON(
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate startDate;
-    @Nullable
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate endDate;
-    private int hoursPerWeek;
-    private boolean indefinite;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        LocalDate startDate,
 
-    public ContractJSON() {}
+        @Nullable
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        LocalDate endDate,
 
-    public ContractJSON(LocalDate startDate, @Nullable LocalDate endDate, int hoursPerWeek, boolean indefinite) {
+        int hoursPerWeek,
 
-        this.startDate = startDate;
-        this.hoursPerWeek = hoursPerWeek;
-        this.indefinite = indefinite;
+        boolean indefinite
+) {
 
+    public ContractJSON {
         if (indefinite) {
-            this.endDate = null;
-        } else {
-            this.endDate = endDate;
+            endDate = null;
         }
     }
 }

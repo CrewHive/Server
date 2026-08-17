@@ -5,15 +5,17 @@ import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-@Slf4j
 @Service
 public class ShiftTemplateService {
+
+    private static final Logger log = LoggerFactory.getLogger(ShiftTemplateService.class);
 
     private final ShiftTemplateRepository repo;
     private final CompanyService companyService;
@@ -60,23 +62,23 @@ public class ShiftTemplateService {
 
         //todo ritorna un dto
 
-        if (repo.existsByShiftNameAndCompanyCompanyId(dto.getShiftName(), dto.getCompanyId())) {
-            throw new ResourceAlreadyExistsException("Shift template with name '" + dto.getShiftName() + "' already exists in company with ID " + dto.getCompanyId());
+        if (repo.existsByShiftNameAndCompanyCompanyId(dto.shiftName(), dto.companyId())) {
+            throw new ResourceAlreadyExistsException("Shift template with name '" + dto.shiftName() + "' already exists in company with ID " + dto.companyId());
         }
 
-        log.info("Creating Shift Template for company {}", dto.getCompanyId());
+        log.info("Creating Shift Template for company {}", dto.companyId());
 
         ShiftTemplate shift = new ShiftTemplate();
 
-        String normalizedShiftName = stringUtils.normalizeString(dto.getShiftName());
+        String normalizedShiftName = stringUtils.normalizeString(dto.shiftName());
 
         shift.setShiftName(normalizedShiftName);
-        shift.setDescription(dto.getDescription());
-        shift.setColor(dto.getColor());
-        shift.setStartShift(dto.getStart());
-        shift.setEndShift(dto.getEnd());
+        shift.setDescription(dto.description());
+        shift.setColor(dto.color());
+        shift.setStartShift(dto.start());
+        shift.setEndShift(dto.end());
 
-        Company company = companyService.getCompanyById(dto.getCompanyId());
+        Company company = companyService.getCompanyById(dto.companyId());
         shift.setCompany(company);
 
         return repo.save(shift);
@@ -94,29 +96,26 @@ public class ShiftTemplateService {
 
         //todo ritorna un dto
 
-        log.info("Patching Shift Template for company {}", dto.getCompanyId());
+        log.info("Patching Shift Template for company {}", dto.companyId());
 
-        String normalizedShiftName = stringUtils.normalizeString(dto.getShiftName());
-        String normalizedOldShiftName = stringUtils.normalizeString(dto.getOldShiftName());
+        String normalizedShiftName = stringUtils.normalizeString(dto.shiftName());
+        String normalizedOldShiftName = stringUtils.normalizeString(dto.oldShiftName());
 
-        dto.setShiftName(normalizedShiftName);
-        dto.setOldShiftName(normalizedOldShiftName);
+        if (repo.existsByShiftNameAndCompanyCompanyId(normalizedShiftName, dto.companyId())) {
 
-        if (repo.existsByShiftNameAndCompanyCompanyId(dto.getShiftName(), dto.getCompanyId())) {
-
-            if (!dto.getOldShiftName().equals(dto.getShiftName())) {
-                throw new ResourceAlreadyExistsException("Shift template with name '" + dto.getShiftName() + "' already exists in company with ID " + dto.getCompanyId());
+            if (!normalizedOldShiftName.equals(normalizedShiftName)) {
+                throw new ResourceAlreadyExistsException("Shift template with name '" + normalizedShiftName + "' already exists in company with ID " + dto.companyId());
             }
         }
 
-        ShiftTemplate shiftTemplate = repo.findByShiftNameAndCompanyCompanyId(dto.getOldShiftName(), dto.getCompanyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Shift template with name '" + dto.getOldShiftName() + "' does not exist in company with ID " + dto.getCompanyId()));
+        ShiftTemplate shiftTemplate = repo.findByShiftNameAndCompanyCompanyId(normalizedOldShiftName, dto.companyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Shift template with name '" + normalizedOldShiftName + "' does not exist in company with ID " + dto.companyId()));
 
-        shiftTemplate.setShiftName(dto.getShiftName());
-        shiftTemplate.setDescription(dto.getDescription());
-        shiftTemplate.setColor(dto.getColor());
-        shiftTemplate.setStartShift(dto.getStart());
-        shiftTemplate.setEndShift(dto.getEnd());
+        shiftTemplate.setShiftName(normalizedShiftName);
+        shiftTemplate.setDescription(dto.description());
+        shiftTemplate.setColor(dto.color());
+        shiftTemplate.setStartShift(dto.start());
+        shiftTemplate.setEndShift(dto.end());
 
         repo.save(shiftTemplate);
 

@@ -3,15 +3,17 @@ package com.pat.crewhive.shiftworked;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.common.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
-@Slf4j
 @Service
 public class ShiftWorkedService {
+
+    private static final Logger log = LoggerFactory.getLogger(ShiftWorkedService.class);
 
     private final ShiftWorkedRepository repo;
     private final StringUtils stringUtils;
@@ -34,23 +36,23 @@ public class ShiftWorkedService {
     @Transactional
     public void createShiftWorked(CreateShiftWorkedDTO dto) {
 
-        log.info("Creating ShiftWorked {} for user {}", dto.getShiftName(), dto.getUserId());
+        log.info("Creating ShiftWorked {} for user {}", dto.shiftName(), dto.userId());
 
-        User user = userService.getUserById(dto.getUserId());
+        User user = userService.getUserById(dto.userId());
 
-        String normalizedShiftName = stringUtils.normalizeString(dto.getShiftName());
+        String normalizedShiftName = stringUtils.normalizeString(dto.shiftName());
 
         ShiftWorked sw = new ShiftWorked(
                 normalizedShiftName,
-                dto.getStart(),
-                dto.getEnd(),
-                dto.getBreakTime(),
-                dto.getExtraHours(),
+                dto.start(),
+                dto.end(),
+                dto.breakTime(),
+                dto.extraHours(),
                 user
         );
 
         BigDecimal oldOvertime = user.getOvertimeHours();
-        BigDecimal newOvertime = oldOvertime.add(dto.getExtraHours());
+        BigDecimal newOvertime = oldOvertime.add(dto.extraHours());
         user.setOvertimeHours(newOvertime);
 
         userService.updateUser(user);

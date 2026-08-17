@@ -3,24 +3,16 @@ package com.pat.crewhive.authuser;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Setter
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-public class AuthRequestDTO {
+public record AuthRequestDTO(
 
-    @NotBlank(message = "Email cannot be blank")
-    @NoHtml
-    @Size(min = 3, max = 32, message = "Email must be of an admissible format")
-    private String email;
+        @NotBlank(message = "Email cannot be blank")
+        @NoHtml
+        @Size(min = 3, max = 32, message = "Email must be of an admissible format")
+        String email,
 
-    @NotBlank(message = "Password cannot be blank")
-    @NoHtml
-    private String password;
-
+        @NotBlank(message = "Password cannot be blank")
+        @NoHtml
+        String password
+) {
 }

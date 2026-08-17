@@ -2,16 +2,10 @@ package com.pat.crewhive.manager;
 
 import com.pat.crewhive.company.Company;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Setter
-@Getter
-@NoArgsConstructor
 @Entity
 @Table(name = "role", indexes = {
         @Index(name = "idx_role_company_id", columnList = "company_id")
@@ -41,9 +35,44 @@ public class Role {
      * @param role_name The name of the role.
      * @param company   The company to which the role belongs.
      */
+    public Role() {
+    }
+
     public Role(String role_name,
                 Company company) {
         this.roleName = role_name;
+        this.company = company;
+    }
+
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public Set<UserRole> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<UserRole> users) {
+        this.users = users;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
         this.company = company;
     }
 }

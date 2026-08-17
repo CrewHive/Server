@@ -4,7 +4,8 @@ public enum ContractType {
 
     FULL_TIME("Full time"),
     PART_TIME_HORIZONTAL("Part time horizontal"),
-    PART_TIME_VERTICAL("Part time vertical");
+    PART_TIME_VERTICAL("Part time vertical"),
+    AT_CALL("At-Call"),;
 
     private final String label;
 

@@ -1,20 +1,12 @@
 package com.pat.crewhive.authuser;
 
-
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Setter
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class RotateRequestDTO {
+public record RotateRequestDTO(
 
-    @NotBlank(message = "Refresh token must not be blank")
-    @NoHtml
-    private String refreshToken;
+        @NotBlank(message = "Refresh token must not be blank")
+        @NoHtml
+        String refreshToken
+) {
 }

@@ -3,7 +3,8 @@ package com.pat.crewhive.company;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -18,9 +19,10 @@ import java.util.UUID;
  * (caching and transactions don't apply to same-class method calls) instead of
  * relying on self-injection.
  */
-@Slf4j
 @Service
 public class CompanyAccessService {
+
+    private static final Logger log = LoggerFactory.getLogger(CompanyAccessService.class);
 
     private final CompanyRepository companyRepository;
     private final UserService userService;

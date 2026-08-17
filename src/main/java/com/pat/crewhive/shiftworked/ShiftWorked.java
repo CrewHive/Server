@@ -3,7 +3,6 @@ package com.pat.crewhive.shiftworked;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
-import lombok.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -12,9 +11,6 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 
-@NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "shift_worked", indexes = {
         @Index(name = "idx_shift_worked_user_id", columnList = "user_id"),
@@ -30,7 +26,6 @@ public class ShiftWorked {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shift_worked_id", nullable = false)
-    @Setter(AccessLevel.NONE)
     private UUID shiftWorkedId;
 
     @Column(name = "shift_name", nullable = false)
@@ -57,6 +52,77 @@ public class ShiftWorked {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public ShiftWorked() {
+    }
+
+    public UUID getShiftWorkedId() {
+        return shiftWorkedId;
+    }
+
+    public String getShiftName() {
+        return shiftName;
+    }
+
+    public void setShiftName(String shiftName) {
+        this.shiftName = shiftName;
+    }
+
+    public OffsetDateTime getStart() {
+        return start;
+    }
+
+    public void setStart(OffsetDateTime start) {
+        this.start = start;
+    }
+
+    public OffsetDateTime getEnd() {
+        return end;
+    }
+
+    public void setEnd(OffsetDateTime end) {
+        this.end = end;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public int getBreakTime() {
+        return breakTime;
+    }
+
+    public void setBreakTime(int breakTime) {
+        this.breakTime = breakTime;
+    }
+
+    public BigDecimal getWorkedHours() {
+        return workedHours;
+    }
+
+    public void setWorkedHours(BigDecimal workedHours) {
+        this.workedHours = workedHours;
+    }
+
+    public BigDecimal getExtraHours() {
+        return extraHours;
+    }
+
+    public void setExtraHours(BigDecimal extraHours) {
+        this.extraHours = extraHours;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     public ShiftWorked(String shiftName,
                        OffsetDateTime start,

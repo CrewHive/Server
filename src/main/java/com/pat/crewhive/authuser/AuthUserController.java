@@ -3,7 +3,8 @@ package com.pat.crewhive.authuser;
 
 import com.pat.crewhive.security.CustomUserDetails;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -14,10 +15,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class AuthUserController implements AuthUserControllerInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthUserController.class);
 
     private final AuthService authService;
 
@@ -30,7 +32,7 @@ public class AuthUserController implements AuthUserControllerInterface {
     public ResponseEntity<AuthResponseDTO> rotate(@AuthenticationPrincipal CustomUserDetails cud,
                                                   @RequestBody @Valid RotateRequestDTO request) {
 
-        AuthResponseDTO response = authService.rotate_token(request.getRefreshToken());
+        AuthResponseDTO response = authService.rotate_token(request.refreshToken());
 
         log.info("Token ok for user: {}", cud.getUsername());
 
@@ -43,7 +45,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         authService.register(rDTO);
 
-        log.info("User {} registered successfully", rDTO.getEmail());
+        log.info("User {} registered successfully", rDTO.email());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -54,7 +56,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         AuthResponseDTO response = authService.login(request);
 
-        log.info("Login ok for user: {}", request.getEmail());
+        log.info("Login ok for user: {}", request.email());
 
         return ResponseEntity.ok(response);
     }

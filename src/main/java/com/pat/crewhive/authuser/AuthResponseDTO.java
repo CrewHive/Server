@@ -1,21 +1,13 @@
 package com.pat.crewhive.authuser;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Setter
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-public class AuthResponseDTO {
+public record AuthResponseDTO(
 
-    @NotBlank(message = "accessToken cannot be blank")
-    private String accessToken;
+        @NotBlank(message = "accessToken cannot be blank")
+        String accessToken,
 
-    @NotBlank(message = "refreshToken cannot be blank")
-    private String refreshToken;
-
+        @NotBlank(message = "refreshToken cannot be blank")
+        String refreshToken
+) {
 }

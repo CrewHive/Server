@@ -88,8 +88,8 @@ class UserServiceTest {
 
         AuthResponseDTO result = userService.leaveCompany(USER_ID);
 
-        assertThat(result.getAccessToken()).isEqualTo("access-jwt");
-        assertThat(result.getRefreshToken()).isEqualTo("reused-refresh-token");
+        assertThat(result.accessToken()).isEqualTo("access-jwt");
+        assertThat(result.refreshToken()).isEqualTo("reused-refresh-token");
         // the pre-existing refresh token must not be manually invalidated/regenerated here anymore
         verify(refreshTokenService, never()).deleteTokenByUser(any());
         verify(refreshTokenService, never()).generateRefreshToken(any());

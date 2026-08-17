@@ -1,17 +1,17 @@
 package com.pat.crewhive.common;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 
-@Slf4j
 @Component
 public class DateUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(DateUtils.class);
 
     public DateUtils() {
     }
