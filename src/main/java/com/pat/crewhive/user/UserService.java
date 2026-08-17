@@ -10,7 +10,8 @@ import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +22,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final RefreshTokenService refreshTokenService;
     private final ShiftUserRepository shiftUserRepository;
@@ -218,17 +220,17 @@ public class UserService {
     @Transactional
     public void updateUserTimeParams(UpdateUserWorkInfoDTO dto, UUID companyId) {
 
-        User user = getUserById(dto.getTargetUserId());
+        User user = getUserById(dto.targetUserId());
 
         if (!user.getCompany().getCompanyId().equals(companyId)) throw new ResourceNotFoundException("User not found in the specified company");
 
-        user.setContractType(dto.getContractType());
-        user.setWorkableHoursPerWeek(dto.getWorkableHoursPerWeek());
-        user.setOvertimeHours(dto.getOvertimeHours());
-        user.setVacationDaysAccumulated(dto.getVacationDaysAccumulated());
-        user.setVacationDaysTaken(dto.getVacationDaysTaken());
-        user.setLeaveDaysAccumulated(dto.getLeaveDaysAccumulated());
-        user.setLeaveDaysTaken(dto.getLeaveDaysTaken());
+        user.setContractType(dto.contractType());
+        user.setWorkableHoursPerWeek(dto.workableHoursPerWeek());
+        user.setOvertimeHours(dto.overtimeHours());
+        user.setVacationDaysAccumulated(dto.vacationDaysAccumulated());
+        user.setVacationDaysTaken(dto.vacationDaysTaken());
+        user.setLeaveDaysAccumulated(dto.leaveDaysAccumulated());
+        user.setLeaveDaysTaken(dto.leaveDaysTaken());
 
         userRepository.save(user);
 

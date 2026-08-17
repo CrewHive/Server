@@ -3,16 +3,10 @@ package com.pat.crewhive.manager;
 
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.UUID;
 
 
-@NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "user_role", indexes = {
         @Index(name = "idx_userrole_user_id", columnList = "user_id"),
@@ -33,8 +27,35 @@ public class UserRole {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    public UserRole() {
+    }
+
     public UserRole(User user, Role role) {
         this.user = user;
+        this.role = role;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
         this.role = role;
     }
 

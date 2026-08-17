@@ -7,22 +7,15 @@ import com.pat.crewhive.shiftprogrammed.ShiftUser;
 import com.pat.crewhive.shiftworked.ShiftWorked;
 import com.pat.crewhive.manager.UserRole;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.*;
 
-@NoArgsConstructor
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_username", columnList = "username"),
         @Index(name = "idx_user_company_id", columnList = "company_id")
 })
-@Getter
-@Setter
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "userId")
@@ -30,7 +23,6 @@ public class User {
 //todo modifica annotazioni json
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Setter(AccessLevel.NONE)
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
@@ -91,6 +83,9 @@ public class User {
     @JsonManagedReference
     private Set<ShiftUser> shiftUsers = new HashSet<>();
 
+    public User() {
+    }
+
     public User(String email, String firstName, String lastName, String password) {
         this.email = email;
         this.firstName = firstName;
@@ -103,5 +98,145 @@ public class User {
         this.vacationDaysTaken = BigDecimal.ZERO;
         this.leaveDaysAccumulated = BigDecimal.ZERO;
         this.leaveDaysTaken = BigDecimal.ZERO;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
+
+    public boolean isWorking() {
+        return isWorking;
+    }
+
+    public void setWorking(boolean working) {
+        isWorking = working;
+    }
+
+    public Set<EventUsers> getPersonalEvents() {
+        return personalEvents;
+    }
+
+    public void setPersonalEvents(Set<EventUsers> personalEvents) {
+        this.personalEvents = personalEvents;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
+    public ContractType getContractType() {
+        return contractType;
+    }
+
+    public void setContractType(ContractType contractType) {
+        this.contractType = contractType;
+    }
+
+    public int getWorkableHoursPerWeek() {
+        return workableHoursPerWeek;
+    }
+
+    public void setWorkableHoursPerWeek(int workableHoursPerWeek) {
+        this.workableHoursPerWeek = workableHoursPerWeek;
+    }
+
+    public BigDecimal getOvertimeHours() {
+        return overtimeHours;
+    }
+
+    public void setOvertimeHours(BigDecimal overtimeHours) {
+        this.overtimeHours = overtimeHours;
+    }
+
+    public BigDecimal getVacationDaysAccumulated() {
+        return vacationDaysAccumulated;
+    }
+
+    public void setVacationDaysAccumulated(BigDecimal vacationDaysAccumulated) {
+        this.vacationDaysAccumulated = vacationDaysAccumulated;
+    }
+
+    public BigDecimal getVacationDaysTaken() {
+        return vacationDaysTaken;
+    }
+
+    public void setVacationDaysTaken(BigDecimal vacationDaysTaken) {
+        this.vacationDaysTaken = vacationDaysTaken;
+    }
+
+    public BigDecimal getLeaveDaysAccumulated() {
+        return leaveDaysAccumulated;
+    }
+
+    public void setLeaveDaysAccumulated(BigDecimal leaveDaysAccumulated) {
+        this.leaveDaysAccumulated = leaveDaysAccumulated;
+    }
+
+    public BigDecimal getLeaveDaysTaken() {
+        return leaveDaysTaken;
+    }
+
+    public void setLeaveDaysTaken(BigDecimal leaveDaysTaken) {
+        this.leaveDaysTaken = leaveDaysTaken;
+    }
+
+    public Set<ShiftWorked> getShiftWorked() {
+        return shiftWorked;
+    }
+
+    public void setShiftWorked(Set<ShiftWorked> shiftWorked) {
+        this.shiftWorked = shiftWorked;
+    }
+
+    public Set<ShiftUser> getShiftUsers() {
+        return shiftUsers;
+    }
+
+    public void setShiftUsers(Set<ShiftUser> shiftUsers) {
+        this.shiftUsers = shiftUsers;
     }
 }

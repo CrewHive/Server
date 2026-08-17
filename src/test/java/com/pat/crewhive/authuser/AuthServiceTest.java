@@ -112,8 +112,8 @@ class AuthServiceTest {
 
         AuthResponseDTO result = authService.login(request);
 
-        assertThat(result.getAccessToken()).isEqualTo("access-jwt");
-        assertThat(result.getRefreshToken()).isEqualTo("new-refresh-token");
+        assertThat(result.accessToken()).isEqualTo("access-jwt");
+        assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
         // the pre-existing session must be invalidated before a new one is issued
         verify(refreshTokenService).invalidateRefreshToken(existingToken);
     }

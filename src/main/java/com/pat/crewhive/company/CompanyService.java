@@ -11,7 +11,8 @@ import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -22,9 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
 public class CompanyService {
+
+    private static final Logger log = LoggerFactory.getLogger(CompanyService.class);
 
     private final CompanyRepository companyRepository;
     private final UserService userService;
@@ -58,15 +60,15 @@ public class CompanyService {
     @Transactional
     public AuthResponseDTO registerCompany(UUID managerId, CompanyRegistrationDTO request) {
 
-        log.error("Attempting to register company with name: {}", request.getCompanyName());
+        log.error("Attempting to register company with name: {}", request.companyName());
 
-        String normalizedCompanyName = stringUtils.normalizeString(request.getCompanyName());
+        String normalizedCompanyName = stringUtils.normalizeString(request.companyName());
 
         if(companyRepository.existsByName(normalizedCompanyName)) {
 
-            log.error("Company with name {} already exists", request.getCompanyName());
+            log.error("Company with name {} already exists", request.companyName());
 
-            throw new ResourceAlreadyExistsException("Company with name " + request.getCompanyName() + " already exists.");
+            throw new ResourceAlreadyExistsException("Company with name " + request.companyName() + " already exists.");
         }
 
         Company company = new Company(request);
@@ -84,7 +86,7 @@ public class CompanyService {
 
         userService.updateUser(manager);
 
-        log.info("Company {} registered successfully", request.getCompanyName());
+        log.info("Company {} registered successfully", request.companyName());
 
         return new AuthResponseDTO(
                 jwtService.generateToken(manager.getUserId(), stringUtils.normalizeString(manager.getEmail()), manager.getFirstName(), manager.getLastName(), manager.getRole().getRole().getRoleName(), company.getCompanyId()),
@@ -206,21 +208,21 @@ public class CompanyService {
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
-        String normalizedCompanyName = stringUtils.normalizeString(request.getCompanyName());
+        String normalizedCompanyName = stringUtils.normalizeString(request.companyName());
 
         Company company = companyRepository.findByName(normalizedCompanyName)
-                .orElseThrow(() ->new ResourceAlreadyExistsException("Company with name " + request.getCompanyName() + " does not exist."));
+                .orElseThrow(() ->new ResourceAlreadyExistsException("Company with name " + request.companyName() + " does not exist."));
 
-        User user = userService.getUserById(request.getUserId());
+        User user = userService.getUserById(request.userId());
 
         if (user.getCompany() != null) {
-            log.info("User ID: {} is already part of company: {}", request.getUserId(), request.getCompanyName());
+            log.info("User ID: {} is already part of company: {}", request.userId(), request.companyName());
             return; // User is already part of the specified company
         }
 
         user.setCompany(company);
         userService.updateUser(user);
-        log.info("Company {} set for user ID: {}", request.getCompanyName(), request.getUserId());
+        log.info("Company {} set for user ID: {}", request.companyName(), request.userId());
     }
 
 

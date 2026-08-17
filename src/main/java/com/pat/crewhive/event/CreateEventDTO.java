@@ -4,44 +4,37 @@ import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class CreateEventDTO {
+public record CreateEventDTO(
 
-    @NotBlank(message = "Event name cannot be blank")
-    @NoHtml
-    @Size(min = 3, max = 32)
-    String name;
+        @NotBlank(message = "Event name cannot be blank")
+        @NoHtml
+        @Size(min = 3, max = 32)
+        String name,
 
-    @NoHtml
-    @Size(max = 256)
-    String description;
+        @NoHtml
+        @Size(max = 256)
+        String description,
 
-    @NotNull(message = "Event start time cannot be null")
-    OffsetDateTime start;
+        @NotNull(message = "Event start time cannot be null")
+        OffsetDateTime start,
 
-    @NotNull(message = "Event end time cannot be null")
-    OffsetDateTime end;
+        @NotNull(message = "Event end time cannot be null")
+        OffsetDateTime end,
 
-    @NotBlank(message = "Event color cannot be blank")
-    @NoHtml
-    @Size(min = 6, max = 6)
-    String color;
+        @NotBlank(message = "Event color cannot be blank")
+        @NoHtml
+        @Size(min = 6, max = 6)
+        String color,
 
-    @NotNull(message = "Event type cannot be null")
-    EventType eventType;
+        @NotNull(message = "Event type cannot be null")
+        EventType eventType,
 
-    @NotNull(message = "Event must have at least one user")
-    Set<UUID> userId;
+        @NotNull(message = "Event must have at least one user")
+        Set<UUID> userId
+) {
 }

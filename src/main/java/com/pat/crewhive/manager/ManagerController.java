@@ -5,7 +5,8 @@ import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import com.pat.crewhive.user.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,10 +14,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@Slf4j
 @RestController
 @RequestMapping("/manager")
 public class ManagerController implements ManagerControllerInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(ManagerController.class);
 
     private final RoleService roleService;
     private final UserService userService;
@@ -46,9 +48,9 @@ public class ManagerController implements ManagerControllerInterface {
     public ResponseEntity<?> updateUserRole(@AuthenticationPrincipal CustomUserDetails cud,
                                             @RequestBody @Valid UpdateUserRoleDTO updateUserRoleDTO) {
 
-        UUID targetId = updateUserRoleDTO.getUserId();
+        UUID targetId = updateUserRoleDTO.userId();
 
-        roleService.updateUserRole(targetId, updateUserRoleDTO.getNewRole(), cud.getCompanyId());
+        roleService.updateUserRole(targetId, updateUserRoleDTO.newRole(), cud.getCompanyId());
 
         log.info("Updated user role for user: {}", cud.getEmail());
 

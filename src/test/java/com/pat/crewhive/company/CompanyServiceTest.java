@@ -86,8 +86,8 @@ class CompanyServiceTest {
 
         AuthResponseDTO result = companyService.registerCompany(managerId, request);
 
-        assertThat(result.getAccessToken()).isEqualTo("access-jwt");
-        assertThat(result.getRefreshToken()).isEqualTo("reused-refresh-token");
+        assertThat(result.accessToken()).isEqualTo("access-jwt");
+        assertThat(result.refreshToken()).isEqualTo("reused-refresh-token");
         // registering a company must not manually invalidate/regenerate the session's refresh token anymore
         verify(refreshTokenService, never()).deleteTokenByUser(any());
         verify(refreshTokenService, never()).generateRefreshToken(any());

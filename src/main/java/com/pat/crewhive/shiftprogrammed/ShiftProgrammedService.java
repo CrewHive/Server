@@ -8,7 +8,8 @@ import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.DateUtils;
 import com.pat.crewhive.common.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -23,9 +24,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 public class ShiftProgrammedService {
+
+    private static final Logger log = LoggerFactory.getLogger(ShiftProgrammedService.class);
 
     private final ShiftProgrammedRepository shiftProgrammedRepository;
     private final ShiftUserRepository shiftUserRepository;
@@ -76,23 +78,22 @@ public class ShiftProgrammedService {
             UUID creatorUserId,
             CreateShiftProgrammedDTO dto) {
 
-        log.info("Creating shift with name: {}", dto.getName());
+        log.info("Creating shift with name: {}", dto.name());
 
-        String normalizedShiftName = stringUtils.normalizeString(dto.getName());
-        dto.setName(normalizedShiftName);
+        String normalizedShiftName = stringUtils.normalizeString(dto.name());
 
-        if (dto.getStart().isAfter(dto.getEnd())) {
+        if (dto.start().isAfter(dto.end())) {
             throw new IllegalArgumentException("Shift start time cannot be after end time");
         }
 
-        List<User> users = userService.getUsersByIds(dto.getUserId());
+        List<User> users = userService.getUsersByIds(dto.userId());
 
         ShiftProgrammed shiftProgrammed = new ShiftProgrammed();
-        shiftProgrammed.setShiftName(dto.getName());
-        shiftProgrammed.setDescription(dto.getDescription());
-        shiftProgrammed.setStart(dto.getStart());
-        shiftProgrammed.setEnd(dto.getEnd());
-        shiftProgrammed.setColor(dto.getColor());
+        shiftProgrammed.setShiftName(normalizedShiftName);
+        shiftProgrammed.setDescription(dto.description());
+        shiftProgrammed.setStart(dto.start());
+        shiftProgrammed.setEnd(dto.end());
+        shiftProgrammed.setColor(dto.color());
 
         for (User u: users) {
             shiftProgrammed.addUser(u);
@@ -251,27 +252,27 @@ public class ShiftProgrammedService {
             UUID requesterUserId,
             PatchShiftProgrammedDTO dto) {
 
-        log.info("Patching shift with id: {}", dto.getShiftProgrammedId());
+        log.info("Patching shift with id: {}", dto.shiftProgrammedId());
 
-        ShiftProgrammed shift = shiftProgrammedRepository.findByIdWithWorkers(dto.getShiftProgrammedId())
-                .orElseThrow(() -> new ResourceNotFoundException("Shift not found with ID: " + dto.getShiftProgrammedId()));
+        ShiftProgrammed shift = shiftProgrammedRepository.findByIdWithWorkers(dto.shiftProgrammedId())
+                .orElseThrow(() -> new ResourceNotFoundException("Shift not found with ID: " + dto.shiftProgrammedId()));
 
 
-        shift.setShiftName(stringUtils.normalizeString(dto.getName()));
+        shift.setShiftName(stringUtils.normalizeString(dto.name()));
 
-        if (dto.getStart().isAfter(dto.getEnd())) {
+        if (dto.start().isAfter(dto.end())) {
             throw new IllegalArgumentException("Shift start time cannot be after end time");
         }
 
-        shift.setStart(dto.getStart());
-        shift.setEnd(dto.getEnd());
-        shift.setDescription(dto.getDescription());
-        shift.setColor(dto.getColor());
+        shift.setStart(dto.start());
+        shift.setEnd(dto.end());
+        shift.setDescription(dto.description());
+        shift.setColor(dto.color());
 
 
-        if (dto.getUserId() != null) {
+        if (dto.userId() != null) {
 
-            Set<UUID> newIds = dto.getUserId();
+            Set<UUID> newIds = dto.userId();
 
             Set<UUID> current = shift.getUsers().stream()
                     .map(su -> su.getUser().getUserId())

@@ -2,20 +2,12 @@ package com.pat.crewhive.manager;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
 @Embeddable
 //todo al momento non è necessario, ma potrebbe essere utile in futuro se per ogni utente ci fossero più ruoli
 public class UserRoleId implements Serializable {
@@ -25,6 +17,30 @@ public class UserRoleId implements Serializable {
 
     @Column(name = "role_id", nullable = false)
     private Long roleId;
+
+    public UserRoleId() {
+    }
+
+    public UserRoleId(UUID userId, Long roleId) {
+        this.userId = userId;
+        this.roleId = roleId;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
 
     @Override
     public boolean equals(Object o) {

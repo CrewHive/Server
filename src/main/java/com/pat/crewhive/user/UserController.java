@@ -5,17 +5,19 @@ import com.pat.crewhive.authuser.AuthResponseDTO;
 import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.authuser.AuthService;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/user")
 public class UserController implements UserControllerInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final AuthService authService;
     private final UserService userService;
@@ -44,7 +46,7 @@ public class UserController implements UserControllerInterface {
                                     @RequestBody @Valid LogoutDTO request) {
 
         authService.logout(request, cud.getJti(), cud.getTokenExpiration());
-        log.info("Logout ok for user: {}", request.getUserId());
+        log.info("Logout ok for user: {}", request.userId());
 
         return ResponseEntity.ok().build();
     }
@@ -56,7 +58,7 @@ public class UserController implements UserControllerInterface {
 
         log.info("Updating password for user: {}", cud.getEmail());
 
-        userService.updatePassword(updatePasswordDTO.getNewPassword(), updatePasswordDTO.getOldPassword(), cud.getEmail());
+        userService.updatePassword(updatePasswordDTO.newPassword(), updatePasswordDTO.oldPassword(), cud.getEmail());
 
         return ResponseEntity.ok().build();
     }

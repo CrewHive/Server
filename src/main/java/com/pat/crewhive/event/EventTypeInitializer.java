@@ -1,6 +1,5 @@
 package com.pat.crewhive.event;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -11,10 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
  * since there is no Flyway/Liquibase migration in this project to do it declaratively.
  */
 @Component
-@RequiredArgsConstructor
 public class EventTypeInitializer implements ApplicationRunner {
 
     private final EventTypeRepository eventTypeRepository;
+
+    public EventTypeInitializer(EventTypeRepository eventTypeRepository) {
+        this.eventTypeRepository = eventTypeRepository;
+    }
 
     @Override
     @Transactional

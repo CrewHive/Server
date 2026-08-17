@@ -5,7 +5,8 @@ import com.pat.crewhive.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,10 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @RestController
 @RequestMapping("/company")
 public class CompanyController implements CompanyControllerInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(CompanyController.class);
 
     private final CompanyService companyService;
 
@@ -65,7 +67,7 @@ public class CompanyController implements CompanyControllerInterface {
 
         AuthResponseDTO dto = companyService.registerCompany(managerId, request);
 
-        log.info("Company {} registered successfully", request.getCompanyName());
+        log.info("Company {} registered successfully", request.companyName());
 
         return ResponseEntity.ok(dto);
     }
@@ -81,7 +83,7 @@ public class CompanyController implements CompanyControllerInterface {
 
         companyService.setCompany(request, companyId, managerId);
 
-        log.info("Company set for user ID: {}", request.getUserId());
+        log.info("Company set for user ID: {}", request.userId());
 
         return ResponseEntity.ok().build();
     }

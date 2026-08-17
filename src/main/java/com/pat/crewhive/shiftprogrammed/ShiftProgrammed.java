@@ -3,7 +3,6 @@ package com.pat.crewhive.shiftprogrammed;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
-import lombok.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -12,9 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-@NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "shift_programmed", indexes = {
         @Index(name = "idx_shiftprogrammed_date", columnList = "shift_date"),
@@ -25,12 +21,10 @@ public class ShiftProgrammed {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shift_programmed_id", nullable = false)
-    @Setter(AccessLevel.NONE)
     private UUID shiftProgrammedId;
 
     @Version
     @Column(name = "version", nullable = false)
-    @Setter(AccessLevel.NONE)
     private Long version;
 
     @Column(name = "shift_programmed_name", nullable = false)
@@ -55,6 +49,72 @@ public class ShiftProgrammed {
     @JsonManagedReference
     private Set<ShiftUser> users = new HashSet<>();
 
+    public ShiftProgrammed() {
+    }
+
+    public UUID getShiftProgrammedId() {
+        return shiftProgrammedId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public String getShiftName() {
+        return shiftName;
+    }
+
+    public void setShiftName(String shiftName) {
+        this.shiftName = shiftName;
+    }
+
+    public OffsetDateTime getStart() {
+        return start;
+    }
+
+    public void setStart(OffsetDateTime start) {
+        this.start = start;
+    }
+
+    public OffsetDateTime getEnd() {
+        return end;
+    }
+
+    public void setEnd(OffsetDateTime end) {
+        this.end = end;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public Set<ShiftUser> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<ShiftUser> users) {
+        this.users = users;
+    }
 
     public void addUser(User u) {
 

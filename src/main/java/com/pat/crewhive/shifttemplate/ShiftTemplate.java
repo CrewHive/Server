@@ -3,18 +3,10 @@ package com.pat.crewhive.shifttemplate;
 
 import com.pat.crewhive.company.Company;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.OffsetTime;
 import java.util.UUID;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "shift_template", indexes = {
         @Index(name = "idx_shifttemplate_shift_name", columnList = "shift_name"),
@@ -47,5 +39,75 @@ public class ShiftTemplate {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
+
+    public ShiftTemplate() {
+    }
+
+    public ShiftTemplate(UUID shiftId, String shiftName, OffsetTime startShift, OffsetTime endShift,
+                          String description, String color, Company company) {
+        this.shiftId = shiftId;
+        this.shiftName = shiftName;
+        this.startShift = startShift;
+        this.endShift = endShift;
+        this.description = description;
+        this.color = color;
+        this.company = company;
+    }
+
+    public UUID getShiftId() {
+        return shiftId;
+    }
+
+    public void setShiftId(UUID shiftId) {
+        this.shiftId = shiftId;
+    }
+
+    public String getShiftName() {
+        return shiftName;
+    }
+
+    public void setShiftName(String shiftName) {
+        this.shiftName = shiftName;
+    }
+
+    public OffsetTime getStartShift() {
+        return startShift;
+    }
+
+    public void setStartShift(OffsetTime startShift) {
+        this.startShift = startShift;
+    }
+
+    public OffsetTime getEndShift() {
+        return endShift;
+    }
+
+    public void setEndShift(OffsetTime endShift) {
+        this.endShift = endShift;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
 
 }

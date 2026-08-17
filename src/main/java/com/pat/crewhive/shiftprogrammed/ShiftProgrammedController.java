@@ -6,7 +6,8 @@ import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.common.Period;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @RestController
 @RequestMapping("/shift-programmed")
 public class ShiftProgrammedController implements ShiftProgrammedControllerInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(ShiftProgrammedController.class);
 
     private final ShiftProgrammedService shiftProgrammedService;
 
@@ -30,7 +32,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
     public ResponseEntity<UUID> createShift(@AuthenticationPrincipal CustomUserDetails cud,
                                             @RequestBody @Valid CreateShiftProgrammedDTO dto) {
 
-        log.info("Received request to create shift: {}", dto.getName());
+        log.info("Received request to create shift: {}", dto.name());
 
         return ResponseEntity.ok(shiftProgrammedService.createShift(cud.getUserId(), dto));
     }
@@ -71,7 +73,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
     public ResponseEntity<UUID> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
                                            @RequestBody @Valid PatchShiftProgrammedDTO dto) {
 
-        log.info("Received request to patch shift: {}", dto.getName());
+        log.info("Received request to patch shift: {}", dto.name());
 
         return ResponseEntity.ok(shiftProgrammedService.patchShift(cud.getUserId(), dto));
     }

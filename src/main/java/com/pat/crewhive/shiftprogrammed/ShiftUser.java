@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "shift_user", indexes = {
@@ -15,9 +12,6 @@ import lombok.Setter;
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uc_shiftuser", columnNames = {"shift_programmed_id", "user_id"})
 })
-@NoArgsConstructor
-@Getter
-@Setter
 public class ShiftUser {
 
     @EmbeddedId
@@ -38,8 +32,35 @@ public class ShiftUser {
     @JsonBackReference
     private User user;
 
+    public ShiftUser() {
+    }
+
     public ShiftUser(ShiftProgrammed shift, User user) {
         this.shift = shift;
+        this.user = user;
+    }
+
+    public ShiftUserId getId() {
+        return id;
+    }
+
+    public void setId(ShiftUserId id) {
+        this.id = id;
+    }
+
+    public ShiftProgrammed getShift() {
+        return shift;
+    }
+
+    public void setShift(ShiftProgrammed shift) {
+        this.shift = shift;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
         this.user = user;
     }
 }

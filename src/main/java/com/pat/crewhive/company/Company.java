@@ -3,17 +3,12 @@ package com.pat.crewhive.company;
 import com.pat.crewhive.user.User;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import lombok.*;
 import org.hibernate.annotations.Type;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "company")
 public class Company {
@@ -21,7 +16,6 @@ public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "company_id", nullable = false)
-    @Setter(AccessLevel.NONE)
     private UUID companyId;
 
     @Column(name = "name", nullable = false, unique = true)
@@ -38,10 +32,57 @@ public class Company {
     @Column(name = "company_type", nullable = false)
     private CompanyType companyType;
 
+    public Company() {
+    }
+
+    public Company(UUID companyId, String name, AddressJSON addressJSON, Set<User> users, CompanyType companyType) {
+        this.companyId = companyId;
+        this.name = name;
+        this.addressJSON = addressJSON;
+        this.users = users;
+        this.companyType = companyType;
+    }
+
     public Company(CompanyRegistrationDTO registrationDTO) {
-        this.name = registrationDTO.getCompanyName();
-        this.addressJSON = registrationDTO.getAddress();
-        this.companyType = registrationDTO.getCompanyType();
+        this.name = registrationDTO.companyName();
+        this.addressJSON = registrationDTO.address();
+        this.companyType = registrationDTO.companyType();
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public AddressJSON getAddressJSON() {
+        return addressJSON;
+    }
+
+    public void setAddressJSON(AddressJSON addressJSON) {
+        this.addressJSON = addressJSON;
+    }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users;
+    }
+
+    public CompanyType getCompanyType() {
+        return companyType;
+    }
+
+    public void setCompanyType(CompanyType companyType) {
+        this.companyType = companyType;
     }
 
 }
