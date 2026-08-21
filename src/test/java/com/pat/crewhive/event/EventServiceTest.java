@@ -110,4 +110,44 @@ class EventServiceTest {
 
         assertThat(result).containsExactly(EventOutputDTO.from(event));
     }
+
+    @Test
+    void patchEvent_reactivatesPreviouslySoftDeletedLink_insteadOfCreatingDuplicate() {
+        UUID eventId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        Event event = new Event();
+        ReflectionTestUtils.setField(event, "eventId", eventId);
+        event.setEventName("Riunione");
+        event.setStart(OffsetDateTime.parse("2026-08-21T09:00:00Z"));
+        event.setEnd(OffsetDateTime.parse("2026-08-21T17:00:00Z"));
+        event.setColor("#FF0000");
+
+        User user = new User("user@example.com", "Mario", "Rossi", "encoded-pwd");
+        ReflectionTestUtils.setField(user, "userId", userId);
+
+        EventUsers softDeletedLink = new EventUsers(user, event);
+        softDeletedLink.markDeleted(user);
+
+        PatchEventDTO dto = new PatchEventDTO(
+                eventId, "Riunione", null,
+                OffsetDateTime.parse("2026-08-21T09:00:00Z"),
+                OffsetDateTime.parse("2026-08-21T17:00:00Z"),
+                "FF0000", EventType.PRIVATE, java.util.Set.of(userId)
+        );
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(java.util.Optional.of(event));
+        when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
+        when(userService.getUsersByIds(java.util.Set.of(userId))).thenReturn(List.of(user));
+        when(eventUsersRepository.findByIdIncludingDeleted(userId, eventId)).thenReturn(java.util.Optional.of(softDeletedLink));
+        when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
+        when(eventRepository.save(event)).thenReturn(event);
+
+        eventService.patchEvent(dto);
+
+        assertThat(softDeletedLink.isActive()).isTrue();
+        assertThat(softDeletedLink.getDeletedAt()).isNull();
+        assertThat(softDeletedLink.getDeletedBy()).isNull();
+        assertThat(event.getUsers()).containsExactly(softDeletedLink);
+    }
 }

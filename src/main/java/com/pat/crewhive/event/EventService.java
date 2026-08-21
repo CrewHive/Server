@@ -199,12 +199,19 @@ public class EventService {
                 usersToRemove.forEach(event::removeUser);
             }
 
-            // aggiungi i nuovi mancanti
+            // aggiungi i nuovi mancanti (riattivando un legame soft-deleted se esiste
+            // già per questa coppia utente/evento, per non collidere sulla sua PK)
             Set<UUID> toAdd = new HashSet<>(newUserIds);
             toAdd.removeAll(existingIds);
             if (!toAdd.isEmpty()) {
                 List<User> usersToAdd = userService.getUsersByIds(toAdd);
-                usersToAdd.forEach(event::addUser);
+                for (User user : usersToAdd) {
+                    EventUsers link = eventUsersRepository
+                            .findByIdIncludingDeleted(user.getUserId(), event.getEventId())
+                            .map(existing -> { existing.restore(); return existing; })
+                            .orElseGet(() -> new EventUsers(user, event));
+                    event.attachUser(link);
+                }
             }
         }
 
