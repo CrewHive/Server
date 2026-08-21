@@ -31,6 +31,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmail(String email);
 
+    /**
+     * Verifica se esiste un utente disattivato con questa email, bypassando il
+     * filtro {@code active = true} di {@code @SQLRestriction}. Usato dal login per
+     * distinguere "account disattivato" da "email mai registrata".
+     */
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM users WHERE email = :email AND active = false)", nativeQuery = true)
+    boolean existsInactiveByEmail(@Param("email") String email);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
         UPDATE users
