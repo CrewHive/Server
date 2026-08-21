@@ -154,6 +154,19 @@ public class Event extends SoftDeletableEntity {
 
 
     /**
+     * Collega un EventUsers già risolto (nuovo, oppure una riga soft-deleted
+     * riattivata dal chiamante) a entrambi i lati dell'associazione. A differenza di
+     * {@link #addUser}, non verifica duplicati né costruisce il link: quella
+     * decisione richiede una query sul repository (per trovare una riga soft-deleted
+     * che occupa già la stessa chiave primaria), possibile solo nel service layer.
+     */
+    public void attachUser(EventUsers link) {
+        this.users.add(link);
+        link.getUser().getPersonalEvents().add(link);
+    }
+
+
+    /**
      * Remove the user from the event and the event from the user
      * @param u the user to remove
      */
