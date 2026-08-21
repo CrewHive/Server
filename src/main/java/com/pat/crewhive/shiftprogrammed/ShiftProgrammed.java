@@ -22,7 +22,7 @@ import java.util.UUID;
         @Index(name = "idx_shiftprogrammed_deleted_by", columnList = "deleted_by")
 })
 @SQLRestriction("active = true")
-@SQLDelete(sql = "UPDATE shift_programmed SET active = false, deleted_at = now() WHERE shift_programmed_id = ?")
+@SQLDelete(sql = "UPDATE shift_programmed SET active = false, deleted_at = now() WHERE shift_programmed_id = ? AND version = ?")
 public class ShiftProgrammed extends SoftDeletableEntity {
 
     @Id
