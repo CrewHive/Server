@@ -1,16 +1,24 @@
 package com.pat.crewhive.shiftprogrammed;
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "shift_user", indexes = {
         @Index(name = "idx_shiftuser", columnList = "shift_programmed_id"),
-        @Index(name = "idx_shiftuser_user_id", columnList = "user_id")
+        @Index(name = "idx_shiftuser_user_id", columnList = "user_id"),
+        @Index(name = "idx_shiftuser_active", columnList = "active"),
+        @Index(name = "idx_shiftuser_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_shiftuser_deleted_by", columnList = "deleted_by")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uc_shiftuser", columnNames = {"shift_programmed_id", "user_id"})
 })
-public class ShiftUser {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE shift_user SET active = false, deleted_at = now() WHERE shift_programmed_id = ? AND user_id = ?")
+public class ShiftUser extends SoftDeletableEntity {
 
     @EmbeddedId
     private ShiftUserId id = new ShiftUserId();
