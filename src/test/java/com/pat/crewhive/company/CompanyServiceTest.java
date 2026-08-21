@@ -105,4 +105,35 @@ class CompanyServiceTest {
 
         verifyNoInteractions(userService, jwtService, refreshTokenService);
     }
+
+    // ---------------------------------------------------------------------
+    // deleteCompany()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void deleteCompany_softDeletesTheCompanyWithManagerAsActor() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+
+        Company company = new Company();
+        ReflectionTestUtils.setField(company, "companyId", companyId);
+
+        User manager = new User("manager@example.com", "Manager", "Rossi", "encoded-pwd");
+        ReflectionTestUtils.setField(manager, "userId", managerId);
+
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(company);
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(userService.getUserById(managerId)).thenReturn(manager);
+
+        companyService.deleteCompany(companyId, managerId);
+
+        assertThat(company.isActive()).isFalse();
+        assertThat(company.getDeletedBy()).isSameAs(manager);
+        assertThat(company.getDeletedAt()).isNotNull();
+        verify(companyAccessService).removeCompanyFromUsers(companyId);
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(companyRepository);
+        order.verify(companyRepository).save(company);
+        order.verify(companyRepository).delete(company);
+    }
 }
