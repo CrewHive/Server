@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -105,12 +104,11 @@ public class ShiftProgrammedService {
     }
 
 
-    //todo refactor function after the exam to avoid that horrible list and dtos
     /**
      * Retrieve shifts for a specific user within a defined period.
      * @param period The period to filter shifts (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
      * @param userId The ID of the user whose shifts are to be retrieved.
-     * @return A list of ShiftProgrammed entities matching the criteria.
+     * @return The shifts matching the criteria, mapped to output DTOs.
      */
     @Transactional(readOnly = true)
     @Cacheable(
@@ -128,25 +126,11 @@ public class ShiftProgrammedService {
 
         List<ShiftProgrammed> dbList = shiftProgrammedRepository.findByUserAndDateBetween(userId, from, to);
 
-        List<NameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
+        List<ShiftProgrammedItemDTO> shifts = dbList.stream()
+                .map(ShiftProgrammedItemDTO::from)
+                .toList();
 
-        dbList.forEach(shiftProgrammed -> {
-
-            List<String> firstNames = new ArrayList<>();
-            List<String>  lastNames = new ArrayList<>();
-            List<UUID> userIds   = new ArrayList<>();
-
-            shiftProgrammed.getUsers().forEach(su -> {
-                var u = su.getUser();
-                userIds.add(u.getUserId());
-                firstNames.add(u.getFirstName());
-                lastNames.add(u.getLastName());
-            });
-
-            result.add(new NameAndUserIdForShiftProgrammedDTO(firstNames, lastNames, userIds, shiftProgrammed.getShiftProgrammedId()));
-        });
-
-        return new ShiftProgrammedOutputDTO(dbList, result);
+        return new ShiftProgrammedOutputDTO(shifts);
     }
 
 
@@ -154,7 +138,7 @@ public class ShiftProgrammedService {
      * Retrieve shifts for a specific company within a defined period.
      * @param period The period to filter shifts (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
      * @param requesterUserId The ID of the user in the company.
-     * @return A list of ShiftProgrammed entities matching the criteria.
+     * @return The shifts matching the criteria, mapped to output DTOs.
      */
     @Transactional(readOnly = true)
     @Cacheable(
@@ -174,32 +158,18 @@ public class ShiftProgrammedService {
 
         List<ShiftProgrammed> dbList = shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to);
 
-        List<NameAndUserIdForShiftProgrammedDTO> result = new ArrayList<>();
+        List<ShiftProgrammedItemDTO> shifts = dbList.stream()
+                .map(ShiftProgrammedItemDTO::from)
+                .toList();
 
-        dbList.forEach(shiftProgrammed -> {
-
-            List<String> firstNames = new ArrayList<>();
-            List<String>  lastNames = new ArrayList<>();
-            List<UUID> userIds   = new ArrayList<>();
-
-            shiftProgrammed.getUsers().forEach(su -> {
-                var u = su.getUser();
-                userIds.add(u.getUserId());
-                firstNames.add(u.getFirstName());
-                lastNames.add(u.getLastName());
-            });
-
-            result.add(new NameAndUserIdForShiftProgrammedDTO(firstNames, lastNames, userIds, shiftProgrammed.getShiftProgrammedId()));
-        });
-
-        return new ShiftProgrammedOutputDTO(dbList, result);
+        return new ShiftProgrammedOutputDTO(shifts);
     }
 
 
     /**
      * Retrieve all users assigned to a specific shift.
      * @param shiftId The ID of the shift.
-     * @return A list of User entities assigned to the shift.
+     * @return The users assigned to the shift, mapped to output DTOs.
      * @throws ResourceNotFoundException if the shift does not exist.
      */
     @Transactional(readOnly = true)
@@ -207,9 +177,8 @@ public class ShiftProgrammedService {
             value = "usersInShift",
             key = "#shiftId"
     )
-    public List<User> getUsersInShift(UUID shiftId) {
+    public List<ShiftParticipantDTO> getUsersInShift(UUID shiftId) {
 
-        // todo ritorna un dto
         log.info("getUsersInShift: Fetching users in shift with id: {}", shiftId);
 
         if (!shiftProgrammedRepository.existsById(shiftId)) {
@@ -218,7 +187,9 @@ public class ShiftProgrammedService {
             throw new ResourceNotFoundException("Shift not found with ID: " + shiftId);
         }
 
-        return shiftUserRepository.findUsersByShiftId(shiftId);
+        return shiftUserRepository.findUsersByShiftId(shiftId).stream()
+                .map(u -> new ShiftParticipantDTO(u.getUserId(), u.getFirstName(), u.getLastName()))
+                .toList();
     }
 
 

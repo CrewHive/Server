@@ -1,7 +1,6 @@
 package com.pat.crewhive.shiftprogrammed;
 
 
-import com.pat.crewhive.user.User;
 import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.common.Period;
 import jakarta.validation.Valid;
@@ -60,7 +59,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @GetMapping("/users/{shiftId}")
-    public ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull UUID shiftId) {
+    public ResponseEntity<List<ShiftParticipantDTO>> getUsersByShift(@PathVariable @NotNull UUID shiftId) {
 
         log.info("Received request to get users for shift {}", shiftId);
 

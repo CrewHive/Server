@@ -1,6 +1,6 @@
 package com.pat.crewhive.user;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.event.EventUsers;
 import com.pat.crewhive.shiftprogrammed.ShiftUser;
@@ -16,11 +16,8 @@ import java.util.*;
         @Index(name = "idx_user_username", columnList = "username"),
         @Index(name = "idx_user_company_id", columnList = "company_id")
 })
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "userId")
 public class User {
-//todo modifica annotazioni json
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id", nullable = false)
@@ -41,14 +38,12 @@ public class User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
-    @JsonIgnore
     private Company company;
 
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference
     private Set<EventUsers> personalEvents = new HashSet<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -80,7 +75,6 @@ public class User {
     private Set<ShiftWorked> shiftWorked = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference
     private Set<ShiftUser> shiftUsers = new HashSet<>();
 
     public User() {

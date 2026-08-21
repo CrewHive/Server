@@ -1,9 +1,6 @@
 package com.pat.crewhive.event;
 
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
 
@@ -20,11 +17,8 @@ import java.util.UUID;
         @Index(name = "idx_event_end_event", columnList = "end_event"),
         @Index(name = "idx_event_date", columnList = "date")
 })
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "eventId")
 public class Event {
-    //todo togli annotazioni json
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "event_id", nullable = false)
@@ -57,7 +51,6 @@ public class Event {
     private EventTypeEntity eventType;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private Set<EventUsers> users = new HashSet<>();
 
     public Event() {

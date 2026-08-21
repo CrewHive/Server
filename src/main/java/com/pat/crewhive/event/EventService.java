@@ -108,15 +108,16 @@ public class EventService {
      * @return List of events within the specified period for the user.
      */
     @Transactional(readOnly = true)
-    public List<Event> getEventsByPeriodAndUser(Period period, UUID userId) {
+    public List<EventOutputDTO> getEventsByPeriodAndUser(Period period, UUID userId) {
 
-        //todo ritorna un DTO
         log.info("Fetching events for userId: {} with eventTemp: {}", userId, period);
 
         LocalDate from = dateUtils.getStartDateForPeriod(period);
         LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        return eventRepository.findWithParticipantsByUserAndDateBetween(userId, from, to);
+        return eventRepository.findWithParticipantsByUserAndDateBetween(userId, from, to).stream()
+                .map(EventOutputDTO::from)
+                .toList();
     }
 
 
@@ -126,12 +127,13 @@ public class EventService {
      * @return List of events associated with the user.
      */
     @Transactional(readOnly = true)
-    public List<Event> getUserEvents(UUID userId) {
+    public List<EventOutputDTO> getUserEvents(UUID userId) {
 
-        //todo ritorna un DTO
         log.info("Fetching all events for userId: {}", userId);
 
-        return eventUsersRepository.findEventsByUserId(userId);
+        return eventUsersRepository.findEventsByUserId(userId).stream()
+                .map(EventOutputDTO::from)
+                .toList();
     }
 
 
@@ -141,15 +143,16 @@ public class EventService {
      * @return List of public events.
      */
     @Transactional(readOnly = true)
-    public List<Event> getPublicEventsByCompanyAndPeriod(UUID companyId, Period period) {
+    public List<EventOutputDTO> getPublicEventsByCompanyAndPeriod(UUID companyId, Period period) {
 
-        //todo ritorna un DTO
         log.info("Fetching all public events");
 
         LocalDate from = dateUtils.getStartDateForPeriod(period);
         LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        return eventRepository.findPublicWithParticipantsByCompanyAndDateBetween(PUBLIC.getId(), companyId, from, to);
+        return eventRepository.findPublicWithParticipantsByCompanyAndDateBetween(PUBLIC.getId(), companyId, from, to).stream()
+                .map(EventOutputDTO::from)
+                .toList();
     }
 
 

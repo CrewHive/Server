@@ -1,6 +1,5 @@
 package com.pat.crewhive.shiftprogrammed;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
 
@@ -17,7 +16,7 @@ import java.util.UUID;
         @Index(name = "idx_shiftprogrammed_start", columnList = "start_shift")
 })
 public class ShiftProgrammed {
-//todo togli annotazioni json
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shift_programmed_id", nullable = false)
@@ -46,7 +45,6 @@ public class ShiftProgrammed {
     private String color;
 
     @OneToMany(mappedBy = "shift", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private Set<ShiftUser> users = new HashSet<>();
 
     public ShiftProgrammed() {
