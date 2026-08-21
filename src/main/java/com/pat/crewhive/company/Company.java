@@ -1,8 +1,11 @@
 package com.pat.crewhive.company;
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.user.User;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Type;
 
 import java.util.LinkedHashSet;
@@ -10,8 +13,14 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "company")
-public class Company {
+@Table(name = "company", indexes = {
+        @Index(name = "idx_company_active", columnList = "active"),
+        @Index(name = "idx_company_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_company_deleted_by", columnList = "deleted_by")
+})
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE company SET active = false, deleted_at = now() WHERE company_id = ?")
+public class Company extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
