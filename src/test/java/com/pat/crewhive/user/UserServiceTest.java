@@ -111,7 +111,7 @@ class UserServiceTest {
 
         assertThat(user.getCompany()).isNull();
         assertThat(company.getUsers()).doesNotContain(user);
-        verify(shiftUserRepository).deleteByUserId(USER_ID);
+        verify(shiftUserRepository).deleteByUserId(eq(USER_ID), any(java.time.OffsetDateTime.class));
         verify(userRepository).save(user);
     }
 
