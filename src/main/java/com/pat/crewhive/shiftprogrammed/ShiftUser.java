@@ -69,7 +69,12 @@ public class ShiftUser extends SoftDeletableEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ShiftUser other)) return false;
-        return id != null && id.equals(other.id);
+        // A transient instance (either side, before @MapsId populates the id at flush)
+        // is only equal to itself - falling through to id.equals() here would let two
+        // distinct freshly-built links collide in a HashSet, silently dropping one.
+        if (id == null || id.getShiftProgrammedId() == null || id.getUserId() == null) return false;
+        if (other.id == null || other.id.getShiftProgrammedId() == null || other.id.getUserId() == null) return false;
+        return id.equals(other.id);
     }
 
     @Override
