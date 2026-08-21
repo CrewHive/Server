@@ -1,17 +1,25 @@
 package com.pat.crewhive.event;
 
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "event_users", indexes = {
         @Index(name = "idx_event_users_user_id", columnList = "user_id"),
-        @Index(name = "idx_event_users_event_id", columnList = "event_id")
+        @Index(name = "idx_event_users_event_id", columnList = "event_id"),
+        @Index(name = "idx_event_users_active", columnList = "active"),
+        @Index(name = "idx_event_users_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_event_users_deleted_by", columnList = "deleted_by")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uc_eventusers_event_id", columnNames = {"event_id", "user_id"})
 })
-public class EventUsers {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE event_users SET active = false, deleted_at = now() WHERE user_id = ? AND event_id = ?")
+public class EventUsers extends SoftDeletableEntity {
 
     @EmbeddedId
     private EventUsersId id = new EventUsersId();
