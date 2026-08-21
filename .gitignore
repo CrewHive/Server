@@ -37,7 +37,7 @@ build/
 ### VS Code ###
 .vscode/
 
-docs/
+docs
 
 ### Superpowers (subagent-driven-development scratch workspaces) ###
 .superpowers/
