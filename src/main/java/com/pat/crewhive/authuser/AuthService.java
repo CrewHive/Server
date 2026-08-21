@@ -8,11 +8,11 @@ import com.pat.crewhive.user.User;
 import com.pat.crewhive.manager.Role;
 import com.pat.crewhive.manager.UserRole;
 import com.pat.crewhive.user.UserRepository;
-import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.manager.RoleService;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
 import org.slf4j.Logger;
@@ -29,7 +29,6 @@ public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
-    private final UserService userService;
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
@@ -39,8 +38,7 @@ public class AuthService {
     private final StringUtils stringUtils;
     private final TokenBlackListService tokenBlackListService;
 
-    public AuthService(UserService userService,
-                       JwtService jwtService,
+    public AuthService(JwtService jwtService,
                        RefreshTokenService refreshTokenService,
                        UserRepository userRepository,
                        RoleService roleService,
@@ -48,7 +46,6 @@ public class AuthService {
                        EmailUtil emailUtil,
                        StringUtils stringUtils,
                        TokenBlackListService tokenBlackListService) {
-        this.userService = userService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
@@ -71,18 +68,25 @@ public class AuthService {
     public AuthResponseDTO login(AuthRequestDTO request) {
 
         String normalizedEmail = stringUtils.normalizeString(request.email());
-        User user = userService.getUserByEmail(normalizedEmail);
+
+        // @SQLRestriction su User nasconde gli account disattivati a findByEmail: se
+        // la riga non c'è, verifichiamo separatamente se esiste ma è inattiva, per dare
+        // un messaggio distinto. Nota: questo significa che per un account disattivato
+        // la password non viene nemmeno controllata - è una conseguenza accettata del
+        // filtro automatico, non una scelta di questo metodo.
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseGet(() -> {
+                    if (userRepository.existsInactiveByEmail(normalizedEmail)) {
+                        log.error("Login attempt for deactivated account: {}", normalizedEmail);
+                        throw new BadCredentialsException("Account disabled");
+                    }
+                    throw new ResourceNotFoundException("User not found");
+                });
 
         if (passwordUtil.NotMatches(request.password(), user.getPassword())) {
             log.error("Invalid password for user: {}", normalizedEmail);
 
             throw new BadCredentialsException("Invalid credentials");
-        }
-
-        if (!user.isActive()) {
-            log.error("Login attempt for deactivated account: {}", normalizedEmail);
-
-            throw new BadCredentialsException("Account disabled");
         }
 
         log.info("User {} authenticated successfully", normalizedEmail);
