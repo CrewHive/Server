@@ -19,7 +19,7 @@ public final class SoftDeleteSupport {
             JpaRepository<T, ID> repository, T entity, User actor) {
 
         entity.markDeleted(actor);
-        repository.save(entity);
-        repository.delete(entity);
+        T managed = repository.save(entity);
+        repository.delete(managed);
     }
 }
