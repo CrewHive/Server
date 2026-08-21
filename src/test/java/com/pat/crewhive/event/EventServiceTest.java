@@ -8,6 +8,7 @@ import com.pat.crewhive.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -15,10 +16,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link EventService}.
@@ -149,5 +151,32 @@ class EventServiceTest {
         assertThat(softDeletedLink.getDeletedAt()).isNull();
         assertThat(softDeletedLink.getDeletedBy()).isNull();
         assertThat(event.getUsers()).containsExactly(softDeletedLink);
+    }
+
+    @Test
+    void createEvent_persistsAllParticipants_notJustTheFirst() {
+        User user1 = new User("user1@example.com", "Mario", "Rossi", "encoded-pwd");
+        ReflectionTestUtils.setField(user1, "userId", UUID.randomUUID());
+        User user2 = new User("user2@example.com", "Luigi", "Verdi", "encoded-pwd");
+        ReflectionTestUtils.setField(user2, "userId", UUID.randomUUID());
+
+        CreateEventDTO dto = new CreateEventDTO(
+                "Riunione", null,
+                OffsetDateTime.parse("2026-08-21T09:00:00Z"),
+                OffsetDateTime.parse("2026-08-21T17:00:00Z"),
+                "FF0000", EventType.PRIVATE, Set.of(user1.getUserId(), user2.getUserId())
+        );
+
+        when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
+        when(userService.getUsersByIds(Set.of(user1.getUserId(), user2.getUserId())))
+                .thenReturn(List.of(user1, user2));
+        when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
+        when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        eventService.createEvent(dto, "ROLE_USER");
+
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(eventRepository).save(captor.capture());
+        assertThat(captor.getValue().getUsers()).hasSize(2);
     }
 }
