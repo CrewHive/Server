@@ -1,6 +1,7 @@
 package com.pat.crewhive.company;
 
 import com.pat.crewhive.authuser.AuthResponseDTO;
+import com.pat.crewhive.common.audit.SoftDeleteSupport;
 import com.pat.crewhive.user.UserWithTimeParamsDTO;
 import com.pat.crewhive.manager.Role;
 import com.pat.crewhive.user.User;
@@ -241,7 +242,9 @@ public class CompanyService {
     })
     public void deleteCompany(UUID companyId, UUID managerId) {
 
-        if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
+        Company company = companyAccessService.getCompanyById(companyId);
+
+        if(companyAccessService.isNotPartOfCompany(managerId, company.getCompanyId())) {
 
             log.error("deleteCompany: Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
@@ -249,7 +252,8 @@ public class CompanyService {
 
         companyAccessService.removeCompanyFromUsers(companyId);
 
-        companyRepository.deleteById(companyId);
+        User manager = userService.getUserById(managerId);
+        SoftDeleteSupport.softDelete(companyRepository, company, manager);
 
         log.info("Company with ID {} deleted successfully", companyId);
     }
