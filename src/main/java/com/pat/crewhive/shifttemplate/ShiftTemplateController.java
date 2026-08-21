@@ -1,5 +1,6 @@
 package com.pat.crewhive.shifttemplate;
 
+import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -65,12 +67,13 @@ public class ShiftTemplateController implements ShiftTemplateControllerInterface
     @Override
     @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/delete/{shiftName}/company/{companyId}")
-    public ResponseEntity<?> deleteShiftTemplate(@PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
+    public ResponseEntity<?> deleteShiftTemplate(@AuthenticationPrincipal CustomUserDetails cud,
+                                                 @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
                                                  @PathVariable @NotNull UUID companyId) {
 
         log.info("Received request to delete shift template '{}' for company ID {}", shiftName, companyId);
 
-        shiftTemplateService.deleteShiftTemplate(shiftName, companyId);
+        shiftTemplateService.deleteShiftTemplate(shiftName, companyId, cud.getUserId());
 
         return ResponseEntity.ok().build();
     }
