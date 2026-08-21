@@ -7,6 +7,7 @@ import com.pat.crewhive.manager.RoleRepository;
 import com.pat.crewhive.manager.UserRole;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.shifttemplate.ShiftTemplateRepository;
 import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
@@ -45,13 +46,15 @@ class CompanyServiceTest {
     private RefreshTokenService refreshTokenService;
     @Mock
     private CompanyAccessService companyAccessService;
+    @Mock
+    private ShiftTemplateRepository shiftTemplateRepository;
 
     private CompanyService companyService;
 
     @BeforeEach
     void setUp() {
         companyService = new CompanyService(
-                companyRepository, userService, stringUtils, roleRepository, jwtService, refreshTokenService, companyAccessService
+                companyRepository, userService, stringUtils, roleRepository, jwtService, refreshTokenService, companyAccessService, shiftTemplateRepository
         );
     }
 
@@ -124,6 +127,7 @@ class CompanyServiceTest {
         when(companyAccessService.getCompanyById(companyId)).thenReturn(company);
         when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
         when(userService.getUserById(managerId)).thenReturn(manager);
+        when(companyRepository.save(company)).thenReturn(company);
 
         companyService.deleteCompany(companyId, managerId);
 
@@ -135,5 +139,23 @@ class CompanyServiceTest {
         org.mockito.InOrder order = org.mockito.Mockito.inOrder(companyRepository);
         order.verify(companyRepository).save(company);
         order.verify(companyRepository).delete(company);
+    }
+
+    @Test
+    void deleteCompany_throwsWhenCompanyStillHasActiveRoles() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        Company company = new Company();
+        ReflectionTestUtils.setField(company, "companyId", companyId);
+
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(company);
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(roleRepository.existsByCompany_CompanyId(companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.deleteCompany(companyId, managerId))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(companyAccessService, never()).removeCompanyFromUsers(any());
+        verify(companyRepository, never()).save(any());
     }
 }

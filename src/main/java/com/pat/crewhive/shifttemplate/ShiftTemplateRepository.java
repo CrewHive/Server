@@ -10,4 +10,6 @@ public interface ShiftTemplateRepository extends JpaRepository<ShiftTemplate, UU
     Optional<ShiftTemplate> findByShiftNameAndCompanyCompanyId(String shiftName, UUID companyId);
 
     boolean existsByShiftNameAndCompanyCompanyId(String shiftName, UUID companyId);
+
+    boolean existsByCompanyCompanyId(UUID companyId);
 }
