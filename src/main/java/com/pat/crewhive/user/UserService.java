@@ -272,9 +272,14 @@ public class UserService {
 
 
     /**
-     * Deletes a user account.
+     * Deactivates a user account (soft-delete).
+     * <p>
+     * The row is not physically removed: historical records tied to the user
+     * (e.g. worked shifts) must keep their reference for payroll/audit purposes.
+     * The refresh token is revoked so the account can no longer obtain new access
+     * tokens, and the account is rejected at login while deactivated.
      *
-     * @param userId the username of the user to delete
+     * @param userId the ID of the user to deactivate
      */
     @Transactional
     public void deleteAccount(UUID userId) {
@@ -283,9 +288,10 @@ public class UserService {
 
         refreshTokenService.deleteTokenByUser(user);
 
-        userRepository.delete(user);
+        user.setActive(false);
+        userRepository.save(user);
 
-        log.info("Deleted account for user: {}", userId);
+        log.info("Deactivated account for user: {}", userId);
     }
 
 

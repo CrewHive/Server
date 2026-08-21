@@ -79,6 +79,12 @@ public class AuthService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
+        if (!user.isActive()) {
+            log.error("Login attempt for deactivated account: {}", normalizedEmail);
+
+            throw new BadCredentialsException("Account disabled");
+        }
+
         log.info("User {} authenticated successfully", normalizedEmail);
 
         RefreshToken rt = refreshTokenService.getRefreshTokenByUser(user);
