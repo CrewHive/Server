@@ -1,8 +1,11 @@
 package com.pat.crewhive.shiftworked;
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -17,8 +20,13 @@ import java.util.UUID;
         @Index(name = "idx_shift_worked_start_shift", columnList = "start_shift"),
         @Index(name = "idx_shift_worked_end_shift", columnList = "end_shift"),
         @Index(name = "idx_shift_worked_date", columnList = "shift_date"),
+        @Index(name = "idx_shift_worked_active", columnList = "active"),
+        @Index(name = "idx_shift_worked_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_shift_worked_deleted_by", columnList = "deleted_by")
 })
-public class ShiftWorked {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE shift_worked SET active = false, deleted_at = now() WHERE shift_worked_id = ?")
+public class ShiftWorked extends SoftDeletableEntity {
 
     private static final int HOURS_SCALE = 2;
     private static final RoundingMode HOURS_ROUNDING = RoundingMode.HALF_UP;
