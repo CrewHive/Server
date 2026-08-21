@@ -79,11 +79,11 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @DeleteMapping(path = "/delete/{eventId}", produces = "application/json")
-    public ResponseEntity<String> deleteEvent(@PathVariable @NotNull UUID eventId) {
+    public ResponseEntity<String> deleteEvent(@AuthenticationPrincipal CustomUserDetails cud, @PathVariable @NotNull UUID eventId) {
 
         log.info("Received request to delete event with id: {}", eventId);
 
-        eventService.deleteEvent(eventId);
+        eventService.deleteEvent(eventId, cud.getUserId());
         return ResponseEntity.ok("Evento eliminato con successo");
     }
 }

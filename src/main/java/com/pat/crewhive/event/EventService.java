@@ -1,5 +1,6 @@
 package com.pat.crewhive.event;
 
+import com.pat.crewhive.common.audit.SoftDeleteSupport;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.user.UserService;
@@ -227,15 +228,14 @@ public class EventService {
      * @throws ResourceNotFoundException if the event does not exist.
      */
     @Transactional
-    public void deleteEvent(UUID eventId) {
+    public void deleteEvent(UUID eventId, UUID actorId) {
 
         log.info("Deleting event with ID: {}", eventId);
 
-        if (!eventRepository.existsById(eventId)) {
-            throw new ResourceNotFoundException("Evento non trovato con ID: " + eventId);
-        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + eventId));
 
-        eventUsersRepository.deleteByEventId(eventId);
-        eventRepository.deleteById(eventId);
+        User actor = userService.getUserById(actorId);
+        SoftDeleteSupport.softDelete(eventRepository, event, actor);
     }
 }
