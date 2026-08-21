@@ -1,8 +1,11 @@
 package com.pat.crewhive.event;
 
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -15,9 +18,14 @@ import java.util.UUID;
 @Table(name = "event", indexes = {
         @Index(name = "idx_event_start_event", columnList = "start_event"),
         @Index(name = "idx_event_end_event", columnList = "end_event"),
-        @Index(name = "idx_event_date", columnList = "date")
+        @Index(name = "idx_event_date", columnList = "date"),
+        @Index(name = "idx_event_active", columnList = "active"),
+        @Index(name = "idx_event_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_event_deleted_by", columnList = "deleted_by")
 })
-public class Event {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE event SET active = false, deleted_at = now() WHERE event_id = ?")
+public class Event extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -46,7 +54,7 @@ public class Event {
     @Column(name = "color", nullable = false)
     private String color;
 
-    @OneToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_type_id", nullable = false)
     private EventTypeEntity eventType;
 
