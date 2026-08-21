@@ -129,4 +129,42 @@ class ShiftProgrammedServiceTest {
         assertThatThrownBy(() -> shiftProgrammedService.getUsersInShift(shiftId))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
+
+    @Test
+    void patchShift_reactivatesPreviouslySoftDeletedLink_insteadOfCreatingDuplicate() {
+        UUID shiftId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        ShiftProgrammed shift = new ShiftProgrammed();
+        ReflectionTestUtils.setField(shift, "shiftProgrammedId", shiftId);
+        shift.setShiftName("Turno mattina");
+        shift.setStart(OffsetDateTime.parse("2026-08-21T09:00:00Z"));
+        shift.setEnd(OffsetDateTime.parse("2026-08-21T17:00:00Z"));
+        shift.setColor("#00FF00");
+
+        User user = buildUser(userId, "Mario", "Rossi");
+
+        ShiftUser softDeletedLink = new ShiftUser(shift, user);
+        softDeletedLink.markDeleted(user);
+
+        PatchShiftProgrammedDTO dto = new PatchShiftProgrammedDTO(
+                shiftId, "Turno mattina", null,
+                OffsetDateTime.parse("2026-08-21T09:00:00Z"),
+                OffsetDateTime.parse("2026-08-21T17:00:00Z"),
+                "00FF00", java.util.Set.of(userId)
+        );
+
+        when(shiftProgrammedRepository.findByIdWithWorkers(shiftId)).thenReturn(java.util.Optional.of(shift));
+        when(stringUtils.normalizeString("Turno mattina")).thenReturn("Turno mattina");
+        when(userService.getUsersByIds(java.util.Set.of(userId))).thenReturn(List.of(user));
+        when(shiftUserRepository.findByIdIncludingDeleted(shiftId, userId)).thenReturn(java.util.Optional.of(softDeletedLink));
+
+        shiftProgrammedService.patchShift(UUID.randomUUID(), dto);
+
+        assertThat(softDeletedLink.isActive()).isTrue();
+        assertThat(softDeletedLink.getDeletedAt()).isNull();
+        assertThat(softDeletedLink.getDeletedBy()).isNull();
+        assertThat(shift.getUsers()).hasSize(1);
+        assertThat(shift.getUsers().iterator().next()).isSameAs(softDeletedLink);
+    }
 }
