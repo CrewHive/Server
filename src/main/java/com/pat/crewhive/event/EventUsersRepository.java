@@ -1,12 +1,12 @@
 package com.pat.crewhive.event;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface EventUsersRepository extends JpaRepository<EventUsers, EventUsersId> {
@@ -21,7 +21,12 @@ public interface EventUsersRepository extends JpaRepository<EventUsers, EventUse
     List<Event> findEventsByUserId(@Param("userId") UUID userId);
 
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from EventUsers eu where eu.event.eventId = :eventId")
-    int deleteByEventId(@Param("eventId") UUID eventId);
+    /**
+     * Cerca una riga EventUsers per la sua chiave composita bypassando il filtro
+     * {@code active = true} di {@code @SQLRestriction}, così un legame soft-deleted
+     * in passato può essere trovato e riattivato invece di collidere sulla sua chiave
+     * primaria quando lo stesso utente viene aggiunto di nuovo allo stesso evento.
+     */
+    @Query(value = "SELECT * FROM event_users WHERE user_id = :userId AND event_id = :eventId", nativeQuery = true)
+    Optional<EventUsers> findByIdIncludingDeleted(@Param("userId") UUID userId, @Param("eventId") UUID eventId);
 }
