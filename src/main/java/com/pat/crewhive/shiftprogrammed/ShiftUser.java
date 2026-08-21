@@ -1,7 +1,5 @@
 package com.pat.crewhive.shiftprogrammed;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
 
@@ -17,19 +15,14 @@ public class ShiftUser {
     @EmbeddedId
     private ShiftUserId id = new ShiftUserId();
 
-    //todo per il refactoring per la beta togliere jsonignore e comincia a creare i dto per i service e a modificare le query per dare le info che servono
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_programmed_id", nullable = false)
-    @JsonIgnore
     @MapsId("shiftProgrammedId")
-    @JsonBackReference
     private ShiftProgrammed shift;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
     @MapsId("userId")
-    @JsonBackReference
     private User user;
 
     public ShiftUser() {

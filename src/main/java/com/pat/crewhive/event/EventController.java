@@ -40,8 +40,8 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @GetMapping(path = "/{temp}/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<Event>> getEventsByPeriodAndUser(@PathVariable @NotNull Period temp,
-                                                                @PathVariable @NotNull UUID userId) {
+    public ResponseEntity<List<EventOutputDTO>> getEventsByPeriodAndUser(@PathVariable @NotNull Period temp,
+                                                                         @PathVariable @NotNull UUID userId) {
 
         log.info("Received request to get events for user {} in period {}", userId, temp);
 
@@ -50,7 +50,7 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @GetMapping(path = "/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<Event>> getAllEventsByUser(@PathVariable @NotNull UUID userId) {
+    public ResponseEntity<List<EventOutputDTO>> getAllEventsByUser(@PathVariable @NotNull UUID userId) {
 
         log.info("Received request to get all events for user {}", userId);
 
@@ -59,8 +59,8 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @GetMapping(path = "/public/{temp}", produces = "application/json")
-    public ResponseEntity<List<Event>> getAllPublicEventsByCompanyAndPeriod(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                            @PathVariable @NotNull Period temp) {
+    public ResponseEntity<List<EventOutputDTO>> getAllPublicEventsByCompanyAndPeriod(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                                     @PathVariable @NotNull Period temp) {
 
         UUID companyId = cud.getCompanyId();
 

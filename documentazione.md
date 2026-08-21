@@ -548,17 +548,17 @@ Indici: `idx_refreshtoken` su id, `idx_refreshtoken_user_id` su `user_id`.
 - `email` (String, `unique = true`).
 - `firstName`, `lastName` (String, not null).
 - `password` (String, not null; `@JsonProperty(access = WRITE_ONLY)` — mai serializzato in output).
-- `company` (`@ManyToOne(LAZY)`, `@JsonIgnore`).
+- `company` (`@ManyToOne(LAZY)`).
 - `isWorking` (boolean).
-- `personalEvents` (`Set<EventUsers>`, `@OneToMany(mappedBy="user", cascade=ALL, orphanRemoval=true, LAZY)`, `@JsonManagedReference`).
+- `personalEvents` (`Set<EventUsers>`, `@OneToMany(mappedBy="user", cascade=ALL, orphanRemoval=true, LAZY)`).
 - `role` (`UserRole`, `@OneToOne(mappedBy="user", cascade=ALL, orphanRemoval=true)`).
 - `contractType` (`ContractType`, `@Enumerated(STRING)`).
 - `workableHoursPerWeek` (int).
 - `overtimeHours`, `vacationDaysAccumulated`, `vacationDaysTaken`, `leaveDaysAccumulated`, `leaveDaysTaken` (BigDecimal, not null).
 - `shiftWorked` (`Set<ShiftWorked>`, `@OneToMany(mappedBy="user", cascade=ALL, orphanRemoval=true, LAZY)`).
-- `shiftUsers` (`Set<ShiftUser>`, `@OneToMany(mappedBy="user", cascade=ALL, orphanRemoval=true, LAZY)`, `@JsonManagedReference`).
+- `shiftUsers` (`Set<ShiftUser>`, `@OneToMany(mappedBy="user", cascade=ALL, orphanRemoval=true, LAZY)`).
 
-**Annotazioni Jackson:** `@JsonIdentityInfo(generator=PropertyGenerator.class, property="userId")` per evitare cicli di serializzazione (es. `User` → `ShiftUser` → `User`).
+**Annotazioni Jackson:** l'entity non viene più serializzata direttamente in nessuna risposta HTTP (vedi `EventOutputDTO`/`ShiftParticipantDTO`), quindi `@JsonIdentityInfo`, `@JsonManagedReference`/`@JsonBackReference` e `@JsonIgnore` sono stati rimossi; resta solo `password` con `@JsonProperty(access = WRITE_ONLY)`, mantenuto come rete di sicurezza anche se non più strettamente necessario.
 
 **Costruttore custom:** `User(String email, String firstName, String lastName, String password)` — imposta `isWorking=false`, `workableHoursPerWeek=0`, tutti i contatori a `BigDecimal.ZERO`. Usato in fase di registrazione.
 
@@ -881,9 +881,9 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 
 **Scopo:** Evento di calendario (pubblico o privato) con più partecipanti, tramite la entity di collegamento `EventUsers`.
 
-**Campi:** `eventId` (PK, IDENTITY), `version` (`@Version`, optimistic locking), `eventName`, `description` (nullable), `start`/`end` (`OffsetDateTime`), `date` (`LocalDate`, derivata automaticamente da `start`), `color`, `eventType` (`EventType`, `@Enumerated(STRING)`), `users` (`Set<EventUsers>`, `@OneToMany(mappedBy="event", cascade=ALL, orphanRemoval=true)`).
+**Campi:** `eventId` (PK, IDENTITY), `version` (`@Version`, optimistic locking), `eventName`, `description` (nullable), `start`/`end` (`OffsetDateTime`), `date` (`LocalDate`, derivata automaticamente da `start`), `color`, `eventType` (relazione `@OneToOne` verso `EventTypeEntity`), `users` (`Set<EventUsers>`, `@OneToMany(mappedBy="event", cascade=ALL, orphanRemoval=true)`).
 
-**Annotazioni Jackson:** `@JsonIdentityInfo` su `eventId` (evita loop di serializzazione). Commento `//todo togli annotazioni json` segnala intenzione futura di rimuoverle (probabile passaggio a DTO di risposta).
+**Annotazioni Jackson:** nessuna — l'entity non viene più serializzata direttamente, la risposta HTTP usa `EventOutputDTO` (vedi sotto).
 
 **Metodi:**
 - `addUser(User u): void` — aggiunge l'utente se non già presente (check via stream `anyMatch`), crea `EventUsers(u, this)`, aggiorna entrambi i lati della relazione.
@@ -896,7 +896,7 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 ### `com.pat.crewhive.event.EventUsers`
 **Tipo:** Entity JPA (join), tabella `event_users`, vincolo unicità su `(event_id, user_id)`.
 
-**Campi:** `id` (`EventUsersId`, `@EmbeddedId`), `user` (`@ManyToOne(optional=false, LAZY)`, `@MapsId("userId")`, `@JsonBackReference`), `event` (`@ManyToOne(optional=false, LAZY)`, `@MapsId("eventId")`, `@JsonBackReference`).
+**Campi:** `id` (`EventUsersId`, `@EmbeddedId`), `user` (`@ManyToOne(optional=false, LAZY)`, `@MapsId("userId")`), `event` (`@ManyToOne(optional=false, LAZY)`, `@MapsId("eventId")`).
 
 **Costruttore:** `EventUsers(User user, Event personalEvent)` — la chiave composita è derivata automaticamente via `@MapsId`.
 
@@ -905,6 +905,16 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 
 ### `com.pat.crewhive.event.EventType`
 **Tipo:** Enum — `PUBLIC("Public")`, `PRIVATE("Private")`, con `getLabel()`.
+
+### `com.pat.crewhive.event.EventParticipantDTO`
+**Tipo:** Record — rappresentazione leggera di un partecipante a un evento (`userId`, `firstName`, `lastName`), usata al posto dell'entity `User` dentro `EventOutputDTO`.
+
+### `com.pat.crewhive.event.EventOutputDTO`
+**Tipo:** Record — DTO di risposta per `Event`, esposto al client al posto dell'entity JPA.
+
+**Campi:** `eventId`, `name`, `description`, `start`, `end`, `date`, `color`, `eventType` (nome dell'`EventTypeEntity`, come `String`), `participants` (`List<EventParticipantDTO>`).
+
+**Metodo:** `static from(Event event): EventOutputDTO` — mappa l'entity e i suoi `EventUsers` nella lista di partecipanti.
 
 ---
 
@@ -935,9 +945,9 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 **Metodi pubblici:**
 
 - `createEvent(CreateEventDTO dto, String role): Long` — `@Transactional`. Normalizza nome; `IllegalArgumentException` se `start > end`; se `role == "ROLE_USER"` e `eventType == PUBLIC`, `AuthorizationDeniedException("Non sei autorizzato a creare eventi pubblici")` (solo ruoli diversi da `ROLE_USER` possono creare eventi pubblici); risolve gli utenti, crea l'evento, salva, ritorna l'id.
-- `getEventsByPeriodAndUser(Period period, Long userId): List<Event>` — readOnly. Calcola `from`/`to` con `DateUtils`. Commento `//todo ritorna un DTO`.
-- `getUserEvents(Long userId): List<Event>` — readOnly. Tutti gli eventi (senza filtro temporale).
-- `getPublicEventsByCompanyAndPeriod(Long companyId, Period period): List<Event>` — readOnly. Solo eventi `PUBLIC`.
+- `getEventsByPeriodAndUser(Period period, Long userId): List<EventOutputDTO>` — readOnly. Calcola `from`/`to` con `DateUtils`, mappa i risultati con `EventOutputDTO::from`.
+- `getUserEvents(Long userId): List<EventOutputDTO>` — readOnly. Tutti gli eventi (senza filtro temporale), mappati con `EventOutputDTO::from`.
+- `getPublicEventsByCompanyAndPeriod(Long companyId, Period period): List<EventOutputDTO>` — readOnly. Solo eventi `PUBLIC`, mappati con `EventOutputDTO::from`.
 - `patchEvent(PatchEventDTO dto): Long` — `@Transactional`. Valida `start`/`end`; carica l'evento (`ResourceNotFoundException` altrimenti); aggiorna i campi; se `userId` non è `null`, calcola diff (`toRemove`/`toAdd`) tra partecipanti attuali e richiesti e sincronizza; se `userId` è `null`, i partecipanti non vengono toccati.
 - `deleteEvent(Long eventId): void` — `@Transactional`. Verifica esistenza (`ResourceNotFoundException` altrimenti), cancella esplicitamente i link `EventUsers`, poi l'evento.
 
@@ -951,9 +961,9 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 
 **Endpoint:**
 - `POST /event/create` — `createEvent(cud, @RequestBody @Valid CreateEventDTO)`: usa `cud.getRole()` per il controllo su eventi pubblici (fatto nel service, non `@PreAuthorize`).
-- `GET /event/{temp}/user/{userId}` — nessun controllo che `userId` corrisponda all'utente autenticato.
-- `GET /event/user/{userId}` — stessa osservazione.
-- `GET /event/public/{temp}` — usa `cud.getCompanyId()`, quindi vincolato alla company dell'utente autenticato.
+- `GET /event/{temp}/user/{userId}` — ritorna `List<EventOutputDTO>`; nessun controllo che `userId` corrisponda all'utente autenticato.
+- `GET /event/user/{userId}` — ritorna `List<EventOutputDTO>`; stessa osservazione.
+- `GET /event/public/{temp}` — ritorna `List<EventOutputDTO>`; usa `cud.getCompanyId()`, quindi vincolato alla company dell'utente autenticato.
 - `PATCH /event/patch` — nessun controllo di autorizzazione esplicito nel controller.
 - `DELETE /event/delete/{eventId}`.
 
@@ -1027,8 +1037,15 @@ Gestisce i turni pianificati (calendario futuro), con assegnazione multi-utente 
 ### `com.pat.crewhive.shiftprogrammed.CreateShiftProgrammedDTO`
 **Campi e validazioni:** `name` (`@NotBlank`, `@NoHtml`, `@Size(3,32)`), `description` (`@NoHtml`, `@Size(max=256)`, opzionale), `start`/`end` (`@NotNull`), `color` (`@NotBlank`, `@NoHtml`, `@Size(6,6)`), `userId` (`Set<Long>`, nessuna validazione esplicita).
 
-### `com.pat.crewhive.shiftprogrammed.NameAndUserIdForShiftProgrammedDTO`
-**Scopo:** liste parallele (`firstName`, `lastName`, `userId`, stesso indice = stesso utente) + `shiftProgrammedId`. Design segnalato dal codice stesso come da rifattorizzare (vedi TODO in `ShiftProgrammedOutputDTO`).
+### `com.pat.crewhive.shiftprogrammed.ShiftParticipantDTO`
+**Tipo:** Record — rappresentazione leggera di un utente assegnato a un turno (`userId`, `firstName`, `lastName`), usata al posto dell'entity `User` sia dentro `ShiftProgrammedItemDTO` sia come tipo di ritorno di `getUsersInShift`. Sostituisce il precedente `NameAndUserIdForShiftProgrammedDTO` (liste parallele firstName/lastName/userId, rimosso).
+
+### `com.pat.crewhive.shiftprogrammed.ShiftProgrammedItemDTO`
+**Tipo:** Record — DTO di risposta per `ShiftProgrammed`, esposto al client al posto dell'entity JPA.
+
+**Campi:** `shiftProgrammedId`, `shiftName`, `description`, `start`, `end`, `date`, `color`, `users` (`List<ShiftParticipantDTO>`).
+
+**Metodo:** `static from(ShiftProgrammed shift): ShiftProgrammedItemDTO` — mappa l'entity e i suoi `ShiftUser` nella lista di partecipanti.
 
 ### `com.pat.crewhive.shiftprogrammed.PatchShiftProgrammedDTO`
 **Campi e validazioni:** `shiftProgrammedId` (`@NotNull`), `name` (`@NotBlank`, `@NoHtml`, nessun `@Size` — incoerenza rispetto a `CreateShiftProgrammedDTO`), `description` (`@NoHtml`, `@Size(max=100)` — diverso dal max=256 di creazione), `start`/`end` (`@NotNull`), `color` (`@NotBlank`, `@NoHtml`, `@Size(6,6)`), `userId` (`Set<Long>`, se valorizzato ridefinisce i partecipanti).
@@ -1038,7 +1055,9 @@ Gestisce i turni pianificati (calendario futuro), con assegnazione multi-utente 
 ### `com.pat.crewhive.shiftprogrammed.ShiftProgrammed`
 **Tipo:** Entity JPA, tabella `shift_programmed`, indici su `shift_date`, `start_shift`.
 
-**Campi:** `shiftProgrammedId` (PK, IDENTITY), `version` (`@Version`), `shiftName`, `start`/`end`, `date` (derivata da `start`), `description`, `color`, `users` (`Set<ShiftUser>`, `@OneToMany(mappedBy="shift", cascade=ALL, orphanRemoval=true)`, `@JsonManagedReference`).
+**Campi:** `shiftProgrammedId` (PK, IDENTITY), `version` (`@Version`), `shiftName`, `start`/`end`, `date` (derivata da `start`), `description`, `color`, `users` (`Set<ShiftUser>`, `@OneToMany(mappedBy="shift", cascade=ALL, orphanRemoval=true)`).
+
+**Annotazioni Jackson:** nessuna — l'entity non viene più serializzata direttamente, la risposta HTTP usa `ShiftProgrammedItemDTO`/`ShiftParticipantDTO` (vedi sopra).
 
 **Metodi:**
 - `Costruttore ShiftProgrammed(Set<User> user, ...)` — non usato da `ShiftProgrammedService.createShift` (che usa costruttore vuoto + setter, probabile codice residuo/alternativo).
@@ -1055,7 +1074,7 @@ Gestisce i turni pianificati (calendario futuro), con assegnazione multi-utente 
 - `POST /shift-programmed/create` — usa l'utente autenticato come `creatorUserId` (solo per invalidazione cache, nessun controllo di autorizzazione esplicito).
 - `GET /shift-programmed/period/{period}/user/{userId}` — nessun controllo che l'utente autenticato coincida con `userId`.
 - `GET /shift-programmed/period/{period}/company}` — **nota**: il path contiene un refuso, la graffa `}` finale è parte letterale del path.
-- `GET /shift-programmed/users/{shiftId}`.
+- `GET /shift-programmed/users/{shiftId}` — ritorna `List<ShiftParticipantDTO>`.
 - `PATCH /shift-programmed/patch`.
 - `DELETE /shift-programmed/delete/{shiftId}`.
 
@@ -1065,7 +1084,7 @@ Gestisce i turni pianificati (calendario futuro), con assegnazione multi-utente 
 **Tipo:** Interfaccia Swagger. Nessuna logica.
 
 ### `com.pat.crewhive.shiftprogrammed.ShiftProgrammedOutputDTO`
-**Campi:** `shifts` (`List<ShiftProgrammed>` — espone direttamente l'entity JPA, non un DTO puro; TODO nel codice per un DTO dedicato), `users` (`List<NameAndUserIdForShiftProgrammedDTO>`, stesso ordine di `shifts`).
+**Campi:** `shifts` (`List<ShiftProgrammedItemDTO>`) — non espone più l'entity JPA né le liste parallele di `NameAndUserIdForShiftProgrammedDTO` (rimosso); ogni turno porta con sé i propri partecipanti in `ShiftProgrammedItemDTO.users()`.
 
 ---
 
@@ -1083,9 +1102,9 @@ Gestisce i turni pianificati (calendario futuro), con assegnazione multi-utente 
 **Metodi pubblici:**
 
 - `createShift(Long creatorUserId, CreateShiftProgrammedDTO dto): Long` — `@Transactional`, `@Caching(evict=...)` su `shiftsByUser`/`shiftsByCompany` per `creatorUserId`, solo periodi **DAY/WEEK/MONTH** (non TRIMESTER/SEMESTER/YEAR — possibile incompletezza: viste in cache per quei periodi potrebbero restare stale). Valida `start ≤ end`, risolve utenti, salva, ritorna l'id.
-- `getShiftsByPeriodAndUser(Period period, Long userId): ShiftProgrammedOutputDTO` — `@Cacheable("shiftsByUser", key="userId:period")`. Costruisce liste parallele nome/cognome/id per turno.
+- `getShiftsByPeriodAndUser(Period period, Long userId): ShiftProgrammedOutputDTO` — `@Cacheable("shiftsByUser", key="userId:period")`. Mappa ogni `ShiftProgrammed` in `ShiftProgrammedItemDTO` tramite `ShiftProgrammedItemDTO::from`.
 - `getShiftsByPeriodAndCompany(Period period, Long requesterUserId): ShiftProgrammedOutputDTO` — `@Cacheable("shiftsByCompany", key="requesterUserId:period")`. La chiave si basa sull'utente richiedente, non sull'azienda: utenti diversi della stessa company generano voci di cache distinte anche per lo stesso risultato (meno efficiente ma corretto).
-- `getUsersInShift(Long shiftId): List<User>` — `@Cacheable("usersInShift", key="shiftId")`. `ResourceNotFoundException` se il turno non esiste.
+- `getUsersInShift(Long shiftId): List<ShiftParticipantDTO>` — `@Cacheable("usersInShift", key="shiftId")`. `ResourceNotFoundException` se il turno non esiste.
 - `patchShift(Long requesterUserId, PatchShiftProgrammedDTO dto): Long` — `@Transactional`. Se `userId` è un Set vuoto (non null), rimuove **tutti** gli utenti assegnati; se `null`, non tocca la relazione — comportamento distinto tra "non specificato" e "svuota". Evict di `usersInShift` + `shiftsByUser`/`shiftsByCompany` (DAY/WEEK/MONTH).
 - `deleteShift(Long requesterUserId, Long shiftId): void` — `@Transactional`. `ResourceNotFoundException` se assente. Cancellazione esplicita di `ShiftUser` (ridondante rispetto a `orphanRemoval`, ma eseguita comunque, probabilmente per bulk delete via query diretta). Stessa strategia di evict di `patchShift`.
 
@@ -1094,7 +1113,7 @@ Gestisce i turni pianificati (calendario futuro), con assegnazione multi-utente 
 ### `com.pat.crewhive.shiftprogrammed.ShiftUser`
 **Tipo:** Entity JPA (join), tabella `shift_user`, vincolo unicità su `(shift_programmed_id, user_id)`.
 
-**Campi:** `id` (`ShiftUserId`, `@EmbeddedId`), `shift` (`@ManyToOne(optional=false, LAZY)`, `@MapsId`, `@JsonIgnore`+`@JsonBackReference`), `user` (idem).
+**Campi:** `id` (`ShiftUserId`, `@EmbeddedId`), `shift` (`@ManyToOne(optional=false, LAZY)`, `@MapsId`), `user` (idem, nessuna annotazione Jackson residua).
 
 ### `com.pat.crewhive.shiftprogrammed.ShiftUserId`
 **Tipo:** `@Embeddable`, `Serializable` — `(shiftProgrammedId, userId)`.

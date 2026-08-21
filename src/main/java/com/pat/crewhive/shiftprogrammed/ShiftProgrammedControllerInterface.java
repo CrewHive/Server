@@ -1,7 +1,6 @@
 package com.pat.crewhive.shiftprogrammed;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.user.User;
 import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.common.Period;
 import io.swagger.v3.oas.annotations.Operation;
@@ -127,7 +126,7 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<User>> getUsersByShift(@PathVariable @NotNull UUID shiftId);
+    ResponseEntity<List<ShiftParticipantDTO>> getUsersByShift(@PathVariable @NotNull UUID shiftId);
 
 
     @Operation(summary = "Update an existing programmed shift",
