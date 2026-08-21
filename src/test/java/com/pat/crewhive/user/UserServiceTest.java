@@ -137,6 +137,7 @@ class UserServiceTest {
         User user = buildUser(USER_ID, null);
 
         when(userRepository.findById(USER_ID)).thenReturn(java.util.Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
 
         userService.deleteAccount(USER_ID);
 
