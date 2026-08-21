@@ -85,6 +85,22 @@ public class User extends SoftDeletableEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<ShiftUser> shiftUsers = new HashSet<>();
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
+    @JoinColumn(name = "user_user_id", nullable = false)
+    private UserPreferences userPreferences;
+
+    public UserPreferences getUserPreferences() {
+        return userPreferences;
+    }
+
+    public void setUserPreferences(UserPreferences userPreferences) {
+        this.userPreferences = userPreferences;
+
+        if (userPreferences != null && userPreferences.getUser() != this) {
+            userPreferences.setUser(this);
+        }
+    }
+
     public User() {
     }
 
