@@ -7,11 +7,11 @@ import com.pat.crewhive.manager.UserRole;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserRepository;
-import com.pat.crewhive.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +22,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,8 +42,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-    @Mock
-    private UserService userService;
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -75,7 +74,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         authService = new AuthService(
-                userService, jwtService, refreshTokenService, userRepository,
+                jwtService, refreshTokenService, userRepository,
                 roleService, passwordUtil, emailUtil, stringUtils, tokenBlackListService
         );
     }
@@ -103,7 +102,7 @@ class AuthServiceTest {
         RefreshToken existingToken = new RefreshToken(UUID.randomUUID(), "old-token", user, LocalDate.now().plusDays(1));
 
         when(stringUtils.normalizeString("mario.rossi@example.com")).thenReturn("mario.rossi@example.com");
-        when(userService.getUserByEmail("mario.rossi@example.com")).thenReturn(user);
+        when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches("P@ssw0rd!", "encoded-pwd")).thenReturn(false);
         when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(existingToken);
         when(jwtService.generateToken(USER_ID, "mario.rossi@example.com", "Mario", "Rossi", "ROLE_USER", null))
@@ -124,7 +123,7 @@ class AuthServiceTest {
         User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
 
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
-        when(userService.getUserByEmail(anyString())).thenReturn(user);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches(anyString(), anyString())).thenReturn(false);
         when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(null);
         when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), anyString(), any()))
@@ -144,7 +143,7 @@ class AuthServiceTest {
         User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", company);
 
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
-        when(userService.getUserByEmail(anyString())).thenReturn(user);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches(anyString(), anyString())).thenReturn(false);
         when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(null);
         when(refreshTokenService.generateRefreshToken(user)).thenReturn("new-refresh-token");
@@ -164,7 +163,7 @@ class AuthServiceTest {
         User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
 
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
-        when(userService.getUserByEmail(anyString())).thenReturn(user);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches("wrong-password", "encoded-pwd")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.login(request))
@@ -172,6 +171,35 @@ class AuthServiceTest {
                 .hasMessage("Invalid credentials");
 
         // fail fast: nothing token-related should happen once the password check fails
+        verifyNoInteractions(refreshTokenService, jwtService);
+    }
+
+    @Test
+    void login_throwsAccountDisabled_whenUserIsDeactivated() {
+        AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "P@ssw0rd!");
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.empty());
+        when(userRepository.existsInactiveByEmail("mario.rossi@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Account disabled");
+
+        verifyNoInteractions(refreshTokenService, jwtService);
+    }
+
+    @Test
+    void login_throwsUserNotFound_whenEmailDoesNotExistAtAll() {
+        AuthRequestDTO request = new AuthRequestDTO("nobody@example.com", "P@ssw0rd!");
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("nobody@example.com");
+        when(userRepository.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
+        when(userRepository.existsInactiveByEmail("nobody@example.com")).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(ResourceNotFoundException.class);
+
         verifyNoInteractions(refreshTokenService, jwtService);
     }
 
