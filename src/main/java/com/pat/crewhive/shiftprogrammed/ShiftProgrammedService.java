@@ -3,6 +3,7 @@ package com.pat.crewhive.shiftprogrammed;
 
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.common.Period;
+import com.pat.crewhive.common.audit.SoftDeleteSupport;
 import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
@@ -312,13 +313,10 @@ public class ShiftProgrammedService {
 
         log.info("deleteShift: Deleting shift with id: {}", shiftId);
 
-        if (!shiftProgrammedRepository.existsById(shiftId)) {
+        ShiftProgrammed shift = shiftProgrammedRepository.findById(shiftId)
+                .orElseThrow(() -> new ResourceNotFoundException("Shift not found with ID: " + shiftId));
 
-            log.error("deleteShift: Shift with id {} does not exist", shiftId);
-            throw new ResourceNotFoundException("Shift not found with ID: " + shiftId);
-        }
-
-        shiftUserRepository.deleteByShiftId(shiftId);
-        shiftProgrammedRepository.deleteById(shiftId);
+        User actor = userService.getUserById(requesterUserId);
+        SoftDeleteSupport.softDelete(shiftProgrammedRepository, shift, actor);
     }
 }
