@@ -257,12 +257,19 @@ public class ShiftProgrammedService {
                     userService.getUsersByIds(toRemove).forEach(shift::removeUser);
                 }
             }
-            // Aggiungi i nuovi
+            // Aggiungi i nuovi (riattivando un legame soft-deleted se esiste già per
+            // questa coppia utente/turno, per non collidere sulla sua PK)
             if (!newIds.isEmpty()) {
                 Set<UUID> toAdd = new HashSet<>(newIds);
                 toAdd.removeAll(current);
                 if (!toAdd.isEmpty()) {
-                    userService.getUsersByIds(toAdd).forEach(shift::addUser);
+                    for (User user : userService.getUsersByIds(toAdd)) {
+                        ShiftUser link = shiftUserRepository
+                                .findByIdIncludingDeleted(shift.getShiftProgrammedId(), user.getUserId())
+                                .map(existing -> { existing.restore(); return existing; })
+                                .orElseGet(() -> new ShiftUser(shift, user));
+                        shift.attachUser(link);
+                    }
                 }
             } else {
 

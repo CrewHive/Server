@@ -134,6 +134,18 @@ public class ShiftProgrammed extends SoftDeletableEntity {
         }
     }
 
+    /**
+     * Collega uno ShiftUser già risolto (nuovo, oppure una riga soft-deleted
+     * riattivata dal chiamante) a entrambi i lati dell'associazione. A differenza di
+     * {@link #addUser}, non verifica duplicati né costruisce il link: quella
+     * decisione richiede una query sul repository (per trovare una riga soft-deleted
+     * che occupa già la stessa chiave primaria), possibile solo nel service layer.
+     */
+    public void attachUser(ShiftUser link) {
+        this.users.add(link);
+        link.getUser().getShiftUsers().add(link);
+    }
+
     public void removeUser(User u) {
 
         this.users.removeIf(link -> {
