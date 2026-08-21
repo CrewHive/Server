@@ -35,6 +35,17 @@ public abstract class SoftDeletableEntity {
         return deletedAt;
     }
 
+    /**
+     * The user who performed the deletion, if any. May throw when accessed if the
+     * recorded actor has since been deactivated (including the common case where a
+     * user deletes their own account: {@code deletedBy} then points at a row that is
+     * itself {@code active = false}) - this is a {@code @ManyToOne(fetch = LAZY)} onto
+     * {@link com.pat.crewhive.user.User}, which is itself {@code @SQLRestriction}ed, so
+     * lazily resolving a reference to a now-hidden row fails instead of returning it.
+     * Known, accepted limitation: reading the historical actor once they're deactivated
+     * needs a query that bypasses {@code User}'s restriction (a native query, similar to
+     * {@code UserRepository.existsInactiveByEmail}), not a plain lazy association read.
+     */
     public User getDeletedBy() {
         return deletedBy;
     }
