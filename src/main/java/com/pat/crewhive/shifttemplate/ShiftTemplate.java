@@ -1,8 +1,11 @@
 package com.pat.crewhive.shifttemplate;
 
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.company.Company;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.OffsetTime;
 import java.util.UUID;
@@ -10,11 +13,16 @@ import java.util.UUID;
 @Entity
 @Table(name = "shift_template", indexes = {
         @Index(name = "idx_shifttemplate_shift_name", columnList = "shift_name"),
-        @Index(name = "idx_shifttemplate_company_id", columnList = "company_id")
+        @Index(name = "idx_shifttemplate_company_id", columnList = "company_id"),
+        @Index(name = "idx_shifttemplate_active", columnList = "active"),
+        @Index(name = "idx_shifttemplate_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_shifttemplate_deleted_by", columnList = "deleted_by")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uk_shifttemplate_shift_name_company_id", columnNames = {"shift_name", "company_id"})
 })
-public class ShiftTemplate {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE shift_template SET active = false, deleted_at = now() WHERE shift_id = ?")
+public class ShiftTemplate extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
