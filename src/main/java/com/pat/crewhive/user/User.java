@@ -1,12 +1,15 @@
 package com.pat.crewhive.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.event.EventUsers;
 import com.pat.crewhive.shiftprogrammed.ShiftUser;
 import com.pat.crewhive.shiftworked.ShiftWorked;
 import com.pat.crewhive.manager.UserRole;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -14,9 +17,14 @@ import java.util.*;
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_username", columnList = "username"),
-        @Index(name = "idx_user_company_id", columnList = "company_id")
+        @Index(name = "idx_user_company_id", columnList = "company_id"),
+        @Index(name = "idx_user_active", columnList = "active"),
+        @Index(name = "idx_user_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_user_deleted_by", columnList = "deleted_by")
 })
-public class User {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE users SET active = false, deleted_at = now() WHERE user_id = ?")
+public class User extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -42,14 +50,6 @@ public class User {
 
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
-
-    /**
-     * Whether the account is active. Set to false by {@code UserService.deleteAccount}
-     * (soft-delete) instead of physically removing the row, so that historical records
-     * (e.g. {@link com.pat.crewhive.shiftworked.ShiftWorked}) keep their reference to the user.
-     */
-    @Column(name = "active", nullable = false)
-    private boolean active = true;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<EventUsers> personalEvents = new HashSet<>();
@@ -152,14 +152,6 @@ public class User {
 
     public void setWorking(boolean working) {
         isWorking = working;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
     }
 
     public Set<EventUsers> getPersonalEvents() {
