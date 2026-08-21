@@ -9,7 +9,7 @@ public record RegistrationDTO(
 
         @NotBlank(message="Email cannot be blank")
         @Email
-        @Size(min=5, max=32, message="Email must be between 5 and 32 characters")
+        @Size(min=5, max=64, message="Email must be between 5 and 64 characters")
         @NoHtml
         String email,
 
@@ -24,7 +24,7 @@ public record RegistrationDTO(
         String lastName,
 
         @NotBlank(message="Password cannot be blank")
-        @Size(min=8, max=32, message="Password must be between 8 and 32 characters")
+        @Size(min=12, max=32, message="Password must be between 12 and 32 characters")
         @NoHtml
         String password
 ) {

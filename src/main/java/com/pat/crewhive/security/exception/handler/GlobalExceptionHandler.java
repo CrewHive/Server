@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ProblemDetail handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
         log.error("Optimistic locking failure: {}", ex.getMessage(), ex);
-        return base(HttpStatus.CONFLICT, "Conflict", "The resource was modified by another transaction. Please retry.", "DATA_409_OPTIMISTIC_LOCK");
+        return base(HttpStatus.CONFLICT, "Conflict", "The resource was modified by another transaction. Please check the new data before trying again.", "DATA_409_OPTIMISTIC_LOCK");
     }
 
     // 400 - JSON malformato / payload non leggibile

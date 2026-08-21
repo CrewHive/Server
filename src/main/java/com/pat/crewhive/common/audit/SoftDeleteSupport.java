@@ -15,8 +15,7 @@ public final class SoftDeleteSupport {
     private SoftDeleteSupport() {
     }
 
-    public static <T extends SoftDeletableEntity, ID> void softDelete(
-            JpaRepository<T, ID> repository, T entity, User actor) {
+    public static <T extends SoftDeletableEntity, ID> void softDelete(JpaRepository<T, ID> repository, T entity, User actor) {
 
         entity.markDeleted(actor);
         T managed = repository.save(entity);

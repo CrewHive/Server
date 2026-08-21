@@ -8,7 +8,7 @@ public record AuthRequestDTO(
 
         @NotBlank(message = "Email cannot be blank")
         @NoHtml
-        @Size(min = 3, max = 32, message = "Email must be of an admissible format")
+        @Size(min = 7, max = 64, message = "Email must be of an admissible format")
         String email,
 
         @NotBlank(message = "Password cannot be blank")
