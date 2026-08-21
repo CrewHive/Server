@@ -11,6 +11,7 @@ import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.shifttemplate.ShiftTemplateRepository;
 import com.pat.crewhive.common.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public class CompanyService {
     private final StringUtils stringUtils;
     private final RefreshTokenService refreshTokenService;
     private final CompanyAccessService companyAccessService;
+    private final ShiftTemplateRepository shiftTemplateRepository;
 
     public CompanyService(CompanyRepository companyRepository,
                           UserService userService,
@@ -43,7 +45,8 @@ public class CompanyService {
                           RoleRepository roleRepository,
                           JwtService jwtService,
                           RefreshTokenService refreshTokenService,
-                          CompanyAccessService companyAccessService) {
+                          CompanyAccessService companyAccessService,
+                          ShiftTemplateRepository shiftTemplateRepository) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.stringUtils = stringUtils;
@@ -51,6 +54,7 @@ public class CompanyService {
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.companyAccessService = companyAccessService;
+        this.shiftTemplateRepository = shiftTemplateRepository;
     }
 
     /**
@@ -248,6 +252,12 @@ public class CompanyService {
 
             log.error("deleteCompany: Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
+
+        if (roleRepository.existsByCompany_CompanyId(companyId) || shiftTemplateRepository.existsByCompanyCompanyId(companyId)) {
+
+            log.error("deleteCompany: Company {} still has active roles or shift templates", companyId);
+            throw new IllegalStateException("Cannot delete company because it still has active roles or shift templates");
         }
 
         companyAccessService.removeCompanyFromUsers(companyId);

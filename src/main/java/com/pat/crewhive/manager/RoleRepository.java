@@ -19,4 +19,6 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     List<Role> findAllByCompany_CompanyId(UUID companyId);
 
+    boolean existsByCompany_CompanyId(UUID companyId);
+
 }
