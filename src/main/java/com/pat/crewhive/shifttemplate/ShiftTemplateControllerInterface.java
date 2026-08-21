@@ -1,6 +1,7 @@
 package com.pat.crewhive.shifttemplate;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
+import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -155,6 +157,7 @@ public interface ShiftTemplateControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<?> deleteShiftTemplate(
+            @AuthenticationPrincipal CustomUserDetails cud,
             @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
             @PathVariable @NotNull UUID companyId
     );

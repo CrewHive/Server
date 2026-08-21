@@ -1,10 +1,13 @@
 package com.pat.crewhive.shifttemplate;
 
+import com.pat.crewhive.common.audit.SoftDeleteSupport;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.StringUtils;
+import com.pat.crewhive.user.User;
+import com.pat.crewhive.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,13 +23,16 @@ public class ShiftTemplateService {
     private final ShiftTemplateRepository repo;
     private final CompanyService companyService;
     private final StringUtils stringUtils;
+    private final UserService userService;
 
     public ShiftTemplateService(ShiftTemplateRepository repo,
                                 CompanyService companyService,
-                                StringUtils stringUtils) {
+                                StringUtils stringUtils,
+                                UserService userService) {
         this.repo = repo;
         this.companyService = companyService;
         this.stringUtils = stringUtils;
+        this.userService = userService;
     }
 
 
@@ -130,7 +136,7 @@ public class ShiftTemplateService {
      * @throws ResourceNotFoundException if the shift template does not exist in the company.
      */
     @Transactional
-    public void deleteShiftTemplate(String shiftName, UUID companyId) {
+    public void deleteShiftTemplate(String shiftName, UUID companyId, UUID actorId) {
 
         log.info("Deleting Shift Template '{}' for company {}", shiftName, companyId);
 
@@ -139,6 +145,7 @@ public class ShiftTemplateService {
         ShiftTemplate shiftTemplate = repo.findByShiftNameAndCompanyCompanyId(normalizedShiftName, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Shift template with name '" + shiftName + "' does not exist in company with ID " + companyId));
 
-        repo.delete(shiftTemplate);
+        User actor = userService.getUserById(actorId);
+        SoftDeleteSupport.softDelete(repo, shiftTemplate, actor);
     }
 }
