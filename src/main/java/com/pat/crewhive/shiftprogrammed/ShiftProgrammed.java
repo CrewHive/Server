@@ -1,7 +1,10 @@
 package com.pat.crewhive.shiftprogrammed;
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -13,9 +16,14 @@ import java.util.UUID;
 @Entity
 @Table(name = "shift_programmed", indexes = {
         @Index(name = "idx_shiftprogrammed_date", columnList = "shift_date"),
-        @Index(name = "idx_shiftprogrammed_start", columnList = "start_shift")
+        @Index(name = "idx_shiftprogrammed_start", columnList = "start_shift"),
+        @Index(name = "idx_shiftprogrammed_active", columnList = "active"),
+        @Index(name = "idx_shiftprogrammed_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_shiftprogrammed_deleted_by", columnList = "deleted_by")
 })
-public class ShiftProgrammed {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE shift_programmed SET active = false, deleted_at = now() WHERE shift_programmed_id = ?")
+public class ShiftProgrammed extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
