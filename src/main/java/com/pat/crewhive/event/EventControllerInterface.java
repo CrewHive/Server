@@ -175,6 +175,6 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<String> deleteEvent(@PathVariable @NotNull UUID eventId);
+    ResponseEntity<String> deleteEvent(@AuthenticationPrincipal CustomUserDetails cud, @PathVariable @NotNull UUID eventId);
 
 }
