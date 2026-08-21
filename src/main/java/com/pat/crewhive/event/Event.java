@@ -24,7 +24,7 @@ import java.util.UUID;
         @Index(name = "idx_event_deleted_by", columnList = "deleted_by")
 })
 @SQLRestriction("active = true")
-@SQLDelete(sql = "UPDATE event SET active = false, deleted_at = now() WHERE event_id = ?")
+@SQLDelete(sql = "UPDATE event SET active = false, deleted_at = now() WHERE event_id = ? AND version = ?")
 public class Event extends SoftDeletableEntity {
 
     @Id

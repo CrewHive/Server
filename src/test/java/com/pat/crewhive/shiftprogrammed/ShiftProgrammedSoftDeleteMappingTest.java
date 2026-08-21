@@ -34,7 +34,7 @@ class ShiftProgrammedSoftDeleteMappingTest {
 
         assertThat(sqlDelete).isNotNull();
         assertThat(sqlDelete.sql())
-                .isEqualTo("UPDATE shift_programmed SET active = false, deleted_at = now() WHERE shift_programmed_id = ?");
+                .isEqualTo("UPDATE shift_programmed SET active = false, deleted_at = now() WHERE shift_programmed_id = ? AND version = ?");
     }
 
     @Test
