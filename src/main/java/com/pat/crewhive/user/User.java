@@ -43,10 +43,18 @@ public class User {
     @Column(name = "is_working", nullable = false)
     private boolean isWorking;
 
+    /**
+     * Whether the account is active. Set to false by {@code UserService.deleteAccount}
+     * (soft-delete) instead of physically removing the row, so that historical records
+     * (e.g. {@link com.pat.crewhive.shiftworked.ShiftWorked}) keep their reference to the user.
+     */
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<EventUsers> personalEvents = new HashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private UserRole role;
 
     @Enumerated(EnumType.STRING)
@@ -71,7 +79,7 @@ public class User {
     @Column(name = "leave_days_taken", nullable = false)
     private BigDecimal leaveDaysTaken;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<ShiftWorked> shiftWorked = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -144,6 +152,14 @@ public class User {
 
     public void setWorking(boolean working) {
         isWorking = working;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public Set<EventUsers> getPersonalEvents() {
