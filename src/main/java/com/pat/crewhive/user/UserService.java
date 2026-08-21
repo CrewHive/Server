@@ -1,6 +1,7 @@
 package com.pat.crewhive.user;
 
 import com.pat.crewhive.authuser.AuthResponseDTO;
+import com.pat.crewhive.common.audit.SoftDeleteSupport;
 import com.pat.crewhive.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.shiftprogrammed.ShiftUserRepository;
@@ -289,8 +290,7 @@ public class UserService {
 
         refreshTokenService.deleteTokenByUser(user);
 
-        user.setActive(false);
-        userRepository.save(user);
+        SoftDeleteSupport.softDelete(userRepository, user, user);
 
         log.info("Deactivated account for user: {}", userId);
     }

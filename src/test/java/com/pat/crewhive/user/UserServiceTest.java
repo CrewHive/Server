@@ -127,4 +127,26 @@ class UserServiceTest {
 
         verifyNoInteractions(refreshTokenService, jwtService, shiftUserRepository);
     }
+
+    // ---------------------------------------------------------------------
+    // deleteAccount()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void deleteAccount_softDeletesTheUserWithItselfAsActor() {
+        User user = buildUser(USER_ID, null);
+
+        when(userRepository.findById(USER_ID)).thenReturn(java.util.Optional.of(user));
+
+        userService.deleteAccount(USER_ID);
+
+        assertThat(user.isActive()).isFalse();
+        assertThat(user.getDeletedBy()).isSameAs(user);
+        assertThat(user.getDeletedAt()).isNotNull();
+        verify(refreshTokenService).deleteTokenByUser(user);
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(userRepository);
+        order.verify(userRepository).save(user);
+        order.verify(userRepository).delete(user);
+    }
 }
