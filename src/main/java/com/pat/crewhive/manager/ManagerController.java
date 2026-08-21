@@ -80,7 +80,7 @@ public class ManagerController implements ManagerControllerInterface {
 
         UUID companyId = cud.getCompanyId();
 
-        roleService.deleteRole(roleName, companyId);
+        roleService.deleteRole(roleName, companyId, cud.getUserId());
 
         log.info("Role {} deleted successfully", roleName);
 

@@ -1,5 +1,6 @@
 package com.pat.crewhive.manager;
 
+import com.pat.crewhive.common.audit.SoftDeleteSupport;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
@@ -95,7 +96,7 @@ public class RoleService {
      * @throws IllegalStateException if the role is assigned to users
      */
     @Transactional
-    public void deleteRole(String roleName, UUID companyId) {
+    public void deleteRole(String roleName, UUID companyId, UUID actorId) {
 
         String normalizedRole = stringUtils.normalizeRole(roleName);
 
@@ -110,7 +111,9 @@ public class RoleService {
             throw new IllegalStateException("Cannot delete role because it is assigned to users");
         }
 
-        roleRepository.delete(role);
+        User actor = userService.getUserById(actorId);
+        SoftDeleteSupport.softDelete(roleRepository, role, actor);
+
         log.info("Role {} deleted successfully", roleName);
     }
 
