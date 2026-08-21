@@ -1,18 +1,26 @@
 package com.pat.crewhive.manager;
 
+import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.company.Company;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "role", indexes = {
-        @Index(name = "idx_role_company_id", columnList = "company_id")
+        @Index(name = "idx_role_company_id", columnList = "company_id"),
+        @Index(name = "idx_role_active", columnList = "active"),
+        @Index(name = "idx_role_deleted_at", columnList = "deleted_at"),
+        @Index(name = "idx_role_deleted_by", columnList = "deleted_by")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uc_role_role_name_company_id", columnNames = {"role_name", "company_id"})
 })
-public class Role {
+@SQLRestriction("active = true")
+@SQLDelete(sql = "UPDATE role SET active = false, deleted_at = now() WHERE role_id = ?")
+public class Role extends SoftDeletableEntity {
     //todo modifica annotazioni json
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +33,7 @@ public class Role {
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRole> users = new LinkedHashSet<>();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
 
