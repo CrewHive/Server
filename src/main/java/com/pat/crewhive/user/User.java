@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pat.crewhive.common.audit.SoftDeletableEntity;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.event.EventUsers;
+import com.pat.crewhive.manager.Role;
 import com.pat.crewhive.shiftprogrammed.ShiftUser;
 import com.pat.crewhive.shiftworked.ShiftWorked;
 import com.pat.crewhive.manager.UserRole;
@@ -54,8 +55,8 @@ public class User extends SoftDeletableEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<EventUsers> personalEvents = new HashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private UserRole role;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<UserRole> roles = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "contract_type")
@@ -178,12 +179,12 @@ public class User extends SoftDeletableEntity {
         this.personalEvents = personalEvents;
     }
 
-    public UserRole getRole() {
-        return role;
+    public Set<UserRole> getRoles() {
+        return roles;
     }
 
-    public void setRole(UserRole role) {
-        this.role = role;
+    public void setRoles(Set<UserRole> roles) {
+        this.roles = roles;
     }
 
     public ContractType getContractType() {
@@ -256,5 +257,27 @@ public class User extends SoftDeletableEntity {
 
     public void setShiftUsers(Set<ShiftUser> shiftUsers) {
         this.shiftUsers = shiftUsers;
+    }
+
+    public void addRole (Role role) {
+
+        boolean hasRole = this.roles.stream().anyMatch(ur -> ur.getRole().equals(role));
+        if (hasRole) return;
+
+        UserRole userRole = new UserRole(this, role);
+        this.roles.add(userRole);
+        role.getUsers().add(userRole);
+    }
+
+    public void removeRole (Role role) {
+        Iterator<UserRole> iterator = this.roles.iterator();
+        while (iterator.hasNext()) {
+            UserRole userRole = iterator.next();
+            if (userRole.getRole().equals(role)) {
+                iterator.remove();
+                role.getUsers().remove(userRole);
+                break;
+            }
+        }
     }
 }

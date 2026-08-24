@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -41,7 +43,7 @@ public class JwtService {
      * @param email    the email of the user
      * @param firstName the first name of the user
      * @param lastName the last name of the user
-     * @param role     the role of the user
+     * @param  roles    the set of the roles of the user
      * @param companyId the company of the user
      * @return a JWT token as a String
      */
@@ -49,13 +51,13 @@ public class JwtService {
                                 String email,
                                 String firstName,
                                 String lastName,
-                                String role,
+                                Set<String> roles,
                                 UUID companyId) {
 
         String jwt = Jwts.builder()
                 .setId(UUID.randomUUID().toString())
                 .setSubject(String.valueOf(userId))
-                .claim("role", role) // ROLE_USER, ROLE_MANAGER, ...
+                .claim("role", String.join(",", roles)) // ROLE_USER,ROLE_MANAGER, ...
                 .claim("email", email)
                 .claim("firstName", firstName)
                 .claim("lastName", lastName)

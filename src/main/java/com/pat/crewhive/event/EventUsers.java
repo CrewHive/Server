@@ -70,9 +70,6 @@ public class EventUsers extends SoftDeletableEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof EventUsers other)) return false;
-        // A transient instance (either side, before @MapsId populates the id at flush)
-        // is only equal to itself - falling through to id.equals() here would let two
-        // distinct freshly-built links collide in a HashSet, silently dropping one.
         if (id == null || id.getUserId() == null || id.getEventId() == null) return false;
         if (other.id == null || other.id.getUserId() == null || other.id.getEventId() == null) return false;
         return id.equals(other.id);

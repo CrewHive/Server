@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CompanyService {
@@ -87,14 +88,21 @@ public class CompanyService {
         String name = "ROLE_MANAGER";
         Role role = roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
                 .orElseGet(() -> roleRepository.save(new Role(name, null)));
-        manager.getRole().setRole(role);
+        manager.addRole(role);
 
         userService.updateUser(manager);
 
         log.info("Company {} registered successfully", request.companyName());
 
         return new AuthResponseDTO(
-                jwtService.generateToken(manager.getUserId(), stringUtils.normalizeString(manager.getEmail()), manager.getFirstName(), manager.getLastName(), manager.getRole().getRole().getRoleName(), company.getCompanyId()),
+                jwtService.generateToken(
+                        manager.getUserId(),
+                        stringUtils.normalizeString(manager.getEmail()),
+                        manager.getFirstName(),
+                        manager.getLastName(),
+                        manager.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
+                        company.getCompanyId()
+                ),
                 refreshTokenService.getOrIssueRefreshToken(manager));
     }
 
@@ -254,15 +262,21 @@ public class CompanyService {
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
-        if (roleRepository.existsByCompany_CompanyId(companyId) || shiftTemplateRepository.existsByCompanyCompanyId(companyId)) {
+        if (shiftTemplateRepository.existsByCompanyCompanyId(companyId)) {
 
-            log.error("deleteCompany: Company {} still has active roles or shift templates", companyId);
-            throw new IllegalStateException("Cannot delete company because it still has active roles or shift templates");
+            log.error("deleteCompany: Company {} still has active shift templates", companyId);
+            throw new IllegalStateException("Cannot delete company because it still has active shift templates");
         }
 
+        User manager = userService.getUserById(managerId);
+
+        // Riporta ogni utente della company al solo ruolo base prima di eliminare i ruoli
+        // stessi, così nessuna UserRole punta più a un ruolo che stiamo per cancellare.
         companyAccessService.removeCompanyFromUsers(companyId);
 
-        User manager = userService.getUserById(managerId);
+        List<Role> companyRoles = roleRepository.findAllByCompany_CompanyId(companyId);
+        companyRoles.forEach(role -> SoftDeleteSupport.softDelete(roleRepository, role, manager));
+
         SoftDeleteSupport.softDelete(companyRepository, company, manager);
 
         log.info("Company with ID {} deleted successfully", companyId);

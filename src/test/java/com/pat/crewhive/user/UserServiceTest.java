@@ -3,6 +3,7 @@ package com.pat.crewhive.user;
 import com.pat.crewhive.authuser.AuthResponseDTO;
 import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.company.Company;
+import com.pat.crewhive.manager.RoleAssignmentService;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
@@ -41,6 +42,8 @@ class UserServiceTest {
     private JwtService jwtService;
     @Mock
     private RefreshTokenService refreshTokenService;
+    @Mock
+    private RoleAssignmentService roleAssignmentService;
 
     private UserService userService;
 
@@ -50,7 +53,8 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         userService = new UserService(
-                userRepository, shiftUserRepository, passwordUtil, stringUtils, jwtService, refreshTokenService
+                userRepository, shiftUserRepository, passwordUtil, stringUtils, jwtService, refreshTokenService,
+                roleAssignmentService
         );
     }
 
@@ -82,7 +86,7 @@ class UserServiceTest {
 
         when(userRepository.findById(USER_ID)).thenReturn(java.util.Optional.of(user));
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
-        when(jwtService.generateToken(eq(USER_ID), anyString(), anyString(), anyString(), eq("ROLE_USER"), isNull()))
+        when(jwtService.generateToken(eq(USER_ID), anyString(), anyString(), anyString(), any(), isNull()))
                 .thenReturn("access-jwt");
         when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
 
@@ -93,6 +97,8 @@ class UserServiceTest {
         // the pre-existing refresh token must not be manually invalidated/regenerated here anymore
         verify(refreshTokenService, never()).deleteTokenByUser(any());
         verify(refreshTokenService, never()).generateRefreshToken(any());
+        // the user must be brought back down to the base role once they leave the company
+        verify(roleAssignmentService).resetToBaseRole(user);
     }
 
     @Test
@@ -103,7 +109,7 @@ class UserServiceTest {
 
         when(userRepository.findById(USER_ID)).thenReturn(java.util.Optional.of(user));
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
-        when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn("access-jwt");
         when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
 
@@ -145,6 +151,7 @@ class UserServiceTest {
         assertThat(user.getDeletedBy()).isSameAs(user);
         assertThat(user.getDeletedAt()).isNotNull();
         verify(refreshTokenService).deleteTokenByUser(user);
+        verify(roleAssignmentService).resetToBaseRole(user);
 
         org.mockito.InOrder order = org.mockito.Mockito.inOrder(userRepository);
         order.verify(userRepository).save(user);

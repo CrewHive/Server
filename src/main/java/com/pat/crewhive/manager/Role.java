@@ -21,7 +21,7 @@ import java.util.Set;
 @SQLRestriction("active = true")
 @SQLDelete(sql = "UPDATE role SET active = false, deleted_at = now() WHERE role_id = ?")
 public class Role extends SoftDeletableEntity {
-    //todo modifica annotazioni json
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="role_id", nullable = false)
@@ -30,22 +30,32 @@ public class Role extends SoftDeletableEntity {
     @Column(name = "role_name", nullable = false)
     private String roleName;
 
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
     private Set<UserRole> users = new LinkedHashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
 
+    public Role() {
+    }
+
     /**
-     * Constructor for creating a new Role.
+     * Constructor for creating a new global Role.
+     *
+     * @param roleName The name of the new role.
+     */
+    public Role (String roleName) {
+        this.roleName = roleName;
+        this.company = null;
+    }
+
+    /**
+     * Constructor for creating a new Role for a certain Company.
      *
      * @param role_name The name of the role.
      * @param company   The company to which the role belongs.
      */
-    public Role() {
-    }
-
     public Role(String role_name,
                 Company company) {
         this.roleName = role_name;

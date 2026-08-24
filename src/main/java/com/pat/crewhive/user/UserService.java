@@ -2,6 +2,7 @@ package com.pat.crewhive.user;
 
 import com.pat.crewhive.authuser.AuthResponseDTO;
 import com.pat.crewhive.common.audit.SoftDeleteSupport;
+import com.pat.crewhive.manager.RoleAssignmentService;
 import com.pat.crewhive.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.shiftprogrammed.ShiftUserRepository;
@@ -18,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,19 +33,22 @@ public class UserService {
     private final PasswordUtil passwordUtil;
     private final StringUtils stringUtils;
     private final JwtService jwtService;
+    private final RoleAssignmentService roleAssignmentService;
 
     public UserService(UserRepository userRepository,
                        ShiftUserRepository shiftUserRepository,
                        PasswordUtil passwordUtil,
                        StringUtils stringUtils,
                        JwtService jwtService,
-                       RefreshTokenService refreshTokenService) {
+                       RefreshTokenService refreshTokenService,
+                       RoleAssignmentService roleAssignmentService) {
         this.userRepository = userRepository;
         this.shiftUserRepository = shiftUserRepository;
         this.passwordUtil = passwordUtil;
         this.refreshTokenService = refreshTokenService;
         this.stringUtils = stringUtils;
         this.jwtService = jwtService;
+        this.roleAssignmentService = roleAssignmentService;
     }
 
 
@@ -256,6 +257,7 @@ public class UserService {
         Company c = user.getCompany();
         c.getUsers().remove(user);
         user.setCompany(null);
+        roleAssignmentService.resetToBaseRole(user);
 
         shiftUserRepository.deleteByUserId(userId, OffsetDateTime.now());
 
@@ -267,7 +269,7 @@ public class UserService {
                         stringUtils.normalizeString(user.getEmail()),
                         user.getFirstName(),
                         user.getLastName(),
-                        "ROLE_USER",
+                        user.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
                         null),
                 refreshTokenService.getOrIssueRefreshToken(user));
     }
@@ -287,6 +289,8 @@ public class UserService {
     public void deleteAccount(UUID userId) {
 
         User user = getUserById(userId);
+
+        roleAssignmentService.resetToBaseRole(user);
 
         refreshTokenService.deleteTokenByUser(user);
 

@@ -34,7 +34,7 @@ class UserRoleSoftDeleteMappingTest {
 
         assertThat(sqlDelete).isNotNull();
         assertThat(sqlDelete.sql())
-                .isEqualTo("UPDATE user_role SET active = false, deleted_at = now() WHERE user_id = ?");
+                .isEqualTo("UPDATE user_role SET active = false, deleted_at = now() WHERE user_id = ? AND role_id = ?");
     }
 
     @Test

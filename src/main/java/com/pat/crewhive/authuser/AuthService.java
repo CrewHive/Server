@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -101,7 +103,14 @@ public class AuthService {
         UUID company = user.getCompany() == null ? null : user.getCompany().getCompanyId();
 
         return new AuthResponseDTO(
-                jwtService.generateToken(user.getUserId(), normalizedEmail, user.getFirstName(), user.getLastName(), user.getRole().getRole().getRoleName(), company),
+                jwtService.generateToken(
+                        user.getUserId(),
+                        normalizedEmail,
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
+                        company
+                ),
                 refreshTokenService.generateRefreshToken(user)
         );
     }
@@ -141,7 +150,7 @@ public class AuthService {
 
         Role role = roleService.getOrCreateGlobalRoleUser();
 
-        newUser.setRole(new UserRole(newUser, role));
+        newUser.addRole(role);
 
         userRepository.save(newUser);
 
@@ -180,12 +189,19 @@ public class AuthService {
         String normalizedEmail = stringUtils.normalizeString(owner.getEmail());
         String firstName = owner.getFirstName();
         String lastName = owner.getLastName();
-        String role = owner.getRole().getRole().getRoleName();
+        Set<String> roles = owner.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet());
         Company company = owner.getCompany();
         UUID companyId = (company != null) ? company.getCompanyId() : null;
 
 
-        String newAccessToken = jwtService.generateToken(userId, normalizedEmail, firstName, lastName, role, companyId);
+        String newAccessToken = jwtService.generateToken(
+                userId,
+                normalizedEmail,
+                firstName,
+                lastName,
+                roles,
+                companyId
+        );
 
         String newRefreshToken = refreshTokenService.rotateRefreshToken(rt);
 

@@ -17,8 +17,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -96,13 +99,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = claims.get("email").toString();
             String firstName = claims.get("firstName", String.class);
             String lastName = claims.get("lastName", String.class);
-            String role = claims.get("role", String.class);
+            String roleClaim = claims.get("role", String.class);
+            Set<String> roles = (roleClaim == null || roleClaim.isBlank())
+                    ? Set.of()
+                    : Arrays.stream(roleClaim.split(",")).collect(Collectors.toSet());
             String companyIdClaim = claims.get("companyId", String.class);
             UUID companyId = companyIdClaim != null ? UUID.fromString(companyIdClaim) : null;
             Date tokenExpiration = claims.getExpiration();
 
             // Costruisci un CUD leggero dai claim (nessun accesso lazy)
-            CustomUserDetails cud = CustomUserDetails.fromClaims(userId, email,firstName, lastName, role, companyId, jti, tokenExpiration);
+            CustomUserDetails cud = CustomUserDetails.fromClaims(userId, email,firstName, lastName, roles, companyId, jti, tokenExpiration);
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(cud, null, cud.getAuthorities());

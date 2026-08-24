@@ -68,7 +68,7 @@ public class EventService {
      * @throws IllegalArgumentException if the start date is after the end date.
      */
     @Transactional
-    public UUID createEvent(CreateEventDTO createEventDTO, String role) {
+    public UUID createEvent(CreateEventDTO createEventDTO, Set<String> roles) {
 
         log.info("Creating event with name: {}", createEventDTO.name());
 
@@ -78,7 +78,7 @@ public class EventService {
             throw new IllegalArgumentException("L'inizio deve essere prima della fine");
         }
 
-        if (role.equals("ROLE_USER") && createEventDTO.eventType() == PUBLIC) {
+        if (!roles.contains("ROLE_MANAGER") && createEventDTO.eventType() == PUBLIC) {
             throw new AuthorizationDeniedException("Non sei autorizzato a creare eventi pubblici");
         }
 

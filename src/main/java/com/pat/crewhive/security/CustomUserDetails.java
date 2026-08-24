@@ -5,10 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * CustomUserDetails implementa UserDetails e adatta i dati utente
@@ -23,7 +20,7 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String firstName;
     private final String lastName;
-    private final String role;
+    private final Set<String> roles;
     private final UUID companyId;
     private final boolean working;
     private final String jti;
@@ -38,7 +35,7 @@ public class CustomUserDetails implements UserDetails {
                              String email,
                              String firstName,
                              String lastName,
-                             String role,
+                             Set<String> roles,
                              UUID companyId,
                              boolean working,
                              String jti,
@@ -47,13 +44,17 @@ public class CustomUserDetails implements UserDetails {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = role;
+        this.roles = roles;
         this.companyId = companyId;
         this.working = working;
         this.jti = jti;
         this.tokenExpiration = tokenExpiration;
 
-        this.authorities = List.of(new SimpleGrantedAuthority(role));
+        List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        for (String role : roles) {
+            grantedAuthorities.add(new SimpleGrantedAuthority(role));
+        }
+        this.authorities = grantedAuthorities;
     }
 
     /**
@@ -63,11 +64,11 @@ public class CustomUserDetails implements UserDetails {
                                                String email,
                                                String firstName,
                                                String lastName,
-                                               String role,
+                                               Set<String> roles,
                                                UUID companyId,
                                                String jti,
                                                Date tokenExpiration) {
-        return new CustomUserDetails(userId, email, firstName, lastName, role, companyId, true, jti, tokenExpiration);
+        return new CustomUserDetails(userId, email, firstName, lastName, roles, companyId, true, jti, tokenExpiration);
     }
 
     /**
@@ -147,8 +148,8 @@ public class CustomUserDetails implements UserDetails {
         return lastName;
     }
 
-    public String getRole() {
-        return role;
+    public Set<String> getRoles() {
+        return roles;
     }
 
     public UUID getCompanyId() {

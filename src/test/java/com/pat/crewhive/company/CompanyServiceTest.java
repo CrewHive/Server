@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,7 +63,7 @@ class CompanyServiceTest {
         User user = new User("manager@example.com", "Mario", "Rossi", "encoded-pwd");
         ReflectionTestUtils.setField(user, "userId", userId);
         Role role = new Role("ROLE_USER", null);
-        user.setRole(new UserRole(user, role));
+        user.addRole(role);
         return user;
     }
 
@@ -83,7 +84,7 @@ class CompanyServiceTest {
         when(roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull("ROLE_MANAGER"))
                 .thenReturn(java.util.Optional.of(managerRole));
         when(stringUtils.normalizeString("manager@example.com")).thenReturn("manager@example.com");
-        when(jwtService.generateToken(eq(managerId), anyString(), anyString(), anyString(), eq("ROLE_MANAGER"), any()))
+        when(jwtService.generateToken(eq(managerId), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn("access-jwt");
         when(refreshTokenService.getOrIssueRefreshToken(manager)).thenReturn("reused-refresh-token");
 
@@ -142,20 +143,37 @@ class CompanyServiceTest {
     }
 
     @Test
-    void deleteCompany_throwsWhenCompanyStillHasActiveRoles() {
+    void deleteCompany_softDeletesTheCompanyRolesWithManagerAsActor() {
         UUID companyId = UUID.randomUUID();
         UUID managerId = UUID.randomUUID();
+
         Company company = new Company();
         ReflectionTestUtils.setField(company, "companyId", companyId);
 
+        User manager = new User("manager@example.com", "Manager", "Rossi", "encoded-pwd");
+        ReflectionTestUtils.setField(manager, "userId", managerId);
+
+        Role role = new Role("ROLE_CASHIER", company);
+
         when(companyAccessService.getCompanyById(companyId)).thenReturn(company);
         when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
-        when(roleRepository.existsByCompany_CompanyId(companyId)).thenReturn(true);
+        when(userService.getUserById(managerId)).thenReturn(manager);
+        when(roleRepository.findAllByCompany_CompanyId(companyId)).thenReturn(List.of(role));
+        when(roleRepository.save(role)).thenReturn(role);
+        when(companyRepository.save(company)).thenReturn(company);
 
-        assertThatThrownBy(() -> companyService.deleteCompany(companyId, managerId))
-                .isInstanceOf(IllegalStateException.class);
+        companyService.deleteCompany(companyId, managerId);
 
-        verify(companyAccessService, never()).removeCompanyFromUsers(any());
-        verify(companyRepository, never()).save(any());
+        // roles are deleted (not blocking the deletion) once every user has been reset to the base role
+        assertThat(role.isActive()).isFalse();
+        assertThat(role.getDeletedBy()).isSameAs(manager);
+        assertThat(role.getDeletedAt()).isNotNull();
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(companyAccessService, roleRepository, companyRepository);
+        order.verify(companyAccessService).removeCompanyFromUsers(companyId);
+        order.verify(roleRepository).save(role);
+        order.verify(roleRepository).delete(role);
+        order.verify(companyRepository).save(company);
+        order.verify(companyRepository).delete(company);
     }
 }

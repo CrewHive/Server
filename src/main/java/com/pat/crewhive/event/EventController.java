@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -33,9 +34,9 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to create event");
 
-        String role = cud.getRole();
+        Set<String> roles = cud.getRoles();
 
-        return ResponseEntity.ok(eventService.createEvent(dto, role));
+        return ResponseEntity.ok(eventService.createEvent(dto, roles));
     }
 
     @Override

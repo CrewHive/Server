@@ -22,8 +22,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -87,7 +86,7 @@ class AuthServiceTest {
         user.setCompany(company);
 
         Role role = new Role("ROLE_USER", null);
-        user.setRole(new UserRole(user, role));
+        user.addRole(role);
         return user;
     }
 
@@ -100,12 +99,14 @@ class AuthServiceTest {
         AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "P@ssw0rd!");
         User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
         RefreshToken existingToken = new RefreshToken(UUID.randomUUID(), "old-token", user, LocalDate.now().plusDays(1));
+        Set<String> roles = new HashSet<>();
+        roles.add("ROLE_USER");
 
         when(stringUtils.normalizeString("mario.rossi@example.com")).thenReturn("mario.rossi@example.com");
         when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches("P@ssw0rd!", "encoded-pwd")).thenReturn(false);
         when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(existingToken);
-        when(jwtService.generateToken(USER_ID, "mario.rossi@example.com", "Mario", "Rossi", "ROLE_USER", null))
+        when(jwtService.generateToken(USER_ID, "mario.rossi@example.com", "Mario", "Rossi", roles, null))
                 .thenReturn("access-jwt");
         when(refreshTokenService.generateRefreshToken(user)).thenReturn("new-refresh-token");
 
@@ -126,7 +127,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches(anyString(), anyString())).thenReturn(false);
         when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(null);
-        when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn("access-jwt");
         when(refreshTokenService.generateRefreshToken(user)).thenReturn("new-refresh-token");
 
@@ -153,7 +154,7 @@ class AuthServiceTest {
         // ArgumentCaptor lets us inspect exactly what AuthService handed to a mock,
         // which is handy when you only care about one of several arguments.
         ArgumentCaptor<UUID> companyIdCaptor = ArgumentCaptor.forClass(UUID.class);
-        verify(jwtService).generateToken(eq(USER_ID), anyString(), anyString(), anyString(), anyString(), companyIdCaptor.capture());
+        verify(jwtService).generateToken(eq(USER_ID), anyString(), anyString(), anyString(), any(), companyIdCaptor.capture());
         assertThat(companyIdCaptor.getValue()).isEqualTo(COMPANY_ID);
     }
 
@@ -227,8 +228,8 @@ class AuthServiceTest {
         User savedUser = savedUserCaptor.getValue();
         assertThat(savedUser.getEmail()).isEqualTo("new.user@example.com");
         assertThat(savedUser.getPassword()).isEqualTo("encoded-pwd");
-        assertThat(savedUser.getRole()).isNotNull();
-        assertThat(savedUser.getRole().getRole()).isEqualTo(globalUserRole);
+        assertThat(savedUser.getRoles()).isNotNull();
+        assertThat(savedUser.getRoles().stream().filter(r -> r.getRole().equals(globalUserRole)).toList().getFirst().getRole()).isEqualTo(globalUserRole);
     }
 
     @Test

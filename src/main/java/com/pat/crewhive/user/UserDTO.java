@@ -2,8 +2,10 @@ package com.pat.crewhive.user;
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
+import java.util.Set;
 import java.util.UUID;
 
 public record UserDTO(
@@ -23,10 +25,8 @@ public record UserDTO(
         @Size(min = 3, max = 32)
         String lastName,
 
-        @NotBlank(message = "Role cannot be blank")
-        @NoHtml
-        @Size(min = 3, max = 32)
-        String role,
+        @NotEmpty(message = "Roles cannot be empty")
+        Set<String> roles,
 
         UUID companyId
 ) {

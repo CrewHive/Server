@@ -18,7 +18,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     @Query("""
         select rt from RefreshToken rt
         join fetch rt.user u
-        left join fetch u.role r
+        left join fetch u.roles r
+        left join fetch r.role
         where rt.token = :token
     """)
     Optional<RefreshToken> findByTokenWithUserAndRole(String token);

@@ -17,15 +17,15 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     @NullMarked
-    @EntityGraph(attributePaths = {"role", "role.role", "shiftUsers", "shiftUsers.shift"})
+    @EntityGraph(attributePaths = {"roles", "roles.role", "shiftUsers", "shiftUsers.shift"})
     Optional<User> findById(UUID id);
 
     List<User> findAllByCompany_CompanyId(UUID companyId);
 
-    @EntityGraph(attributePaths = {"role", "role.role"})
+    @EntityGraph(attributePaths = {"roles", "roles.role"})
     Optional<User> findByEmail(String email);
 
-    @EntityGraph(attributePaths = {"role", "role.role"})
+    @EntityGraph(attributePaths = {"roles", "roles.role"})
     @Query("select u from User u where u.userId in :ids")
     List<User> findAllByIds(@Param("ids") Set<UUID> ids);
 

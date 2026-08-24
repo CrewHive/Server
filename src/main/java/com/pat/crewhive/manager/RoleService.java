@@ -24,15 +24,18 @@ public class RoleService {
     private final UserService userService;
     private final CompanyService companyService;
     private final StringUtils stringUtils;
+    private final RoleAssignmentService roleAssignmentService;
 
     public RoleService(RoleRepository roleRepository,
                        UserService userService,
                        CompanyService companyService,
-                       StringUtils stringUtils) {
+                       StringUtils stringUtils,
+                       RoleAssignmentService roleAssignmentService) {
         this.roleRepository = roleRepository;
         this.userService = userService;
         this.companyService = companyService;
         this.stringUtils = stringUtils;
+        this.roleAssignmentService = roleAssignmentService;
     }
 
     /**
@@ -81,9 +84,7 @@ public class RoleService {
 
         User targetUser = userService.getUserById(targetId);
 
-        // Posso farlo perché al momento della registrazione viene dato un ruolo di default
-        UserRole current = targetUser.getRole();
-        current.setRole(role);
+        targetUser.addRole(role);
     }
 
 
@@ -125,11 +126,7 @@ public class RoleService {
      */
     @Transactional
     public Role getOrCreateGlobalRoleUser() {
-
-        //todo Ritorna un DTO
-        String name = "ROLE_USER";
-        return roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
-                .orElseGet(() -> roleRepository.save(new Role(name, null)));
+        return roleAssignmentService.getOrCreateGlobalRoleUser();
     }
 
 }

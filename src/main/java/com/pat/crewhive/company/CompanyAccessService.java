@@ -1,5 +1,6 @@
 package com.pat.crewhive.company;
 
+import com.pat.crewhive.manager.RoleAssignmentService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
@@ -26,10 +27,14 @@ public class CompanyAccessService {
 
     private final CompanyRepository companyRepository;
     private final UserService userService;
+    private final RoleAssignmentService roleAssignmentService;
 
-    public CompanyAccessService(CompanyRepository companyRepository, UserService userService) {
+    public CompanyAccessService(CompanyRepository companyRepository,
+                                UserService userService,
+                                RoleAssignmentService roleAssignmentService) {
         this.companyRepository = companyRepository;
         this.userService = userService;
+        this.roleAssignmentService = roleAssignmentService;
     }
 
     /**
@@ -77,6 +82,7 @@ public class CompanyAccessService {
 
         for (User user : users) {
             user.setCompany(null);
+            roleAssignmentService.resetToBaseRole(user);
             userService.updateUser(user);
         }
 

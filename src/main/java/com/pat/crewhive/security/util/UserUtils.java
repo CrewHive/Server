@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -67,7 +68,7 @@ public final class UserUtils {
                 cud.getEmail(),
                 cud.getFirstName(),
                 cud.getLastName(),
-                cud.getRole(),
+                cud.getRoles(),
                 cud.getCompanyId()
         ) : null);
     }
@@ -93,13 +94,13 @@ public final class UserUtils {
     }
 
     /**
-     * Role (singolo) dell'utente corrente, o null se non autenticato.
+     * Roles dell'utente corrente, o null se non autenticato.
      */
-    public static String getCurrentUserRole() {
+    public static Set<String> getCurrentUserRoles() {
 
         CustomUserDetails cud = getCustomUserDetails();
 
-        return (cud != null ? cud.getRole() : null);
+        return (cud != null ? cud.getRoles() : null);
     }
 
     /**

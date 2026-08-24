@@ -15,6 +15,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -173,7 +174,7 @@ class EventServiceTest {
         when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
         when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        eventService.createEvent(dto, "ROLE_USER");
+        eventService.createEvent(dto, Collections.singleton("ROLE_USER"));
 
         ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
         verify(eventRepository).save(captor.capture());
