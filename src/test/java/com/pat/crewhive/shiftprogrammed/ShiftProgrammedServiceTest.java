@@ -103,7 +103,7 @@ class ShiftProgrammedServiceTest {
         when(shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to))
                 .thenReturn(List.of(shift));
 
-        ShiftProgrammedOutputDTO result = shiftProgrammedService.getShiftsByPeriodAndCompany(Period.WEEK, requesterUserId);
+        ShiftProgrammedOutputDTO result = shiftProgrammedService.getShiftsByPeriodAndCompany(Period.WEEK, requesterUserId, companyId);
 
         assertThat(result.shifts()).containsExactly(ShiftProgrammedItemDTO.from(shift));
     }

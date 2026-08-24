@@ -100,7 +100,8 @@ public interface ShiftProgrammedControllerInterface {
                             schema = @Schema(implementation = ApiError.class)))
     })
     ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                         @PathVariable @NotNull Period period);
+                                                                         @PathVariable @NotNull Period period,
+                                                                         @PathVariable @NotNull UUID companyId);
 
 
 

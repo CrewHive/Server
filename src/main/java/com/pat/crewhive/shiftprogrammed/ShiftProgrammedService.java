@@ -1,6 +1,7 @@
 package com.pat.crewhive.shiftprogrammed;
 
 
+import com.pat.crewhive.company.CompanyAccessService;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.common.audit.SoftDeleteSupport;
@@ -35,19 +36,21 @@ public class ShiftProgrammedService {
     private final UserService userService;
     private final DateUtils dateUtils;
     private final CompanyService companyService;
+    private final CompanyAccessService companyAccessService;
 
     public ShiftProgrammedService(ShiftProgrammedRepository shiftProgrammedRepository,
                                   ShiftUserRepository shiftUserRepository,
                                   StringUtils stringUtils,
                                   UserService userService,
                                   DateUtils dateUtils,
-                                  CompanyService companyService) {
+                                  CompanyService companyService, CompanyAccessService companyAccessService) {
         this.shiftProgrammedRepository = shiftProgrammedRepository;
         this.shiftUserRepository = shiftUserRepository;
         this.stringUtils = stringUtils;
         this.userService = userService;
         this.dateUtils = dateUtils;
         this.companyService = companyService;
+        this.companyAccessService = companyAccessService;
     }
 
 
@@ -148,9 +151,13 @@ public class ShiftProgrammedService {
     )
     public ShiftProgrammedOutputDTO getShiftsByPeriodAndCompany(
             Period period,
-            UUID requesterUserId) {
+            UUID requesterUserId,
+            UUID companyId) {
 
-        UUID companyId = companyService.getCompanyByUserId(requesterUserId).getCompanyId();
+        if (companyAccessService.isNotPartOfCompany(requesterUserId, companyId)) {
+            log.error("Company {} access has been denied to user {}", companyId, requesterUserId);
+            throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
+        }
 
         log.info("Fetching shifts for company ID: {}", companyId);
 

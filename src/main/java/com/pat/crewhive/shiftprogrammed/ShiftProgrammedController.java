@@ -1,6 +1,7 @@
 package com.pat.crewhive.shiftprogrammed;
 
 
+import com.pat.crewhive.company.Company;
 import com.pat.crewhive.security.CustomUserDetails;
 import com.pat.crewhive.common.Period;
 import jakarta.validation.Valid;
@@ -47,13 +48,14 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
 
     @Override
-    @GetMapping("/period/{period}/company}")
+    @GetMapping("/period/{period}/{companyId}")
     public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndCompany(@AuthenticationPrincipal CustomUserDetails cud,
-                                                                                @PathVariable @NotNull Period period) {
+                                                                                @PathVariable @NotNull Period period,
+                                                                                @PathVariable @NotNull UUID companyId) {
 
         log.info("Received request to get shifts for company {} in period {}",  cud.getCompanyId(), period);
 
-        return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndCompany(period, cud.getUserId()));
+        return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndCompany(period, cud.getUserId(), companyId));
     }
 
 
