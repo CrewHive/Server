@@ -43,7 +43,8 @@ public class ShiftProgrammedService {
                                   StringUtils stringUtils,
                                   UserService userService,
                                   DateUtils dateUtils,
-                                  CompanyService companyService, CompanyAccessService companyAccessService) {
+                                  CompanyService companyService,
+                                  CompanyAccessService companyAccessService) {
         this.shiftProgrammedRepository = shiftProgrammedRepository;
         this.shiftUserRepository = shiftUserRepository;
         this.stringUtils = stringUtils;

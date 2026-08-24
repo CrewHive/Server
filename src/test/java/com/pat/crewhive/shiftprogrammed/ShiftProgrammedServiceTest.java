@@ -3,7 +3,7 @@ package com.pat.crewhive.shiftprogrammed;
 import com.pat.crewhive.common.DateUtils;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.common.StringUtils;
-import com.pat.crewhive.company.Company;
+import com.pat.crewhive.company.CompanyAccessService;
 import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
@@ -44,13 +44,16 @@ class ShiftProgrammedServiceTest {
     private DateUtils dateUtils;
     @Mock
     private CompanyService companyService;
+    @Mock
+    private CompanyAccessService companyAccessService;
 
     private ShiftProgrammedService shiftProgrammedService;
 
     @BeforeEach
     void setUp() {
         shiftProgrammedService = new ShiftProgrammedService(
-                shiftProgrammedRepository, shiftUserRepository, stringUtils, userService, dateUtils, companyService
+                shiftProgrammedRepository, shiftUserRepository, stringUtils, userService, dateUtils, companyService,
+                companyAccessService
         );
     }
 
@@ -95,9 +98,7 @@ class ShiftProgrammedServiceTest {
         LocalDate from = LocalDate.of(2026, 8, 17);
         LocalDate to = LocalDate.of(2026, 8, 23);
         ShiftProgrammed shift = buildShiftWithUser(UUID.randomUUID());
-        Company company = new Company(companyId, "Acme", null, null, null);
 
-        when(companyService.getCompanyByUserId(requesterUserId)).thenReturn(company);
         when(dateUtils.getStartDateForPeriod(Period.WEEK)).thenReturn(from);
         when(dateUtils.getEndDateForPeriod(Period.WEEK)).thenReturn(to);
         when(shiftProgrammedRepository.findByCompanyAndDateBetween(companyId, from, to))

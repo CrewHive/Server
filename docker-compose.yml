@@ -6,6 +6,9 @@ services:
     env_file:
       - .env
     environment:
+      # "cloud" legge le chiavi JWT da AWS Parameter Store (richiede AWS_* in .env);
+      # "onpremise" le legge da JWT_PUBLIC_KEY/JWT_PRIVATE_KEY in .env.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/crewhive
       SPRING_DATASOURCE_USERNAME: crewhive
       SPRING_DATASOURCE_PASSWORD: crewhive
@@ -20,7 +23,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: crewhive-postgres
+    container_name: crewhive-postgre
     environment:
       POSTGRES_DB: crewhive
       POSTGRES_USER: crewhive
