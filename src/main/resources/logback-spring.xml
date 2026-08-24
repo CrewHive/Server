@@ -8,8 +8,24 @@
         </encoder>
     </appender>
 
-    <appender name="CALCULATOR_FILE" class="ch.qos.logback.core.FileAppender">
-        <file>${LOG_PATH}/app.log</file>
+    <appender name="CALCULATOR_INFO_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_PATH}/app-info.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CALCULATOR_DEBUG_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_PATH}/app-debug.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CALCULATOR_ERROR_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_PATH}/app-error.log</file>
         <append>false</append>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -25,10 +41,11 @@
     </logger>
 
     <logger name="com.pat.crewhive" level="DEBUG" additivity="false">
-        <appender-ref ref="CALCULATOR_FILE" />
+        <appender-ref ref="CALCULATOR_DEBUG_FILE" />
     </logger>
+
     <logger name="com.pat.crewhive" level="ERROR" additivity="false">
-        <appender-ref ref="CALCULATOR_FILE" />
+        <appender-ref ref="CALCULATOR_ERROR_FILE" />
     </logger>
 
 </configuration>

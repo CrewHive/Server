@@ -41,6 +41,7 @@ public class RoleAssignmentService {
      * lascia la company, ne viene rimosso, oppure la company stessa viene eliminata) o
      * quando l'account viene disattivato: senza una company, all'utente deve restare
      * solo "ROLE_USER" (che sia un ruolo company-specific o quello globale ROLE_MANAGER).
+     * @param user The user whom will get resetted
      */
     @Transactional
     public void resetToBaseRole(User user) {
