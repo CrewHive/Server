@@ -39,5 +39,7 @@ build/
 
 docs
 
+logs
+
 ### Superpowers (subagent-driven-development scratch workspaces) ###
 .superpowers/
