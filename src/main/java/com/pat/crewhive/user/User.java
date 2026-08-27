@@ -32,6 +32,10 @@ public class User extends SoftDeletableEntity {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name="email", unique = true)
     private String email;
 
