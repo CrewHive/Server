@@ -17,7 +17,6 @@ import java.util.*;
 
 @Entity
 @Table(name = "users", indexes = {
-        @Index(name = "idx_user_username", columnList = "username"),
         @Index(name = "idx_user_company_id", columnList = "company_id"),
         @Index(name = "idx_user_active", columnList = "active"),
         @Index(name = "idx_user_deleted_at", columnList = "deleted_at"),

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 public class ShiftWorkedService {
@@ -29,16 +30,17 @@ public class ShiftWorkedService {
 
 
     /**
-     * Creates a new ShiftWorked entry in the database.
+     * Creates a new ShiftWorked entry for the given user (the authenticated caller).
      *
-     * @param dto Data transfer object containing shift details.
+     * @param dto    Data transfer object containing shift details.
+     * @param userId ID of the user the shift belongs to, taken from the JWT (self-only).
      */
     @Transactional
-    public void createShiftWorked(CreateShiftWorkedDTO dto) {
+    public void createShiftWorked(CreateShiftWorkedDTO dto, UUID userId) {
 
-        log.info("Creating ShiftWorked {} for user {}", dto.shiftName(), dto.userId());
+        log.info("Creating ShiftWorked {} for user {}", dto.shiftName(), userId);
 
-        User user = userService.getUserById(dto.userId());
+        User user = userService.getUserById(userId);
 
         String normalizedShiftName = stringUtils.normalizeString(dto.shiftName());
 
