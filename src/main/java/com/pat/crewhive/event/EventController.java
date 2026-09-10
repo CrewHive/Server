@@ -34,9 +34,7 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to create event");
 
-        Set<String> roles = cud.getRoles();
-
-        return ResponseEntity.ok(eventService.createEvent(dto, roles));
+        return ResponseEntity.ok(eventService.createEvent(dto, cud.getUserId(), cud.getCompanyId(), cud.getRoles()));
     }
 
     @Override
@@ -71,11 +69,12 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @PatchMapping(path = "/patch", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<UUID> patchEvent(@RequestBody @Valid PatchEventDTO dto) {
+    public ResponseEntity<UUID> patchEvent(@AuthenticationPrincipal CustomUserDetails cud,
+                                           @RequestBody @Valid PatchEventDTO dto) {
 
         log.info("Received request to patch event with id: {}", dto.eventId());
 
-        return ResponseEntity.ok(eventService.patchEvent(dto));
+        return ResponseEntity.ok(eventService.patchEvent(dto, cud.getUserId(), cud.getCompanyId(), cud.getRoles()));
     }
 
     @Override
@@ -84,7 +83,7 @@ public class EventController implements EventControllerInterface {
 
         log.info("Received request to delete event with id: {}", eventId);
 
-        eventService.deleteEvent(eventId, cud.getUserId());
+        eventService.deleteEvent(eventId, cud.getUserId(), cud.getCompanyId(), cud.getRoles());
         return ResponseEntity.ok("Evento eliminato con successo");
     }
 }

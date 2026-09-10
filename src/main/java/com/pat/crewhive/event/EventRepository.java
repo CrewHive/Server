@@ -44,7 +44,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             @Param("to")          LocalDate to
     );
 
-    @EntityGraph(attributePaths = {"users", "users.user", "eventType"}, type = EntityGraph.EntityGraphType.LOAD)
+    @EntityGraph(attributePaths = {"users", "users.user", "eventType", "creator", "creator.company"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("select distinct e from Event e where e.eventId = :id")
     Optional<Event> findByIdWithParticipants(@Param("id") UUID id);
 }

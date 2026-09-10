@@ -150,7 +150,8 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<UUID> patchEvent(@RequestBody @Valid PatchEventDTO dto);
+    ResponseEntity<UUID> patchEvent(@AuthenticationPrincipal CustomUserDetails cud,
+                                    @RequestBody @Valid PatchEventDTO dto);
 
 
     @Operation(summary = "Delete an event",
