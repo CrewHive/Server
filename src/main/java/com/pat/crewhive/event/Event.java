@@ -21,7 +21,8 @@ import java.util.UUID;
         @Index(name = "idx_event_date", columnList = "date"),
         @Index(name = "idx_event_active", columnList = "active"),
         @Index(name = "idx_event_deleted_at", columnList = "deleted_at"),
-        @Index(name = "idx_event_deleted_by", columnList = "deleted_by")
+        @Index(name = "idx_event_deleted_by", columnList = "deleted_by"),
+        @Index(name = "idx_event_creator_id", columnList = "creator_id")
 })
 @SQLRestriction("active = true")
 @SQLDelete(sql = "UPDATE event SET active = false, deleted_at = now() WHERE event_id = ? AND version = ?")
@@ -60,6 +61,10 @@ public class Event extends SoftDeletableEntity {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventUsers> users = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "creator_id", nullable = false)
+    private User creator;
 
     public Event() {
     }
@@ -118,6 +123,14 @@ public class Event extends SoftDeletableEntity {
 
     public void setColor(String color) {
         this.color = color;
+    }
+    
+    public User getCreator() {
+        return creator;
+    }
+
+    public void setCreator(User creator) {
+        this.creator = creator;
     }
 
     public EventTypeEntity getEventType() {
