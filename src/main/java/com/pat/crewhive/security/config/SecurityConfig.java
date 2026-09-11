@@ -67,8 +67,7 @@ public class SecurityConfig {
                         .requestMatchers(POST, "/api/auth/register").permitAll()
                         .requestMatchers(POST, "/api/auth/register/manager").permitAll()
                         .requestMatchers(POST, "/api/auth/rotate").permitAll()
-                        .requestMatchers("/docs", "/docs/**",
-                                         "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/docs", "/docs/**").hasRole("DEV")
                         .anyRequest().authenticated()
                 )
 
@@ -115,7 +114,8 @@ public class SecurityConfig {
         CorsConfiguration cfg = new CorsConfiguration();
 
         cfg.setAllowCredentials(true);
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "QUERY", "PATCH", "DELETE", "OPTIONS"));
+        cfg.setAllowedOrigins(List.of("*"));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         cfg.setExposedHeaders(List.of("Authorization")); // Per il token JWT
         // Preflight cache
