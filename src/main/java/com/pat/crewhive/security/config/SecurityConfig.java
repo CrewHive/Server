@@ -67,8 +67,7 @@ public class SecurityConfig {
                         .requestMatchers(POST, "/api/auth/register").permitAll()
                         .requestMatchers(POST, "/api/auth/register/manager").permitAll()
                         .requestMatchers(POST, "/api/auth/rotate").permitAll()
-                        .requestMatchers("/docs", "/docs/**",
-                                         "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/docs", "/docs/**").hasRole("DEV")
                         .anyRequest().authenticated()
                 )
 

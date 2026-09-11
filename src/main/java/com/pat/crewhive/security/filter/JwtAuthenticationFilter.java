@@ -47,11 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || uri.equals("/api/auth/register/manager")
                 || uri.equals("/api/auth/rotate")
                 || uri.startsWith("/actuator/health")
-                || uri.equals("/error")
-                || uri.equals("/docs")
-                || uri.startsWith("/docs/")
-                || uri.equals("/swagger-ui.html")
-                || uri.startsWith("/swagger-ui/");
+                || uri.equals("/error");
         // NOTA: /api/auth/logout NON è escluso → il filtro gira e autentica
     }
 

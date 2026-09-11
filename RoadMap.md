@@ -177,8 +177,10 @@ richiedono ROLE_MANAGER". Calendar spam / molestie / inquinamento dati cross-ten
   un'altra azienda.
 
 ### BASSI (sintesi)
-`show-sql=true` di default in prod (L1); `ddl-auto=update` in prod (L2); Swagger/OpenAPI
-world-readable in ogni profilo (L3); CORS `allowCredentials(true)` senza `allowedOrigins` +
+`show-sql=true` di default in prod (L1); `ddl-auto=update` in prod (L2); ~~Swagger/OpenAPI
+world-readable in ogni profilo (L3)~~ **risolto**: `/docs`, `/docs/**` ora richiedono
+autenticazione JWT + ruolo `DEV` (`SecurityConfig`/`JwtAuthenticationFilter`); CORS
+`allowCredentials(true)` senza `allowedOrigins` +
 metodo fittizio `"QUERY"` (L4); credenziali DB `crewhive/crewhive` in `docker-compose.yml` con
 Postgres/Redis esposti sull'host, Redis senza auth (L5); `GlobalExceptionHandler` rimanda
 `ex.getMessage()` degli `IllegalArgumentException` al client, a volte con identificatori (L6);
