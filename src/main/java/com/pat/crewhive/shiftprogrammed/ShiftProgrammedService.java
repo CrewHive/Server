@@ -187,6 +187,7 @@ public class ShiftProgrammedService {
 
         if (companyAccessService.isNotPartOfCompany(requesterUserId, companyId)) {
             log.error("Company {} access has been denied to user {}", companyId, requesterUserId);
+            //TODO: L'ID dev'essere lasciato solo nel log
             throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
         }
 
@@ -223,6 +224,7 @@ public class ShiftProgrammedService {
         if (!shiftProgrammedRepository.existsById(shiftId)) {
 
             log.error("getUsersInShift: Shift with id {} does not exist", shiftId);
+            //TODO: L'ID dev'essere lasciato solo nel log
             throw new ResourceNotFoundException("Shift not found with ID: " + shiftId);
         }
 
@@ -269,6 +271,7 @@ public class ShiftProgrammedService {
 
         if (companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())) {
             log.error("Company access has been denied to user {}", requesterUserId);
+            //TODO: L'ID dev'essere lasciato solo nel log
             throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
         }
 
@@ -360,6 +363,7 @@ public class ShiftProgrammedService {
 
         if (companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())) {
             log.error("Company access has been denied to user {}", requesterUserId);
+            //TODO: L'ID dev'essere lasciato solo nel log
             throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
         }
 
