@@ -69,6 +69,7 @@ public class ShiftTemplateService {
         //todo ritorna un dto
 
         if (repo.existsByShiftNameAndCompanyCompanyId(dto.shiftName(), dto.companyId())) {
+            //TODO: L'ID dev'essere lasciato solo nel log
             throw new ResourceAlreadyExistsException("Shift template with name '" + dto.shiftName() + "' already exists in company with ID " + dto.companyId());
         }
 
@@ -110,6 +111,7 @@ public class ShiftTemplateService {
         if (repo.existsByShiftNameAndCompanyCompanyId(normalizedShiftName, dto.companyId())) {
 
             if (!normalizedOldShiftName.equals(normalizedShiftName)) {
+                //TODO: L'ID dev'essere lasciato solo nel log
                 throw new ResourceAlreadyExistsException("Shift template with name '" + normalizedShiftName + "' already exists in company with ID " + dto.companyId());
             }
         }

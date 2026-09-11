@@ -107,6 +107,7 @@ public class UserService {
 
             Set<UUID> missing = new HashSet<>(ids);
             missing.removeAll(foundIds);
+            //TODO: L'ID dev'essere lasciato solo nel log
             throw new ResourceNotFoundException("Users not found: " + missing);
         }
 

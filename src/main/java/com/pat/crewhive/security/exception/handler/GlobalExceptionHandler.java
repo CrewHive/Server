@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
-    // 400 - Validazione Bean Validationd
+    // 400 - Validazione Bean Validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
