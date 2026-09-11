@@ -18,7 +18,7 @@ public interface ShiftUserRepository extends JpaRepository<ShiftUser, ShiftUserI
         select distinct u
         from ShiftUser su
         join su.user u
-        where su.shift.shiftProgrammedId = :shiftId
+        where su.shift.id = :shiftId
         order by u.email asc
         """)
     List<User> findUsersByShiftId(@Param("shiftId") UUID shiftId);

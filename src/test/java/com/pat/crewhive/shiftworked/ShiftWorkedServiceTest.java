@@ -1,6 +1,8 @@
 package com.pat.crewhive.shiftworked;
 
 import com.pat.crewhive.common.StringUtils;
+import com.pat.crewhive.company.Company;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,7 +47,14 @@ class ShiftWorkedServiceTest {
         User user = new User("user@example.com", "Mario", "Rossi", "encoded-pwd");
         ReflectionTestUtils.setField(user, "userId", userId);
         user.setOvertimeHours(overtime);
+        user.setCompany(buildCompany());
         return user;
+    }
+
+    private Company buildCompany() {
+        Company company = new Company();
+        ReflectionTestUtils.setField(company, "companyId", UUID.randomUUID());
+        return company;
     }
 
     private CreateShiftWorkedDTO dto(BigDecimal extraHours) {
@@ -85,5 +95,16 @@ class ShiftWorkedServiceTest {
         shiftWorkedService.createShiftWorked(dto(BigDecimal.ZERO), callerId);
 
         verify(userService).getUserById(callerId);
+    }
+
+    @Test
+    void createShiftWorked_userHasNoCompany_throwsResourceNotFoundException() {
+        UUID callerId = UUID.randomUUID();
+        User user = buildUser(callerId, BigDecimal.ZERO);
+        user.setCompany(null);
+        when(userService.getUserById(callerId)).thenReturn(user);
+
+        assertThatThrownBy(() -> shiftWorkedService.createShiftWorked(dto(BigDecimal.ZERO), callerId))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

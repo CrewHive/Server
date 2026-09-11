@@ -29,7 +29,7 @@ class ShiftProgrammedItemDTOTest {
         OffsetDateTime end = OffsetDateTime.parse("2026-08-21T17:00:00Z");
 
         ShiftProgrammed shift = new ShiftProgrammed();
-        ReflectionTestUtils.setField(shift, "shiftProgrammedId", shiftId);
+        ReflectionTestUtils.setField(shift, "id", shiftId);
         shift.setShiftName("Turno mattina");
         shift.setDescription("Apertura negozio");
         shift.setStart(start);
@@ -56,7 +56,7 @@ class ShiftProgrammedItemDTOTest {
     @Test
     void from_shiftWithoutUsers_returnsEmptyUsersList() {
         ShiftProgrammed shift = new ShiftProgrammed();
-        ReflectionTestUtils.setField(shift, "shiftProgrammedId", UUID.randomUUID());
+        ReflectionTestUtils.setField(shift, "id", UUID.randomUUID());
         shift.setShiftName("Turno vuoto");
         shift.setStart(OffsetDateTime.now());
         shift.setEnd(OffsetDateTime.now().plusHours(1));

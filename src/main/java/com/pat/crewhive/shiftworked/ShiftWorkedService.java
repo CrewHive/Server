@@ -1,5 +1,7 @@
 package com.pat.crewhive.shiftworked;
 
+import com.pat.crewhive.company.Company;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.common.StringUtils;
@@ -42,6 +44,11 @@ public class ShiftWorkedService {
 
         User user = userService.getUserById(userId);
 
+        Company company = user.getCompany();
+        if (company == null) {
+            throw new ResourceNotFoundException("User has no company");
+        }
+
         String normalizedShiftName = stringUtils.normalizeString(dto.shiftName());
 
         ShiftWorked sw = new ShiftWorked(
@@ -50,7 +57,8 @@ public class ShiftWorkedService {
                 dto.end(),
                 dto.breakTime(),
                 dto.extraHours(),
-                user
+                user,
+                company
         );
 
         BigDecimal oldOvertime = user.getOvertimeHours();

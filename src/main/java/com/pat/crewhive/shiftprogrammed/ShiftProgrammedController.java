@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
     }
 
     @Override
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/create")
     public ResponseEntity<UUID> createShift(@AuthenticationPrincipal CustomUserDetails cud,
                                             @RequestBody @Valid CreateShiftProgrammedDTO dto) {
@@ -70,6 +72,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
 
     @Override
+    @PreAuthorize("hasRole('MANAGER')")
     @PatchMapping("/patch")
     public ResponseEntity<UUID> patchShift(@AuthenticationPrincipal CustomUserDetails cud,
                                            @RequestBody @Valid PatchShiftProgrammedDTO dto) {
@@ -80,6 +83,7 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
     }
 
     @Override
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/delete/{shiftId}")
     public ResponseEntity<?> deleteShift(@AuthenticationPrincipal CustomUserDetails cud,
                                          @PathVariable @NotNull UUID shiftId) {

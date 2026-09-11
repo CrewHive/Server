@@ -34,7 +34,7 @@ class ShiftWorkedSoftDeleteMappingTest {
 
         assertThat(sqlDelete).isNotNull();
         assertThat(sqlDelete.sql())
-                .isEqualTo("UPDATE shift_worked SET active = false, deleted_at = now() WHERE shift_worked_id = ?");
+                .isEqualTo("UPDATE shift_worked SET active = false, deleted_at = now() WHERE shift_worked_id = ? AND version = ?");
     }
 
     @Test

@@ -1,15 +1,14 @@
 package com.pat.crewhive.shiftworked;
 
-import com.pat.crewhive.common.audit.SoftDeletableEntity;
+import com.pat.crewhive.common.shift.Shift;
+import com.pat.crewhive.company.Company;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.AssertTrue;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -17,6 +16,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "shift_worked", indexes = {
         @Index(name = "idx_shift_worked_user_id", columnList = "user_id"),
+        @Index(name = "idx_shift_worked_company_id", columnList = "company_id"),
         @Index(name = "idx_shift_worked_start_shift", columnList = "start_shift"),
         @Index(name = "idx_shift_worked_end_shift", columnList = "end_shift"),
         @Index(name = "idx_shift_worked_date", columnList = "shift_date"),
@@ -24,29 +24,16 @@ import java.util.UUID;
         @Index(name = "idx_shift_worked_deleted_at", columnList = "deleted_at"),
         @Index(name = "idx_shift_worked_deleted_by", columnList = "deleted_by")
 })
+@AttributeOverrides({
+        @AttributeOverride(name = "id", column = @Column(name = "shift_worked_id", nullable = false)),
+        @AttributeOverride(name = "shiftName", column = @Column(name = "shift_name", nullable = false))
+})
 @SQLRestriction("active = true")
-@SQLDelete(sql = "UPDATE shift_worked SET active = false, deleted_at = now() WHERE shift_worked_id = ?")
-public class ShiftWorked extends SoftDeletableEntity {
+@SQLDelete(sql = "UPDATE shift_worked SET active = false, deleted_at = now() WHERE shift_worked_id = ? AND version = ?")
+public class ShiftWorked extends Shift {
 
     private static final int HOURS_SCALE = 2;
     private static final RoundingMode HOURS_ROUNDING = RoundingMode.HALF_UP;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "shift_worked_id", nullable = false)
-    private UUID shiftWorkedId;
-
-    @Column(name = "shift_name", nullable = false)
-    private String shiftName;
-
-    @Column(name = "start_shift", nullable = false)
-    private OffsetDateTime start;
-
-    @Column(name = "end_shift", nullable = false)
-    private OffsetDateTime end;
-
-    @Column(name = "shift_date", nullable = false)
-    private LocalDate date;
 
     @Column(name = "break_time", nullable = false)
     private int breakTime;
@@ -65,39 +52,7 @@ public class ShiftWorked extends SoftDeletableEntity {
     }
 
     public UUID getShiftWorkedId() {
-        return shiftWorkedId;
-    }
-
-    public String getShiftName() {
-        return shiftName;
-    }
-
-    public void setShiftName(String shiftName) {
-        this.shiftName = shiftName;
-    }
-
-    public OffsetDateTime getStart() {
-        return start;
-    }
-
-    public void setStart(OffsetDateTime start) {
-        this.start = start;
-    }
-
-    public OffsetDateTime getEnd() {
-        return end;
-    }
-
-    public void setEnd(OffsetDateTime end) {
-        this.end = end;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
+        return getId();
     }
 
     public int getBreakTime() {
@@ -137,11 +92,13 @@ public class ShiftWorked extends SoftDeletableEntity {
                        OffsetDateTime end,
                        int breakTimeMinutes,
                        BigDecimal extraHours,
-                       User user) {
+                       User user,
+                       Company company) {
 
-        this.shiftName = shiftName;
-        this.start = start;
-        this.end = end;
+        setShiftName(shiftName);
+        setStart(start);
+        setEnd(end);
+        setCompany(company);
         this.breakTime = breakTimeMinutes;
         this.user = user;
         this.extraHours = extraHours != null ? extraHours : BigDecimal.ZERO;
@@ -171,22 +128,12 @@ public class ShiftWorked extends SoftDeletableEntity {
 
     @PrePersist
     @PreUpdate
-    private void syncAndRecompute() {
+    private void recomputeWorkedHours() {
 
-        if (this.start != null) {
-            this.date = this.start.toLocalDate();
-        }
-
-        this.workedHours = computeWorkedHours(this.start, this.end, this.breakTime);
+        this.workedHours = computeWorkedHours(getStart(), getEnd(), this.breakTime);
 
         if (this.extraHours == null) {
             this.extraHours = BigDecimal.ZERO;
         }
-    }
-
-    // Validazione bean: utile con @Valid sul DTO/Controller
-    @AssertTrue(message = "La fine turno deve essere successiva all'inizio turno")
-    private boolean isChronologicallyValid() {
-        return start != null && end != null && end.isAfter(start);
     }
 }
