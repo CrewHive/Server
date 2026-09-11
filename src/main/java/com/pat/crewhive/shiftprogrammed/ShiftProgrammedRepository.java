@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface ShiftProgrammedRepository extends JpaRepository<ShiftProgrammed, UUID> {
 
     @EntityGraph(attributePaths = {"users.user"})
-    @Query("select sp from ShiftProgrammed sp where sp.shiftProgrammedId = :id")
+    @Query("select sp from ShiftProgrammed sp where sp.id = :id")
     Optional<ShiftProgrammed> findByIdWithWorkers(@Param("id") UUID id);
 
     @EntityGraph(attributePaths = {"users.user"}, type = EntityGraph.EntityGraphType.LOAD)
@@ -32,10 +32,9 @@ public interface ShiftProgrammedRepository extends JpaRepository<ShiftProgrammed
 
     @EntityGraph(attributePaths = {"users.user"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("""
-        select distinct sp
+        select sp
         from ShiftProgrammed sp
-        join sp.users su
-        where su.user.company.companyId = :companyId
+        where sp.company.companyId = :companyId
             and sp.date between :from and :to
         order by sp.start asc
         """)

@@ -24,7 +24,7 @@ public record RegistrationDTO(
         String lastName,
 
         @NotBlank(message="Password cannot be blank")
-        @Size(min=12, max=32, message="Password must be between 12 and 32 characters")
+        @Size(min=12, max=20, message="Password must be between 12 and 20 characters")
         @NoHtml
         String password
 ) {

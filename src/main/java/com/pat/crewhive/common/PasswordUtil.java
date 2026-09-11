@@ -8,7 +8,7 @@ import java.util.Objects;
 @Component
 public class PasswordUtil {
 
-    private static final int MIN_LEN = 8;
+    private static final int MIN_LEN = 12;
     private static final int MAX_LEN = 20;
 
     private final PasswordEncoder passwordEncoder;

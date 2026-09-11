@@ -3,6 +3,7 @@ package com.pat.crewhive.shiftprogrammed;
 import com.pat.crewhive.common.DateUtils;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.common.StringUtils;
+import com.pat.crewhive.company.Company;
 import com.pat.crewhive.company.CompanyAccessService;
 import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
@@ -63,9 +64,15 @@ class ShiftProgrammedServiceTest {
         return user;
     }
 
+    private Company buildCompany() {
+        Company company = new Company();
+        ReflectionTestUtils.setField(company, "companyId", UUID.randomUUID());
+        return company;
+    }
+
     private ShiftProgrammed buildShiftWithUser(UUID userId) {
         ShiftProgrammed shift = new ShiftProgrammed();
-        ReflectionTestUtils.setField(shift, "shiftProgrammedId", UUID.randomUUID());
+        ReflectionTestUtils.setField(shift, "id", UUID.randomUUID());
         shift.setShiftName("Turno mattina");
         shift.setStart(OffsetDateTime.parse("2026-08-21T09:00:00Z"));
         shift.setEnd(OffsetDateTime.parse("2026-08-21T17:00:00Z"));
@@ -138,14 +145,17 @@ class ShiftProgrammedServiceTest {
         UUID shiftId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
+        Company company = buildCompany();
         ShiftProgrammed shift = new ShiftProgrammed();
-        ReflectionTestUtils.setField(shift, "shiftProgrammedId", shiftId);
+        ReflectionTestUtils.setField(shift, "id", shiftId);
         shift.setShiftName("Turno mattina");
         shift.setStart(OffsetDateTime.parse("2026-08-21T09:00:00Z"));
         shift.setEnd(OffsetDateTime.parse("2026-08-21T17:00:00Z"));
         shift.setColor("#00FF00");
+        shift.setCompany(company);
 
         User user = buildUser(userId, "Mario", "Rossi");
+        user.setCompany(company);
 
         ShiftUser softDeletedLink = new ShiftUser(shift, user);
         softDeletedLink.markDeleted(user);
@@ -172,9 +182,59 @@ class ShiftProgrammedServiceTest {
     }
 
     @Test
+    void patchShift_requesterNotPartOfShiftCompany_throwsIllegalArgumentException() {
+        UUID shiftId = UUID.randomUUID();
+        UUID requesterUserId = UUID.randomUUID();
+
+        ShiftProgrammed shift = new ShiftProgrammed();
+        ReflectionTestUtils.setField(shift, "id", shiftId);
+        shift.setShiftName("Turno mattina");
+        shift.setStart(OffsetDateTime.parse("2026-08-21T09:00:00Z"));
+        shift.setEnd(OffsetDateTime.parse("2026-08-21T17:00:00Z"));
+        shift.setColor("#00FF00");
+        shift.setCompany(buildCompany());
+
+        PatchShiftProgrammedDTO dto = new PatchShiftProgrammedDTO(
+                shiftId, "Turno mattina", null,
+                OffsetDateTime.parse("2026-08-21T09:00:00Z"),
+                OffsetDateTime.parse("2026-08-21T17:00:00Z"),
+                "00FF00", null
+        );
+
+        when(shiftProgrammedRepository.findByIdWithWorkers(shiftId)).thenReturn(java.util.Optional.of(shift));
+        when(companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())).thenReturn(true);
+
+        assertThatThrownBy(() -> shiftProgrammedService.patchShift(requesterUserId, dto))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void deleteShift_requesterNotPartOfShiftCompany_throwsIllegalArgumentException() {
+        UUID shiftId = UUID.randomUUID();
+        UUID requesterUserId = UUID.randomUUID();
+
+        ShiftProgrammed shift = new ShiftProgrammed();
+        ReflectionTestUtils.setField(shift, "id", shiftId);
+        shift.setCompany(buildCompany());
+
+        when(shiftProgrammedRepository.findById(shiftId)).thenReturn(java.util.Optional.of(shift));
+        when(companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())).thenReturn(true);
+
+        assertThatThrownBy(() -> shiftProgrammedService.deleteShift(requesterUserId, shiftId))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(userService, never()).getUserById(requesterUserId);
+    }
+
+    @Test
     void createShift_persistsAllParticipants_notJustTheFirst() {
+        Company company = buildCompany();
+        User creator = buildUser(UUID.randomUUID(), "Anna", "Bianchi");
+        creator.setCompany(company);
         User user1 = buildUser(UUID.randomUUID(), "Mario", "Rossi");
+        user1.setCompany(company);
         User user2 = buildUser(UUID.randomUUID(), "Luigi", "Verdi");
+        user2.setCompany(company);
 
         CreateShiftProgrammedDTO dto = new CreateShiftProgrammedDTO(
                 "Turno mattina", null,
@@ -183,15 +243,19 @@ class ShiftProgrammedServiceTest {
                 "00FF00", Set.of(user1.getUserId(), user2.getUserId())
         );
 
+        UUID creatorUserId = creator.getUserId();
+
+        when(userService.getUserById(creatorUserId)).thenReturn(creator);
         when(stringUtils.normalizeString("Turno mattina")).thenReturn("Turno mattina");
         when(userService.getUsersByIds(Set.of(user1.getUserId(), user2.getUserId())))
                 .thenReturn(List.of(user1, user2));
         when(shiftProgrammedRepository.save(any(ShiftProgrammed.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        shiftProgrammedService.createShift(UUID.randomUUID(), dto);
+        shiftProgrammedService.createShift(creatorUserId, dto);
 
         ArgumentCaptor<ShiftProgrammed> captor = ArgumentCaptor.forClass(ShiftProgrammed.class);
         verify(shiftProgrammedRepository).save(captor.capture());
         assertThat(captor.getValue().getUsers()).hasSize(2);
+        assertThat(captor.getValue().getCompany()).isSameAs(company);
     }
 }

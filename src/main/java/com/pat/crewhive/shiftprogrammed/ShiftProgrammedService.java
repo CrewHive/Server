@@ -1,6 +1,7 @@
 package com.pat.crewhive.shiftprogrammed;
 
 
+import com.pat.crewhive.company.Company;
 import com.pat.crewhive.company.CompanyAccessService;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.common.Period;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,7 +92,14 @@ public class ShiftProgrammedService {
             throw new IllegalArgumentException("Shift start time cannot be after end time");
         }
 
-        List<User> users = userService.getUsersByIds(dto.userId());
+        User creator = userService.getUserById(creatorUserId);
+
+        Company company = creator.getCompany();
+        if (company == null) {
+            throw new ResourceNotFoundException("Creator has no company");
+        }
+
+        List<User> users = resolveParticipantsSameCompany(dto.userId(), company.getCompanyId());
 
         ShiftProgrammed shiftProgrammed = new ShiftProgrammed();
         shiftProgrammed.setShiftName(normalizedShiftName);
@@ -98,6 +107,7 @@ public class ShiftProgrammedService {
         shiftProgrammed.setStart(dto.start());
         shiftProgrammed.setEnd(dto.end());
         shiftProgrammed.setColor(dto.color());
+        shiftProgrammed.setCompany(company);
 
         for (User u: users) {
             shiftProgrammed.addUser(u);
@@ -106,6 +116,26 @@ public class ShiftProgrammedService {
         ShiftProgrammed savedShift = shiftProgrammedRepository.save(shiftProgrammed);
 
         return savedShift.getShiftProgrammedId();
+    }
+
+
+    /**
+     * Risolve gli utenti indicati verificando che appartengano tutti alla company
+     * data, così un turno non può mai essere assegnato a un utente esterno.
+     * @throws AuthorizationDeniedException se almeno un utente non appartiene alla company.
+     */
+    private List<User> resolveParticipantsSameCompany(Set<UUID> userIds, UUID companyId) {
+
+        List<User> users = userService.getUsersByIds(userIds);
+
+        boolean foreign = users.stream().anyMatch(u ->
+                u.getCompany() == null || !u.getCompany().getCompanyId().equals(companyId));
+
+        if (foreign) {
+            throw new AuthorizationDeniedException("Un partecipante non appartiene alla tua company");
+        }
+
+        return users;
     }
 
 
@@ -237,6 +267,10 @@ public class ShiftProgrammedService {
         ShiftProgrammed shift = shiftProgrammedRepository.findByIdWithWorkers(dto.shiftProgrammedId())
                 .orElseThrow(() -> new ResourceNotFoundException("Shift not found with ID: " + dto.shiftProgrammedId()));
 
+        if (companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())) {
+            log.error("Company access has been denied to user {}", requesterUserId);
+            throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
+        }
 
         shift.setShiftName(stringUtils.normalizeString(dto.name()));
 
@@ -272,7 +306,7 @@ public class ShiftProgrammedService {
                 Set<UUID> toAdd = new HashSet<>(newIds);
                 toAdd.removeAll(current);
                 if (!toAdd.isEmpty()) {
-                    for (User user : userService.getUsersByIds(toAdd)) {
+                    for (User user : resolveParticipantsSameCompany(toAdd, shift.getCompany().getCompanyId())) {
                         ShiftUser link = shiftUserRepository
                                 .findByIdIncludingDeleted(shift.getShiftProgrammedId(), user.getUserId())
                                 .map(existing -> { existing.restore(); return existing; })
@@ -324,7 +358,13 @@ public class ShiftProgrammedService {
         ShiftProgrammed shift = shiftProgrammedRepository.findById(shiftId)
                 .orElseThrow(() -> new ResourceNotFoundException("Shift not found with ID: " + shiftId));
 
+        if (companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())) {
+            log.error("Company access has been denied to user {}", requesterUserId);
+            throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
+        }
+
         User actor = userService.getUserById(requesterUserId);
+
         SoftDeleteSupport.softDelete(shiftProgrammedRepository, shift, actor);
     }
 }
