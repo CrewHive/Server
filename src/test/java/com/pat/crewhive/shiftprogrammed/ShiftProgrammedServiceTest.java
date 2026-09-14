@@ -44,8 +44,6 @@ class ShiftProgrammedServiceTest {
     @Mock
     private DateUtils dateUtils;
     @Mock
-    private CompanyService companyService;
-    @Mock
     private CompanyAccessService companyAccessService;
 
     private ShiftProgrammedService shiftProgrammedService;
@@ -53,7 +51,7 @@ class ShiftProgrammedServiceTest {
     @BeforeEach
     void setUp() {
         shiftProgrammedService = new ShiftProgrammedService(
-                shiftProgrammedRepository, shiftUserRepository, stringUtils, userService, dateUtils, companyService,
+                shiftProgrammedRepository, shiftUserRepository, stringUtils, userService, dateUtils,
                 companyAccessService
         );
     }

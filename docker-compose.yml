@@ -5,6 +5,7 @@ services:
     container_name: crewhive-app
     env_file:
       - .env
+      - .env.${SPRING_PROFILES_ACTIVE}
     environment:
       # "cloud" legge le chiavi JWT da AWS Parameter Store (richiede AWS_* in .env);
       # "onpremise" le legge da JWT_PUBLIC_KEY/JWT_PRIVATE_KEY in .env.
@@ -13,6 +14,8 @@ services:
       SPRING_DATASOURCE_USERNAME: crewhive
       SPRING_DATASOURCE_PASSWORD: crewhive
       SPRING_DATA_REDIS_HOST: redis
+      DDL_AUTO: validate
+      SHOW_SQL: false
     ports:
       - "8080:8080"
     depends_on:
