@@ -41,10 +41,12 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @GetMapping("/period/{period}/user/{userId}")
-    public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
-                                                                          @PathVariable @NotNull UUID userId) {
+    public ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                             @PathVariable @NotNull Period period,
+                                                                             @PathVariable @NotNull UUID userId) {
         log.info("Received request to get shifts for user {} in period {}", userId, period);
 
+        shiftProgrammedService.assertCanReadUserShifts(userId, cud.getCompanyId());
         return ResponseEntity.ok(shiftProgrammedService.getShiftsByPeriodAndUser(period, userId));
     }
 
@@ -63,10 +65,12 @@ public class ShiftProgrammedController implements ShiftProgrammedControllerInter
 
     @Override
     @GetMapping("/users/{shiftId}")
-    public ResponseEntity<List<ShiftParticipantDTO>> getUsersByShift(@PathVariable @NotNull UUID shiftId) {
+    public ResponseEntity<List<ShiftParticipantDTO>> getUsersByShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                  @PathVariable @NotNull UUID shiftId) {
 
         log.info("Received request to get users for shift {}", shiftId);
 
+        shiftProgrammedService.assertCanReadShift(shiftId, cud.getCompanyId());
         return ResponseEntity.ok(shiftProgrammedService.getUsersInShift(shiftId));
     }
 

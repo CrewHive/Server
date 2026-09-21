@@ -20,10 +20,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -135,6 +137,70 @@ class ShiftProgrammedServiceTest {
         when(shiftProgrammedRepository.existsById(shiftId)).thenReturn(false);
 
         assertThatThrownBy(() -> shiftProgrammedService.getUsersInShift(shiftId))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void assertCanReadUserShifts_sameCompany_passes() {
+        UUID userId = UUID.randomUUID();
+        Company company = buildCompany();
+        User target = buildUser(userId, "Luigi", "Verdi");
+        target.setCompany(company);
+
+        when(userService.getUserById(userId)).thenReturn(target);
+
+        assertThatCode(() -> shiftProgrammedService.assertCanReadUserShifts(userId, company.getCompanyId()))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void assertCanReadUserShifts_otherCompanyOrNone_throwsResourceNotFound() {
+        UUID userId = UUID.randomUUID();
+        User target = buildUser(userId, "Luigi", "Verdi");
+        target.setCompany(buildCompany());
+
+        when(userService.getUserById(userId)).thenReturn(target);
+
+        assertThatThrownBy(() -> shiftProgrammedService.assertCanReadUserShifts(userId, UUID.randomUUID()))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        target.setCompany(null);
+        assertThatThrownBy(() -> shiftProgrammedService.assertCanReadUserShifts(userId, UUID.randomUUID()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void assertCanReadShift_sameCompany_passes() {
+        Company company = buildCompany();
+        ShiftProgrammed shift = buildShiftWithUser(UUID.randomUUID());
+        shift.setCompany(company);
+        UUID shiftId = shift.getShiftProgrammedId();
+
+        when(shiftProgrammedRepository.findById(shiftId)).thenReturn(Optional.of(shift));
+
+        assertThatCode(() -> shiftProgrammedService.assertCanReadShift(shiftId, company.getCompanyId()))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void assertCanReadShift_otherCompany_throwsResourceNotFound() {
+        ShiftProgrammed shift = buildShiftWithUser(UUID.randomUUID());
+        shift.setCompany(buildCompany());
+        UUID shiftId = shift.getShiftProgrammedId();
+
+        when(shiftProgrammedRepository.findById(shiftId)).thenReturn(Optional.of(shift));
+
+        assertThatThrownBy(() -> shiftProgrammedService.assertCanReadShift(shiftId, UUID.randomUUID()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void assertCanReadShift_shiftDoesNotExist_throwsResourceNotFound() {
+        UUID shiftId = UUID.randomUUID();
+
+        when(shiftProgrammedRepository.findById(shiftId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> shiftProgrammedService.assertCanReadShift(shiftId, UUID.randomUUID()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 

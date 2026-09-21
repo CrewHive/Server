@@ -161,20 +161,58 @@ public class EventService {
 
 
     /**
+     * Assert that the target user belongs to the caller's company. A missing user and a user of
+     * another company get the same answer, so the endpoint can't be used to probe which IDs exist.
+     * @throws ResourceNotFoundException if the target is unknown or outside the caller's company
+     */
+    private void assertTargetInCompany(UUID targetUserId, UUID callerCompanyId) {
+
+        User target = userService.getUserById(targetUserId);
+
+        if (target.getCompany() == null || !target.getCompany().getCompanyId().equals(callerCompanyId)) {
+            log.warn("Denied agenda read of user {} to a caller of company {}", targetUserId, callerCompanyId);
+            throw new ResourceNotFoundException("User not found");
+        }
+    }
+
+
+    /**
+     * Restrict a colleague's events to what the caller may see: public events, and private
+     * events the caller takes part in. The owner's own agenda is returned untouched.
+     */
+    private List<Event> visibleTo(List<Event> events, UUID targetUserId, UUID callerId) {
+
+        if (targetUserId.equals(callerId)) {
+            return events;
+        }
+
+        return events.stream()
+                .filter(e -> e.getEventType().getId() == PUBLIC.getId()
+                        || e.getUsers().stream().anyMatch(eu -> eu.getUser().getUserId().equals(callerId)))
+                .toList();
+    }
+
+
+    /**
      * Fetch events for a user within a specified time period.
      * @param period The time period (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
-     * @param userId The ID of the user.
-     * @return List of events within the specified period for the user.
+     * @param targetUserId The ID of the user whose agenda is requested.
+     * @param callerId The ID of the authenticated user.
+     * @param callerCompanyId The company of the authenticated user.
+     * @return Events of the target within the period that the caller may see.
+     * @throws ResourceNotFoundException if the target is unknown or belongs to another company.
      */
     @Transactional(readOnly = true)
-    public List<EventOutputDTO> getEventsByPeriodAndUser(Period period, UUID userId) {
+    public List<EventOutputDTO> getEventsByPeriodAndUser(Period period, UUID targetUserId, UUID callerId, UUID callerCompanyId) {
 
-        log.info("Fetching events for userId: {} with eventTemp: {}", userId, period);
+        log.info("Fetching events for userId: {} with eventTemp: {}", targetUserId, period);
+
+        assertTargetInCompany(targetUserId, callerCompanyId);
 
         LocalDate from = dateUtils.getStartDateForPeriod(period);
         LocalDate to = dateUtils.getEndDateForPeriod(period);
 
-        return eventRepository.findWithParticipantsByUserAndDateBetween(userId, from, to).stream()
+        return visibleTo(eventRepository.findWithParticipantsByUserAndDateBetween(targetUserId, from, to), targetUserId, callerId).stream()
                 .map(EventOutputDTO::from)
                 .toList();
     }
@@ -182,15 +220,20 @@ public class EventService {
 
     /**
      * Fetch all events associated with a specific user.
-     * @param userId The ID of the user.
-     * @return List of events associated with the user.
+     * @param targetUserId The ID of the user whose agenda is requested.
+     * @param callerId The ID of the authenticated user.
+     * @param callerCompanyId The company of the authenticated user.
+     * @return Events of the target that the caller may see.
+     * @throws ResourceNotFoundException if the target is unknown or belongs to another company.
      */
     @Transactional(readOnly = true)
-    public List<EventOutputDTO> getUserEvents(UUID userId) {
+    public List<EventOutputDTO> getUserEvents(UUID targetUserId, UUID callerId, UUID callerCompanyId) {
 
-        log.info("Fetching all events for userId: {}", userId);
+        log.info("Fetching all events for userId: {}", targetUserId);
 
-        return eventUsersRepository.findEventsByUserId(userId).stream()
+        assertTargetInCompany(targetUserId, callerCompanyId);
+
+        return visibleTo(eventUsersRepository.findEventsByUserId(targetUserId), targetUserId, callerId).stream()
                 .map(EventOutputDTO::from)
                 .toList();
     }

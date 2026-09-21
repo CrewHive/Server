@@ -52,7 +52,7 @@ public class ManagerController implements ManagerControllerInterface {
 
         roleService.updateUserRole(targetId, updateUserRoleDTO.newRole(), cud.getCompanyId());
 
-        log.info("Updated user role for user: {}", cud.getEmail());
+        log.info("Updated user role for user: {}", targetId);
 
         return ResponseEntity.ok().build();
     }

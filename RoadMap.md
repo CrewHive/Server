@@ -119,19 +119,27 @@ riassegnare le persone dentro/fuori dai turni di un altro tenant.
 
 ### ALTI
 
-**H1 — Disclosure cross-tenant di agenda e turni altrui.**
+~~**H1 — Disclosure cross-tenant di agenda e turni altrui.**~~ **risolto**: target/turno devono
+essere nella company del chiamante (404 uniforme, no oracolo di esistenza); eventi di un collega
+filtrati a PUBLIC + privati condivisi; check nel controller *prima* dei metodi `@Cacheable`.
+*(Testo originale:)*
 `GET /event/user/{userId}`, `GET /event/{temp}/user/{userId}`,
 `GET /shift-programmed/period/{p}/user/{userId}`, `GET /shift-programmed/users/{shiftId}`: nessun
 controllo, `userId`/`shiftId` arbitrari, ritornano date e nomi dei colleghi.
 
-**H2 — Disclosure cross-tenant di PII/HR via CompanyController.**
+~~**H2 — Disclosure cross-tenant di PII/HR via CompanyController.**~~ **risolto**: nuovo
+`assertCanReadCompanyUser` (manager *e* target nella company, 404 uniforme) chiamato dal controller
+prima del metodo `@Cacheable`, che prima su cache hit saltava anche il check del manager.
+*(Testo originale:)*
 `CompanyService.getCompanyUserWithInformation` (`CompanyService.java:171-201`) verifica che il
 *manager* appartenga a `companyId`, ma non che `targetId` appartenga a `companyId`. Un manager legge
 email, contratto, ore, saldi ferie/permessi di qualsiasi utente di qualsiasi azienda.
 
-**H3 — `updateUserRole` non verifica che il target sia nella company del manager**
+~~**H3 — `updateUserRole` non verifica che il target sia nella company del manager**
 (`RoleService.java:75-88`): un manager di A può assegnare ruoli di A a utenti di B. In più
-`UpdateUserRoleDTO.newRole` ha `@Min/@Max` su una `String` → Bean Validation invalida → 500.
+`UpdateUserRoleDTO.newRole` ha `@Min/@Max` su una `String` → Bean Validation invalida → 500.~~
+**risolto**: target verificato nella company del manager (404 uniforme); DTO corretto
+(`@NotBlank/@Size/@NoHtml`, `userId` `@NotNull`).
 
 **H4 — Gli endpoint ShiftTemplate si fidano del `companyId` fornito dall'attaccante.**
 Tutti `@PreAuthorize("hasRole('MANAGER')")` (autorità *globale*), ma `companyId` arriva da
@@ -172,7 +180,7 @@ richiedono ROLE_MANAGER". Calendar spam / molestie / inquinamento dati cross-ten
 - **M7 — Verifica JWT senza algoritmo pinnato e senza clock-skew**: `parserBuilder().setSigningKey()`
   senza allow-list `RS256`. L'algorithm-confusion è bloccato solo dai check interni di jjwt, non da
   policy esplicita — fragile visto M6.
-- **M1 — `setCompany`** autorizza su `companyId` del token ma poi muta la company risolta *per nome*
+- ~~**M1 — `setCompany`**~~ **risolto** (la company risolta per nome deve coincidere con quella del manager, altrimenti 403). *(Testo originale:)* autorizza su `companyId` del token ma poi muta la company risolta *per nome*
   dal body (`CompanyService.java:212-239`): un manager può arruolare un utente company-less in
   un'altra azienda.
 

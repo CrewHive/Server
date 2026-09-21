@@ -4,6 +4,7 @@ import com.pat.crewhive.common.DateUtils;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.company.Company;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,32 +108,103 @@ class EventServiceTest {
     // ---------------------------------------------------------------------
 
     @Test
-    void getEventsByPeriodAndUser_returnsEventsMappedToOutputDTOs() {
-        UUID userId = UUID.randomUUID();
+    void getEventsByPeriodAndUser_ownAgenda_returnsAllEvents() {
+        User me = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(UUID.randomUUID(), me);
+        event.addUser(me);
         LocalDate from = LocalDate.of(2026, 8, 17);
         LocalDate to = LocalDate.of(2026, 8, 23);
-        Event event = buildEventWithParticipant();
 
+        when(userService.getUserById(me.getUserId())).thenReturn(me);
         when(dateUtils.getStartDateForPeriod(Period.WEEK)).thenReturn(from);
         when(dateUtils.getEndDateForPeriod(Period.WEEK)).thenReturn(to);
-        when(eventRepository.findWithParticipantsByUserAndDateBetween(userId, from, to))
+        when(eventRepository.findWithParticipantsByUserAndDateBetween(me.getUserId(), from, to))
                 .thenReturn(List.of(event));
 
-        List<EventOutputDTO> result = eventService.getEventsByPeriodAndUser(Period.WEEK, userId);
+        List<EventOutputDTO> result = eventService.getEventsByPeriodAndUser(Period.WEEK, me.getUserId(), me.getUserId(), COMPANY_A);
 
         assertThat(result).containsExactly(EventOutputDTO.from(event));
     }
 
     @Test
-    void getUserEvents_returnsEventsMappedToOutputDTOs() {
-        UUID userId = UUID.randomUUID();
-        Event event = buildEventWithParticipant();
+    void getEventsByPeriodAndUser_targetInOtherCompany_throwsResourceNotFound() {
+        User target = user(UUID.randomUUID(), COMPANY_B);
 
-        when(eventUsersRepository.findEventsByUserId(userId)).thenReturn(List.of(event));
+        when(userService.getUserById(target.getUserId())).thenReturn(target);
 
-        List<EventOutputDTO> result = eventService.getUserEvents(userId);
+        assertThatThrownBy(() -> eventService.getEventsByPeriodAndUser(Period.WEEK, target.getUserId(), UUID.randomUUID(), COMPANY_A))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verifyNoInteractions(eventRepository);
+    }
+
+    @Test
+    void getEventsByPeriodAndUser_colleague_returnsOnlyPublicOrSharedEvents() {
+        User me = user(UUID.randomUUID(), COMPANY_A);
+        User colleague = user(UUID.randomUUID(), COMPANY_A);
+        User other = user(UUID.randomUUID(), COMPANY_A);
+
+        Event publicEvent = event(UUID.randomUUID(), colleague);
+        publicEvent.setEventType(new EventTypeEntity((short) 1, "Public"));
+        publicEvent.addUser(colleague);
+
+        Event sharedPrivate = event(UUID.randomUUID(), colleague);
+        sharedPrivate.addUser(colleague);
+        sharedPrivate.addUser(me);
+
+        Event hiddenPrivate = event(UUID.randomUUID(), colleague);
+        hiddenPrivate.addUser(colleague);
+        hiddenPrivate.addUser(other);
+
+        LocalDate from = LocalDate.of(2026, 8, 17);
+        LocalDate to = LocalDate.of(2026, 8, 23);
+        when(userService.getUserById(colleague.getUserId())).thenReturn(colleague);
+        when(dateUtils.getStartDateForPeriod(Period.WEEK)).thenReturn(from);
+        when(dateUtils.getEndDateForPeriod(Period.WEEK)).thenReturn(to);
+        when(eventRepository.findWithParticipantsByUserAndDateBetween(colleague.getUserId(), from, to))
+                .thenReturn(List.of(publicEvent, sharedPrivate, hiddenPrivate));
+
+        List<EventOutputDTO> result = eventService.getEventsByPeriodAndUser(Period.WEEK, colleague.getUserId(), me.getUserId(), COMPANY_A);
+
+        assertThat(result).containsExactly(EventOutputDTO.from(publicEvent), EventOutputDTO.from(sharedPrivate));
+    }
+
+    @Test
+    void getUserEvents_ownAgenda_returnsAllEvents() {
+        User me = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(UUID.randomUUID(), me);
+        event.addUser(me);
+
+        when(userService.getUserById(me.getUserId())).thenReturn(me);
+        when(eventUsersRepository.findEventsByUserId(me.getUserId())).thenReturn(List.of(event));
+
+        List<EventOutputDTO> result = eventService.getUserEvents(me.getUserId(), me.getUserId(), COMPANY_A);
 
         assertThat(result).containsExactly(EventOutputDTO.from(event));
+    }
+
+    @Test
+    void getUserEvents_targetInOtherCompany_throwsResourceNotFound() {
+        User target = user(UUID.randomUUID(), COMPANY_B);
+
+        when(userService.getUserById(target.getUserId())).thenReturn(target);
+
+        assertThatThrownBy(() -> eventService.getUserEvents(target.getUserId(), UUID.randomUUID(), COMPANY_A))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verifyNoInteractions(eventUsersRepository);
+    }
+
+    @Test
+    void getUserEvents_colleague_hidesPrivateEventsNotShared() {
+        User me = user(UUID.randomUUID(), COMPANY_A);
+        User colleague = user(UUID.randomUUID(), COMPANY_A);
+
+        Event hiddenPrivate = event(UUID.randomUUID(), colleague);
+        hiddenPrivate.addUser(colleague);
+
+        when(userService.getUserById(colleague.getUserId())).thenReturn(colleague);
+        when(eventUsersRepository.findEventsByUserId(colleague.getUserId())).thenReturn(List.of(hiddenPrivate));
+
+        assertThat(eventService.getUserEvents(colleague.getUserId(), me.getUserId(), COMPANY_A)).isEmpty();
     }
 
     @Test

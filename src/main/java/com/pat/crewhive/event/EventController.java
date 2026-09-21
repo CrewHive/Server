@@ -39,21 +39,23 @@ public class EventController implements EventControllerInterface {
 
     @Override
     @GetMapping(path = "/{temp}/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<EventOutputDTO>> getEventsByPeriodAndUser(@PathVariable @NotNull Period temp,
+    public ResponseEntity<List<EventOutputDTO>> getEventsByPeriodAndUser(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                         @PathVariable @NotNull Period temp,
                                                                          @PathVariable @NotNull UUID userId) {
 
         log.info("Received request to get events for user {} in period {}", userId, temp);
 
-        return ResponseEntity.ok(eventService.getEventsByPeriodAndUser(temp, userId));
+        return ResponseEntity.ok(eventService.getEventsByPeriodAndUser(temp, userId, cud.getUserId(), cud.getCompanyId()));
     }
 
     @Override
     @GetMapping(path = "/user/{userId}", produces = "application/json")
-    public ResponseEntity<List<EventOutputDTO>> getAllEventsByUser(@PathVariable @NotNull UUID userId) {
+    public ResponseEntity<List<EventOutputDTO>> getAllEventsByUser(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                @PathVariable @NotNull UUID userId) {
 
         log.info("Received request to get all events for user {}", userId);
 
-        return ResponseEntity.ok(eventService.getUserEvents(userId));
+        return ResponseEntity.ok(eventService.getUserEvents(userId, cud.getUserId(), cud.getCompanyId()));
     }
 
     @Override

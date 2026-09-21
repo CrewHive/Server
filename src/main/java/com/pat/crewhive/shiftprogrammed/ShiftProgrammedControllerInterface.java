@@ -72,7 +72,8 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@PathVariable @NotNull Period period,
+    ResponseEntity<ShiftProgrammedOutputDTO> getShiftsByPeriodAndUser(@AuthenticationPrincipal CustomUserDetails cud,
+                                                                      @PathVariable @NotNull Period period,
                                                                       @PathVariable @NotNull UUID userId);
 
 
@@ -127,7 +128,8 @@ public interface ShiftProgrammedControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<ShiftParticipantDTO>> getUsersByShift(@PathVariable @NotNull UUID shiftId);
+    ResponseEntity<List<ShiftParticipantDTO>> getUsersByShift(@AuthenticationPrincipal CustomUserDetails cud,
+                                                               @PathVariable @NotNull UUID shiftId);
 
 
     @Operation(summary = "Update an existing programmed shift",

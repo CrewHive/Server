@@ -51,9 +51,11 @@ public class CompanyController implements CompanyControllerInterface {
 
         UUID managerId = cud.getUserId();
 
-        UserWithTimeParamsDTO user = companyService.getCompanyUserWithInformation(managerId, companyId, targetId);
+        companyService.assertCanReadCompanyUser(managerId, companyId, targetId);
 
-        log.info("Fetched {} user for company ID: {}", user, companyId);
+        UserWithTimeParamsDTO user = companyService.getCompanyUserWithInformation(companyId, targetId);
+
+        log.info("Fetched user {} for company ID: {}", targetId, companyId);
 
         return ResponseEntity.ok(user);
     }

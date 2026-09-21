@@ -137,6 +137,42 @@ public class ShiftProgrammedService {
 
 
     /**
+     * Assert that the target user belongs to the caller's company. Must be called by the controller
+     * <em>before</em> the cached readers: a cache hit skips the method body, so the check can't live there.
+     * Unknown user and foreign user get the same answer, to avoid an existence oracle.
+     * @throws ResourceNotFoundException if the target is unknown or outside the caller's company
+     */
+    @Transactional(readOnly = true)
+    public void assertCanReadUserShifts(UUID targetUserId, UUID callerCompanyId) {
+
+        User target = userService.getUserById(targetUserId);
+
+        if (target.getCompany() == null || !target.getCompany().getCompanyId().equals(callerCompanyId)) {
+            log.warn("Denied shifts read of user {} to a caller of company {}", targetUserId, callerCompanyId);
+            throw new ResourceNotFoundException("User not found");
+        }
+    }
+
+
+    /**
+     * Assert that the shift belongs to the caller's company. Same contract as
+     * {@link #assertCanReadUserShifts(UUID, UUID)}.
+     * @throws ResourceNotFoundException if the shift is unknown or owned by another company
+     */
+    @Transactional(readOnly = true)
+    public void assertCanReadShift(UUID shiftId, UUID callerCompanyId) {
+
+        ShiftProgrammed shift = shiftProgrammedRepository.findById(shiftId)
+                .orElseThrow(() -> new ResourceNotFoundException("Shift not found"));
+
+        if (!shift.getCompany().getCompanyId().equals(callerCompanyId)) {
+            log.warn("Denied participants read of shift {} to a caller of company {}", shiftId, callerCompanyId);
+            throw new ResourceNotFoundException("Shift not found");
+        }
+    }
+
+
+    /**
      * Retrieve shifts for a specific user within a defined period.
      * @param period The period to filter shifts (DAY, WEEK, MONTH, TRIMESTER, SEMESTER, YEAR).
      * @param userId The ID of the user whose shifts are to be retrieved.

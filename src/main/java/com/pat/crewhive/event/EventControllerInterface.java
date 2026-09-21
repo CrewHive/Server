@@ -73,7 +73,8 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<EventOutputDTO>> getEventsByPeriodAndUser(@PathVariable @NotNull Period temp,
+    ResponseEntity<List<EventOutputDTO>> getEventsByPeriodAndUser(@AuthenticationPrincipal CustomUserDetails cud,
+                                                         @PathVariable @NotNull Period temp,
                                                          @PathVariable @NotNull UUID userId);
 
 
@@ -99,7 +100,8 @@ public interface EventControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<List<EventOutputDTO>> getAllEventsByUser(@PathVariable @NotNull UUID eventId);
+    ResponseEntity<List<EventOutputDTO>> getAllEventsByUser(@AuthenticationPrincipal CustomUserDetails cud,
+                                                            @PathVariable @NotNull UUID userId);
 
 
     @Operation(summary = "Get all public events by company and period",

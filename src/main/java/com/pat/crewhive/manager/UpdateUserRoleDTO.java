@@ -1,22 +1,20 @@
 package com.pat.crewhive.manager;
 
 import com.pat.crewhive.security.sanitizer.annotation.NoHtml;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
 public record UpdateUserRoleDTO(
 
         @NotBlank(message = "New role cannot be blank")
-        @Min(value = 1, message = "Role ID must be greater than 0")
-        @Max(value = 15, message = "Role ID must be less than or equal to 10")
+        @Size(max = 50, message = "Role name must be at most 50 characters")
         @NoHtml
         String newRole,
 
-        @NotEmpty(message = "User ID cannot be empty")
+        @NotNull(message = "User ID is required")
         UUID userId
 ) {
 }

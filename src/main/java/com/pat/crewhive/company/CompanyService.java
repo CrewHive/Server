@@ -160,27 +160,52 @@ public class CompanyService {
 
 
     /**
-     * Retrieves detailed information about a specific user within a company.
+     * Asserts that the manager may read the details of {@code targetId} within {@code companyId}:
+     * the manager must belong to the company, and so must the target. Must be called by the
+     * controller <em>before</em> {@link #getCompanyUserWithInformation}, whose cache hits skip the method body.
+     * Unknown target and target of another company get the same answer, to avoid an existence oracle.
      *
      * @param managerId The ID of the manager requesting the user information.
-     * @param companyId The ID of the company to which the user belongs.
-     * @param targetId The ID of the user whose information is to be retrieved.
-     * @return A UserWithTimeParamsDTO containing detailed information about the user.
+     * @param companyId The ID of the company to which the user must belong.
+     * @param targetId The ID of the user whose information is requested.
      * @throws AuthorizationDeniedException if the manager does not belong to the specified company.
+     * @throws ResourceNotFoundException if the target is unknown or outside the company.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "userInCompany", key = "#companyId + ':' + #targetId")
-    public UserWithTimeParamsDTO getCompanyUserWithInformation(UUID managerId, UUID companyId, UUID targetId) {
+    public void assertCanReadCompanyUser(UUID managerId, UUID companyId, UUID targetId) {
 
-        if(companyAccessService.isNotPartOfCompany(managerId, companyAccessService.getCompanyById(companyId).getCompanyId())) {
+        if (companyAccessService.isNotPartOfCompany(managerId, companyId)) {
 
-            log.error("getCompanyUserWithInformation: Manager {} may be not part of company {}", managerId, companyId);
+            log.error("assertCanReadCompanyUser: Manager {} may be not part of company {}", managerId, companyId);
             throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
         }
 
+        User target = userService.getUserById(targetId);
+
+        if (target.getCompany() == null || !target.getCompany().getCompanyId().equals(companyId)) {
+
+            log.warn("assertCanReadCompanyUser: user {} is not part of company {}", targetId, companyId);
+            throw new ResourceNotFoundException("User not found");
+        }
+    }
+
+
+    /**
+     * Retrieves detailed information about a specific user within a company.
+     * Authorization is NOT checked here (cache hits skip this body): call
+     * {@link #assertCanReadCompanyUser} first.
+     *
+     * @param companyId The ID of the company to which the user belongs.
+     * @param targetId The ID of the user whose information is to be retrieved.
+     * @return A UserWithTimeParamsDTO containing detailed information about the user.
+     */
+    @Transactional(readOnly = true)
+    @Cacheable(value = "userInCompany", key = "#companyId + ':' + #targetId")
+    public UserWithTimeParamsDTO getCompanyUserWithInformation(UUID companyId, UUID targetId) {
+
         User user = userService.getUserById(targetId);
 
-        log.info("getCompanyUserWithInformation: User details retrieved for user: {}", user.getEmail());
+        log.info("getCompanyUserWithInformation: User details retrieved for user: {}", targetId);
 
         String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 
@@ -225,6 +250,11 @@ public class CompanyService {
 
         Company company = companyRepository.findByName(normalizedCompanyName)
                 .orElseThrow(() ->new ResourceAlreadyExistsException("Company with name " + request.companyName() + " does not exist."));
+
+        if (!company.getCompanyId().equals(companyId)) {
+            log.warn("setCompany: manager {} tried to enroll user {} into company {}", managerId, request.userId(), company.getCompanyId());
+            throw new AuthorizationDeniedException("Manager does not belong to the specified company.");
+        }
 
         User user = userService.getUserById(request.userId());
 

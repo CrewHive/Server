@@ -10,7 +10,10 @@ import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException
 import com.pat.crewhive.shifttemplate.ShiftTemplateRepository;
 import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.user.User;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.UserService;
+import com.pat.crewhive.user.UserWithTimeParamsDTO;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,9 +22,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -113,6 +118,122 @@ class CompanyServiceTest {
     // ---------------------------------------------------------------------
     // deleteCompany()
     // ---------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------
+    // assertCanReadCompanyUser() / getCompanyUserWithInformation()  (H2)
+    // ---------------------------------------------------------------------
+
+    private Company companyWithId(UUID companyId) {
+        Company c = new Company();
+        ReflectionTestUtils.setField(c, "companyId", companyId);
+        return c;
+    }
+
+    private User userIn(UUID userId, Company company) {
+        User u = new User("u-" + userId + "@example.com", "Luigi", "Verdi", "encoded-pwd");
+        ReflectionTestUtils.setField(u, "userId", userId);
+        u.setCompany(company);
+        return u;
+    }
+
+    @Test
+    void assertCanReadCompanyUser_managerAndTargetInCompany_passes() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        User target = userIn(UUID.randomUUID(), companyWithId(companyId));
+
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(userService.getUserById(target.getUserId())).thenReturn(target);
+
+        assertThatCode(() -> companyService.assertCanReadCompanyUser(managerId, companyId, target.getUserId()))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void assertCanReadCompanyUser_managerNotInCompany_throwsAuthorizationDenied() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.assertCanReadCompanyUser(managerId, companyId, UUID.randomUUID()))
+                .isInstanceOf(AuthorizationDeniedException.class);
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void assertCanReadCompanyUser_targetInOtherCompanyOrNone_throwsResourceNotFound() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        User foreign = userIn(UUID.randomUUID(), companyWithId(UUID.randomUUID()));
+        User companyless = userIn(UUID.randomUUID(), null);
+
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(userService.getUserById(foreign.getUserId())).thenReturn(foreign);
+        when(userService.getUserById(companyless.getUserId())).thenReturn(companyless);
+
+        assertThatThrownBy(() -> companyService.assertCanReadCompanyUser(managerId, companyId, foreign.getUserId()))
+                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> companyService.assertCanReadCompanyUser(managerId, companyId, companyless.getUserId()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getCompanyUserWithInformation_mapsUserToDto() {
+        UUID companyId = UUID.randomUUID();
+        Company company = companyWithId(companyId);
+        company.setName("Acme");
+        User target = userIn(UUID.randomUUID(), company);
+
+        when(userService.getUserById(target.getUserId())).thenReturn(target);
+
+        UserWithTimeParamsDTO dto = companyService.getCompanyUserWithInformation(companyId, target.getUserId());
+
+        assertThat(dto.userId()).isEqualTo(target.getUserId());
+        assertThat(dto.email()).isEqualTo(target.getEmail());
+        assertThat(dto.companyName()).isEqualTo("Acme");
+    }
+
+    // ---------------------------------------------------------------------
+    // setCompany()  (M1)
+    // ---------------------------------------------------------------------
+
+    @Test
+    void setCompany_companyNameOfAnotherCompany_throwsAuthorizationDenied() {
+        UUID managerCompanyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        Company other = companyWithId(UUID.randomUUID());
+        User target = userIn(UUID.randomUUID(), null);
+        SetCompanyDTO request = new SetCompanyDTO("Other", target.getUserId());
+
+        when(companyAccessService.isNotPartOfCompany(managerId, managerCompanyId)).thenReturn(false);
+        when(stringUtils.normalizeString("Other")).thenReturn("Other");
+        when(companyRepository.findByName("Other")).thenReturn(Optional.of(other));
+
+        assertThatThrownBy(() -> companyService.setCompany(request, managerCompanyId, managerId))
+                .isInstanceOf(AuthorizationDeniedException.class);
+        assertThat(target.getCompany()).isNull();
+        verify(userService, never()).updateUser(any());
+    }
+
+    @Test
+    void setCompany_ownCompany_enrollsCompanylessUser() {
+        UUID managerCompanyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        Company own = companyWithId(managerCompanyId);
+        User target = userIn(UUID.randomUUID(), null);
+        SetCompanyDTO request = new SetCompanyDTO("Own", target.getUserId());
+
+        when(companyAccessService.isNotPartOfCompany(managerId, managerCompanyId)).thenReturn(false);
+        when(stringUtils.normalizeString("Own")).thenReturn("Own");
+        when(companyRepository.findByName("Own")).thenReturn(Optional.of(own));
+        when(userService.getUserById(target.getUserId())).thenReturn(target);
+
+        companyService.setCompany(request, managerCompanyId, managerId);
+
+        assertThat(target.getCompany()).isSameAs(own);
+        verify(userService).updateUser(target);
+    }
 
     @Test
     void deleteCompany_softDeletesTheCompanyWithManagerAsActor() {

@@ -70,7 +70,7 @@ public class RoleService {
      * @param targetId the ID of the user whose role is to be updated
      * @param newRole  the new role to be assigned to the user
      * @param companyId the ID of the company to which the user belongs
-     * @throws ResourceNotFoundException if the role is not found
+     * @throws ResourceNotFoundException if the role is not found, or the user is unknown or outside the company
      */
     @Transactional
     public void updateUserRole(UUID targetId, String newRole, UUID companyId) {
@@ -83,6 +83,12 @@ public class RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         User targetUser = userService.getUserById(targetId);
+
+        if (targetUser.getCompany() == null || !targetUser.getCompany().getCompanyId().equals(companyId)) {
+
+            log.warn("updateUserRole: user {} is not part of company {}", targetId, companyId);
+            throw new ResourceNotFoundException("User not found");
+        }
 
         targetUser.addRole(role);
     }
