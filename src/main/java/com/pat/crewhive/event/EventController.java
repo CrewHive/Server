@@ -88,4 +88,25 @@ public class EventController implements EventControllerInterface {
         eventService.deleteEvent(eventId, cud.getUserId(), cud.getCompanyId(), cud.getRoles());
         return ResponseEntity.ok("Evento eliminato con successo");
     }
+
+    @Override
+    @GetMapping(path = "/invitations", produces = "application/json")
+    public ResponseEntity<List<EventOutputDTO>> getPendingInvitations(@AuthenticationPrincipal CustomUserDetails cud) {
+
+        log.info("Received request to get pending invitations");
+
+        return ResponseEntity.ok(eventService.getPendingInvitations(cud.getUserId()));
+    }
+
+    @Override
+    @PostMapping(path = "/{eventId}/respond", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> respondToInvitation(@AuthenticationPrincipal CustomUserDetails cud,
+                                                      @PathVariable @NotNull UUID eventId,
+                                                      @RequestBody @Valid EventResponseDTO dto) {
+
+        log.info("Received request to answer invitation to event {}", eventId);
+
+        eventService.respondToInvitation(eventId, cud.getUserId(), cud.getCompanyId(), dto.accepted());
+        return ResponseEntity.ok("Risposta registrata con successo");
+    }
 }

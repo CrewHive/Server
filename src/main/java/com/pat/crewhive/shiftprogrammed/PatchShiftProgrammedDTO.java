@@ -33,6 +33,7 @@ public record PatchShiftProgrammedDTO(
         @Size(min = 6, max = 6)
         String color,
 
+        @Size(max = 200, message = "A shift cannot have more than 200 participants")
         Set<UUID> userId
 ) {
 }

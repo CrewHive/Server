@@ -35,6 +35,7 @@ public record CreateEventDTO(
         EventType eventType,
 
         @NotNull(message = "Event must have at least one user")
+        @Size(max = 50, message = "An event cannot have more than 50 participants")
         Set<UUID> userId
 ) {
 }

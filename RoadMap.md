@@ -177,7 +177,19 @@ Rimossa la regola morta `/api/auth/register/manager` da `SecurityConfig` e `JwtA
 cross-tenant sui template. (Nota: `SecurityConfig` fa `permitAll` su `/api/auth/register/manager`
 che **non esiste** come endpoint — regola morta.)
 
-**H7 — Assegnazione di massa di eventi/turni a utenti arbitrari.**
+~~**H7 — Assegnazione di massa di eventi/turni a utenti arbitrari.**~~ **risolto**: la parte cross-tenant era già
+chiusa (H1); ora un unico `UserService.getUsersInCompany` (404 per ID inesistenti, 403 per utenti di altra company)
+sostituisce le due copie di `resolveParticipantsSameCompany`. Limiti sulla lista partecipanti: 50 per evento, 200 per
+turno (`@Size` sui 4 DTO, 400 se superati). Inviti agli eventi: `event_users.status` (`PENDING/ACCEPTED/DECLINED`);
+il creatore è ACCEPTED, gli invitati a eventi PRIVATE sono PENDING (PUBLIC → ACCEPTED). Agenda e visibilità verso i
+colleghi contano solo gli ACCEPTED; nuovi `GET /event/invitations` e `POST /event/{id}/respond`. Un rifiuto non si
+annulla ri-invitando; il creatore non può rifiutare il proprio evento. `EventParticipantDTO` espone `status`.
+*Chiusi anche i residui:* patch PRIVATE→PUBLIC porta i PENDING ad ACCEPTED (i DECLINED restano) e, come `createEvent`,
+richiede `ROLE_MANAGER` (prima un utente qualunque poteva rendere pubblico un proprio evento via patch);
+`CreateShiftProgrammedDTO.userId` è `@NotNull` (set vuoto ammesso); `getUsersByIds` logga a INFO solo il numero di
+utenti, gli ID a DEBUG. *Deploy:* con `DDL_AUTO=update` la colonna `status`
+nasce con default `ACCEPTED` (righe esistenti = ACCEPTED).
+*(Testo originale:)*
 `createEvent` / `createShift` accettano qualsiasi lista di UUID; unico gate è "gli eventi PUBLIC
 richiedono ROLE_MANAGER". Calendar spam / molestie / inquinamento dati cross-tenant.
 

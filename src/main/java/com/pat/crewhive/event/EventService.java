@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -88,7 +89,7 @@ public class EventService {
         }
 
         User creator = userService.getUserById(creatorId);
-        List<User> users = resolveParticipantsSameCompany(createEventDTO.userId(), callerCompanyId);
+        List<User> users = userService.getUsersInCompany(createEventDTO.userId(), callerCompanyId);
 
         Event event = new Event();
         event.setEventName(normalizedEventName);
@@ -99,38 +100,48 @@ public class EventService {
         event.setEventType(toEntityReference(createEventDTO.eventType()));
         event.setCreator(creator);
 
+        // the creator always takes part in the event they created, and is added first:
+        // addUser dedupes, so listing themselves among the participants must not leave them PENDING
+        event.addUser(creator, EventParticipationStatus.ACCEPTED);
+
+        EventParticipationStatus initialStatus = initialStatusFor(createEventDTO.eventType());
         for (User user : users) {
-            event.addUser(user);
+            event.addUser(user, initialStatus);
         }
-        // the creator always takes part in the event they created (addUser dedupes)
-        event.addUser(creator);
 
         Event saved = eventRepository.save(event);
+
+        log.info("Event {} created by user {} with {} participants (status {})",
+                saved.getEventId(), creatorId, users.size(), initialStatus);
 
         return saved.getEventId();
     }
 
 
     /**
-     * Resolve the given user IDs and assert that every one of them belongs to {@code callerCompanyId}.
-     * Prevents injecting participants from another tenant via create/patch.
-     * @param userIds the user IDs to resolve (may be empty, never null)
-     * @param callerCompanyId the company the caller belongs to
-     * @return the resolved users
-     * @throws AuthorizationDeniedException if any user is outside the caller's company
+     * Initial status of a participant added by someone else: PUBLIC events are a broadcast by a
+     * manager and need no consent; invitations to PRIVATE events must be answered by the invitee.
      */
-    private List<User> resolveParticipantsSameCompany(Set<UUID> userIds, UUID callerCompanyId) {
+    private EventParticipationStatus initialStatusFor(EventType eventType) {
+        return eventType == PUBLIC ? EventParticipationStatus.ACCEPTED : EventParticipationStatus.PENDING;
+    }
 
-        List<User> users = userService.getUsersByIds(userIds);
 
-        boolean foreign = users.stream().anyMatch(u ->
-                u.getCompany() == null || !u.getCompany().getCompanyId().equals(callerCompanyId));
+    /**
+     * Assert that the event belongs to the caller's company (the company of its creator).
+     * @param event the event ({@code creator} and {@code creator.company} must be loaded)
+     * @throws AuthorizationDeniedException if the event is from another company
+     */
+    private void assertSameCompany(Event event, UUID callerId, UUID callerCompanyId) {
 
-        if (foreign) {
-            throw new AuthorizationDeniedException("Un partecipante non appartiene alla tua company");
+        User creator = event.getCreator();
+        UUID eventCompanyId = creator.getCompany() != null ? creator.getCompany().getCompanyId() : null;
+
+        if (eventCompanyId == null || !eventCompanyId.equals(callerCompanyId)) {
+            log.warn("User {} (company {}) denied access to event {} (company {})",
+                    callerId, callerCompanyId, event.getEventId(), eventCompanyId);
+            throw new AuthorizationDeniedException("Non hai accesso a questo evento");
         }
-
-        return users;
     }
 
 
@@ -145,14 +156,9 @@ public class EventService {
      */
     private void assertCanMutate(Event event, UUID callerId, UUID callerCompanyId, Set<String> roles) {
 
-        User creator = event.getCreator();
-        UUID eventCompanyId = creator.getCompany() != null ? creator.getCompany().getCompanyId() : null;
+        assertSameCompany(event, callerId, callerCompanyId);
 
-        if (eventCompanyId == null || !eventCompanyId.equals(callerCompanyId)) {
-            log.warn("User {} (company {}) denied access to event {} (company {})",
-                    callerId, callerCompanyId, event.getEventId(), eventCompanyId);
-            throw new AuthorizationDeniedException("Non hai accesso a questo evento");
-        }
+        User creator = event.getCreator();
 
         if (!roles.contains("ROLE_MANAGER") && !creator.getUserId().equals(callerId)) {
             throw new AuthorizationDeniedException("Solo il creatore o un manager può modificare l'evento");
@@ -178,7 +184,8 @@ public class EventService {
 
     /**
      * Restrict a colleague's events to what the caller may see: public events, and private
-     * events the caller takes part in. The owner's own agenda is returned untouched.
+     * events the caller has accepted (a pending or declined invitation does not open the agenda
+     * of the inviter). The owner's own agenda is returned untouched.
      */
     private List<Event> visibleTo(List<Event> events, UUID targetUserId, UUID callerId) {
 
@@ -188,7 +195,8 @@ public class EventService {
 
         return events.stream()
                 .filter(e -> e.getEventType().getId() == PUBLIC.getId()
-                        || e.getUsers().stream().anyMatch(eu -> eu.getUser().getUserId().equals(callerId)))
+                        || e.getUsers().stream().anyMatch(eu -> eu.getUser().getUserId().equals(callerId)
+                                && eu.getStatus() == EventParticipationStatus.ACCEPTED))
                 .toList();
     }
 
@@ -259,6 +267,60 @@ public class EventService {
 
 
     /**
+     * Fetch the pending invitations of the caller (events not yet ended).
+     * @param callerId The ID of the authenticated user.
+     * @return Events the caller has been invited to and has not answered yet.
+     */
+    @Transactional(readOnly = true)
+    public List<EventOutputDTO> getPendingInvitations(UUID callerId) {
+
+        log.info("Fetching pending invitations for userId: {}", callerId);
+
+        return eventRepository.findPendingWithParticipantsByUser(callerId, OffsetDateTime.now()).stream()
+                .map(EventOutputDTO::from)
+                .toList();
+    }
+
+
+    /**
+     * Answer an invitation to an event. The answer can be changed later between accepted and declined,
+     * but a participant never goes back to pending.
+     * @param eventId The event the caller was invited to.
+     * @param callerId The ID of the authenticated user.
+     * @param callerCompanyId The company of the authenticated user.
+     * @param accepted true to accept, false to decline.
+     * @throws ResourceNotFoundException if the event does not exist or the caller does not take part in it.
+     * @throws AuthorizationDeniedException if the event belongs to another company.
+     * @throws IllegalArgumentException if the creator tries to decline their own event.
+     */
+    @Transactional
+    public void respondToInvitation(UUID eventId, UUID callerId, UUID callerCompanyId, boolean accepted) {
+
+        Event event = eventRepository.findByIdWithParticipants(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + eventId));
+
+        assertSameCompany(event, callerId, callerCompanyId);
+
+        EventUsers link = event.getUsers().stream()
+                .filter(eu -> eu.getUser().getUserId().equals(callerId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.warn("User {} answered event {} without being invited", callerId, eventId);
+                    return new ResourceNotFoundException("Evento non trovato con ID: " + eventId);
+                });
+
+        if (!accepted && event.getCreator().getUserId().equals(callerId)) {
+            throw new IllegalArgumentException("Il creatore non può rifiutare il proprio evento");
+        }
+
+        EventParticipationStatus status = accepted ? EventParticipationStatus.ACCEPTED : EventParticipationStatus.DECLINED;
+        link.setStatus(status);
+
+        log.info("User {} {} event {}", callerId, status, eventId);
+    }
+
+
+    /**
      * Update an existing event.
      * @param dto The DTO containing updated event details.
      * @param callerId The ID of the authenticated user requesting the update.
@@ -284,6 +346,11 @@ public class EventService {
 
         assertCanMutate(event, callerId, callerCompanyId, roles);
 
+        // stessa regola di createEvent: senza questo check un evento PRIVATE si trasformerebbe in PUBLIC via patch
+        if (!roles.contains("ROLE_MANAGER") && dto.eventType() == PUBLIC) {
+            throw new AuthorizationDeniedException("Non sei autorizzato a rendere pubblico un evento");
+        }
+
         String normalizedEventName = stringUtils.normalizeString(dto.name());
 
         event.setEventName(normalizedEventName);
@@ -292,6 +359,14 @@ public class EventService {
         event.setEnd(dto.end());
         event.setColor(dto.color());
         event.setEventType(toEntityReference(dto.eventType()));
+
+        // un evento PUBLIC è un broadcast del manager: gli inviti ancora in sospeso non servono più
+        // (un rifiuto già dato resta tale)
+        if (dto.eventType() == PUBLIC) {
+            event.getUsers().stream()
+                    .filter(eu -> eu.getStatus() == EventParticipationStatus.PENDING)
+                    .forEach(eu -> eu.setStatus(EventParticipationStatus.ACCEPTED));
+        }
 
         Set<UUID> newUserIds = dto.userId();
         if (newUserIds != null) {
@@ -313,12 +388,20 @@ public class EventService {
             Set<UUID> toAdd = new HashSet<>(newUserIds);
             toAdd.removeAll(existingIds);
             if (!toAdd.isEmpty()) {
-                List<User> usersToAdd = resolveParticipantsSameCompany(toAdd, callerCompanyId);
+                EventParticipationStatus initialStatus = initialStatusFor(dto.eventType());
+                List<User> usersToAdd = userService.getUsersInCompany(toAdd, callerCompanyId);
                 for (User user : usersToAdd) {
                     EventUsers link = eventUsersRepository
                             .findByIdIncludingDeleted(user.getUserId(), event.getEventId())
-                            .map(existing -> { existing.restore(); return existing; })
-                            .orElseGet(() -> new EventUsers(user, event));
+                            .map(existing -> {
+                                existing.restore();
+                                // un rifiuto non si annulla rimuovendo e ri-invitando
+                                if (existing.getStatus() != EventParticipationStatus.DECLINED) {
+                                    existing.setStatus(initialStatus);
+                                }
+                                return existing;
+                            })
+                            .orElseGet(() -> new EventUsers(user, event, initialStatus));
                     event.attachUser(link);
                 }
             }

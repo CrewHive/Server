@@ -15,6 +15,7 @@ import com.pat.crewhive.common.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,7 +97,8 @@ public class UserService {
             return List.of();
         }
 
-        log.info("Retrieving users {}", ids);
+        log.info("Retrieving {} users", ids.size());
+        log.debug("Retrieving users {}", ids);
 
         List<User> users = userRepository.findAllByIds(ids);
         if (users.size() != ids.size()) {
@@ -109,6 +111,34 @@ public class UserService {
             missing.removeAll(foundIds);
             //TODO: L'ID dev'essere lasciato solo nel log
             throw new ResourceNotFoundException("Users not found: " + missing);
+        }
+
+        return users;
+    }
+
+
+    /**
+     * Retrieves the users with the given IDs and asserts that every one of them belongs to
+     * {@code companyId}. Single entry point used to resolve participants of events and shifts,
+     * so nobody can be assigned an item from another tenant.
+     *
+     * @param ids the user IDs to resolve (may be empty or null)
+     * @param companyId the company every user must belong to
+     * @return the resolved users
+     * @throws ResourceNotFoundException if any of the users is not found
+     * @throws AuthorizationDeniedException if any user has no company or belongs to another one
+     */
+    @Transactional(readOnly = true)
+    public List<User> getUsersInCompany(Set<UUID> ids, UUID companyId) {
+
+        List<User> users = getUsersByIds(ids);
+
+        boolean foreign = users.stream().anyMatch(u ->
+                u.getCompany() == null || !u.getCompany().getCompanyId().equals(companyId));
+
+        if (foreign) {
+            log.warn("Rejected {} participants: at least one is outside company {}", users.size(), companyId);
+            throw new AuthorizationDeniedException("Un partecipante non appartiene alla tua company");
         }
 
         return users;

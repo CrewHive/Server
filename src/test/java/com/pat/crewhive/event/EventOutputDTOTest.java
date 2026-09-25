@@ -52,7 +52,7 @@ class EventOutputDTOTest {
         assertThat(dto.color()).isEqualTo("#FF0000");
         assertThat(dto.eventType()).isEqualTo("Private");
         assertThat(dto.participants())
-                .containsExactly(new EventParticipantDTO(userId, "Mario", "Rossi"));
+                .containsExactly(new EventParticipantDTO(userId, "Mario", "Rossi", EventParticipationStatus.ACCEPTED));
     }
 
     @Test

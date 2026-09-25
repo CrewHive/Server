@@ -34,12 +34,29 @@ public class EventUsers extends SoftDeletableEntity {
     @MapsId("eventId")
     private Event event;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(16) default 'ACCEPTED'")
+    private EventParticipationStatus status = EventParticipationStatus.ACCEPTED;
+
     public EventUsers() {
     }
 
     public EventUsers(User user, Event personalEvent) {
         this.user = user;
         this.event = personalEvent;
+    }
+
+    public EventUsers(User user, Event personalEvent, EventParticipationStatus status) {
+        this(user, personalEvent);
+        this.status = status;
+    }
+
+    public EventParticipationStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(EventParticipationStatus status) {
+        this.status = status;
     }
 
     public EventUsersId getId() {

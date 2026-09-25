@@ -233,7 +233,7 @@ class ShiftProgrammedServiceTest {
 
         when(shiftProgrammedRepository.findByIdWithWorkers(shiftId)).thenReturn(java.util.Optional.of(shift));
         when(stringUtils.normalizeString("Turno mattina")).thenReturn("Turno mattina");
-        when(userService.getUsersByIds(java.util.Set.of(userId))).thenReturn(List.of(user));
+        when(userService.getUsersInCompany(java.util.Set.of(userId), company.getCompanyId())).thenReturn(List.of(user));
         when(shiftUserRepository.findByIdIncludingDeleted(shiftId, userId)).thenReturn(java.util.Optional.of(softDeletedLink));
 
         shiftProgrammedService.patchShift(UUID.randomUUID(), dto);
@@ -311,7 +311,7 @@ class ShiftProgrammedServiceTest {
 
         when(userService.getUserById(creatorUserId)).thenReturn(creator);
         when(stringUtils.normalizeString("Turno mattina")).thenReturn("Turno mattina");
-        when(userService.getUsersByIds(Set.of(user1.getUserId(), user2.getUserId())))
+        when(userService.getUsersInCompany(Set.of(user1.getUserId(), user2.getUserId()), company.getCompanyId()))
                 .thenReturn(List.of(user1, user2));
         when(shiftProgrammedRepository.save(any(ShiftProgrammed.class))).thenAnswer(inv -> inv.getArgument(0));
 

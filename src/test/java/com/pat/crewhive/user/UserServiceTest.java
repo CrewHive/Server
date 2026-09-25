@@ -156,4 +156,60 @@ class UserServiceTest {
         order.verify(userRepository).save(user);
         order.verify(userRepository).delete(user);
     }
+
+    // ---------------------------------------------------------------------
+    // getUsersInCompany() — single point of participant resolution (H7)
+    // ---------------------------------------------------------------------
+
+    @Test
+    void getUsersInCompany_allInCompany_returnsThem() {
+        Company company = buildCompany(COMPANY_ID);
+        User u1 = buildUser(UUID.randomUUID(), company);
+        User u2 = buildUser(UUID.randomUUID(), company);
+        java.util.Set<UUID> ids = java.util.Set.of(u1.getUserId(), u2.getUserId());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of(u1, u2));
+
+        assertThat(userService.getUsersInCompany(ids, COMPANY_ID)).containsExactlyInAnyOrder(u1, u2);
+    }
+
+    @Test
+    void getUsersInCompany_userOfAnotherCompany_isDenied() {
+        User mine = buildUser(UUID.randomUUID(), buildCompany(COMPANY_ID));
+        User foreign = buildUser(UUID.randomUUID(), buildCompany(UUID.randomUUID()));
+        java.util.Set<UUID> ids = java.util.Set.of(mine.getUserId(), foreign.getUserId());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of(mine, foreign));
+
+        assertThatThrownBy(() -> userService.getUsersInCompany(ids, COMPANY_ID))
+                .isInstanceOf(org.springframework.security.authorization.AuthorizationDeniedException.class);
+    }
+
+    @Test
+    void getUsersInCompany_userWithoutCompany_isDenied() {
+        User companyless = buildUser(UUID.randomUUID(), null);
+        java.util.Set<UUID> ids = java.util.Set.of(companyless.getUserId());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of(companyless));
+
+        assertThatThrownBy(() -> userService.getUsersInCompany(ids, COMPANY_ID))
+                .isInstanceOf(org.springframework.security.authorization.AuthorizationDeniedException.class);
+    }
+
+    @Test
+    void getUsersInCompany_emptyOrNullIds_returnsEmptyList() {
+        assertThat(userService.getUsersInCompany(java.util.Set.of(), COMPANY_ID)).isEmpty();
+        assertThat(userService.getUsersInCompany(null, COMPANY_ID)).isEmpty();
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void getUsersInCompany_unknownId_throwsResourceNotFound() {
+        java.util.Set<UUID> ids = java.util.Set.of(UUID.randomUUID());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of());
+
+        assertThatThrownBy(() -> userService.getUsersInCompany(ids, COMPANY_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

@@ -154,12 +154,22 @@ public class Event extends SoftDeletableEntity {
      * @param u the user to add
      */
     public void addUser(User u) {
+        addUser(u, EventParticipationStatus.ACCEPTED);
+    }
+
+
+    /**
+     * Add a user to the event with the given participation status; no-op if already present
+     * @param u the user to add
+     * @param status the initial participation status
+     */
+    public void addUser(User u, EventParticipationStatus status) {
 
         boolean alreadyPresent = this.users.stream()
                 .anyMatch(eu -> Objects.equals(eu.getUser().getUserId(), u.getUserId()));
 
         if (!alreadyPresent) {
-            EventUsers link = new EventUsers(u, this);
+            EventUsers link = new EventUsers(u, this, status);
             this.users.add(link);
             u.getPersonalEvents().add(link);
         }

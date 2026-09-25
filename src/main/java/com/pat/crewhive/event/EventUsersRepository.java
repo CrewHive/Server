@@ -16,6 +16,7 @@ public interface EventUsersRepository extends JpaRepository<EventUsers, EventUse
        from EventUsers eu
        join eu.event e
        where eu.user.userId = :userId
+         and eu.status = com.pat.crewhive.event.EventParticipationStatus.ACCEPTED
        order by e.start asc
        """)
     List<Event> findEventsByUserId(@Param("userId") UUID userId);
