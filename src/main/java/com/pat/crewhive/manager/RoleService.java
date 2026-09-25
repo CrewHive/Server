@@ -13,12 +13,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class RoleService {
 
     private static final Logger log = LoggerFactory.getLogger(RoleService.class);
+
+    private static final Set<String> RESERVED_ROLES = Set.of(Role.ROLE_USER, Role.ROLE_MANAGER, Role.ROLE_DEV);
 
     private final RoleRepository roleRepository;
     private final UserService userService;
@@ -49,6 +52,12 @@ public class RoleService {
     public void createRole(String roleName, UUID companyId) {
 
         String normalizedRole = stringUtils.normalizeRole(roleName);
+
+        if (RESERVED_ROLES.contains(normalizedRole)) {
+
+            log.warn("createRole: attempt to create reserved role {} in company {}", normalizedRole, companyId);
+            throw new IllegalArgumentException("Role name is reserved");
+        }
 
         Company company = companyService.getCompanyById(companyId);
 

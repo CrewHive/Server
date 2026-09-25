@@ -140,6 +140,26 @@ class AuthServiceTest {
     }
 
     @Test
+    void login_dropsLegacyGlobalManagerRole_fromToken() {
+        AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "P@ssw0rd!");
+        Company company = new Company();
+        ReflectionTestUtils.setField(company, "companyId", COMPANY_ID);
+        User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", company);
+        user.addRole(new Role("ROLE_MANAGER", null)); // vecchio ruolo globale
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(passwordUtil.NotMatches(anyString(), anyString())).thenReturn(false);
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
+
+        authService.login(request);
+
+        ArgumentCaptor<Set<String>> rolesCaptor = ArgumentCaptor.forClass(Set.class);
+        verify(jwtService).generateToken(eq(USER_ID), anyString(), anyString(), anyString(), rolesCaptor.capture(), eq(COMPANY_ID));
+        assertThat(rolesCaptor.getValue()).containsExactly("ROLE_USER");
+    }
+
+    @Test
     void login_throwsBadCredentialsException_whenPasswordDoesNotMatch() {
         AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "wrong-password");
         User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);

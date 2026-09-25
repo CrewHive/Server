@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -101,7 +100,7 @@ public class AuthService {
                         normalizedEmail,
                         user.getFirstName(),
                         user.getLastName(),
-                        user.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
+                        user.getEffectiveRoleNames(),
                         company
                 ),
                 refreshTokenService.issueNewFamily(user)
@@ -178,7 +177,7 @@ public class AuthService {
         String normalizedEmail = stringUtils.normalizeString(owner.getEmail());
         String firstName = owner.getFirstName();
         String lastName = owner.getLastName();
-        Set<String> roles = owner.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet());
+        Set<String> roles = owner.getEffectiveRoleNames();
         Company company = owner.getCompany();
         UUID companyId = (company != null) ? company.getCompanyId() : null;
 

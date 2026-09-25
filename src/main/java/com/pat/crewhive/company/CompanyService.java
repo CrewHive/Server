@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class CompanyService {
@@ -66,7 +65,7 @@ public class CompanyService {
     @Transactional
     public AuthResponseDTO registerCompany(UUID managerId, CompanyRegistrationDTO request) {
 
-        log.error("Attempting to register company with name: {}", request.companyName());
+        log.info("User {} attempting to register company with name: {}", managerId, request.companyName());
 
         String normalizedCompanyName = stringUtils.normalizeString(request.companyName());
 
@@ -77,22 +76,29 @@ public class CompanyService {
             throw new ResourceAlreadyExistsException("Company with name " + request.companyName() + " already exists.");
         }
 
+        User manager = userService.getUserById(managerId);
+
+        if (manager.getCompany() != null) {
+
+            log.warn("registerCompany: user {} already belongs to a company", managerId);
+
+            throw new ResourceAlreadyExistsException("User already belongs to a company");
+        }
+
         Company company = new Company(request);
         company.setName(normalizedCompanyName);
         companyRepository.save(company);
 
-        User manager = userService.getUserById(managerId);
         manager.setCompany(company);
 
-        // Duplicate of getOrCreateGlobalRoleManager but here to avoid circular dependency
-        String name = "ROLE_MANAGER";
-        Role role = roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull(name)
-                .orElseGet(() -> roleRepository.save(new Role(name, null)));
+        // ROLE_MANAGER è per-company: vale solo per la company appena creata
+        Role role = roleRepository.save(new Role(Role.ROLE_MANAGER, company));
         manager.addRole(role);
 
         userService.updateUser(manager);
 
-        log.info("Company {} registered successfully", request.companyName());
+        log.info("Company {} registered successfully by user {} (companyId={})",
+                request.companyName(), managerId, company.getCompanyId());
 
         return new AuthResponseDTO(
                 jwtService.generateToken(
@@ -100,7 +106,7 @@ public class CompanyService {
                         stringUtils.normalizeString(manager.getEmail()),
                         manager.getFirstName(),
                         manager.getLastName(),
-                        manager.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
+                        manager.getEffectiveRoleNames(),
                         company.getCompanyId()
                 ),
                 refreshTokenService.issueNewFamily(manager));

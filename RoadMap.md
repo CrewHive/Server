@@ -163,7 +163,15 @@ silenzioso al legittimo proprietario. Scadenza a granularità di *giorno* (`Loca
 Chi legge la tabella (backup, log, altra vuln) ha token immediatamente spendibili su
 `POST /api/auth/rotate` (che è `permitAll`).
 
-**H6 — Escalation self-service a MANAGER + assenza di scoping a valle.**
+~~**H6 — Escalation self-service a MANAGER + assenza di scoping a valle.**~~ **risolto**: `ROLE_MANAGER`
+è ora un ruolo *per-company* (riga `role` con `company_id`, creata in `registerCompany`); `User.getEffectiveRoleNames()`
+mette nel JWT un ruolo company solo se è della company corrente dell'utente, e ignora il vecchio `ROLE_MANAGER`
+globale. `registerCompany` risponde 409 se l'utente ha già una company. `createRole` rifiuta i nomi riservati
+`ROLE_USER/ROLE_DEV/ROLE_MANAGER` (prima un manager poteva creare il ruolo company `dev` → `ROLE_DEV` → `/docs`).
+Rimossa la regola morta `/api/auth/register/manager` da `SecurityConfig` e `JwtAuthenticationFilter`.
+*Nota:* resta possibile per qualunque utente registrare una propria company (onboarding); nessuna migrazione dati
+(i vecchi manager globali perdono l'autorità finché non viene creato un `ROLE_MANAGER` della loro company).
+*(Testo originale:)*
 `POST /company/register` richiede solo autenticazione e assegna il ruolo **globale** `ROLE_MANAGER`
 (`CompanyService.java:66-107`). Combinato con H4, qualunque utente si promuove e ottiene CRUD
 cross-tenant sui template. (Nota: `SecurityConfig` fa `permitAll` su `/api/auth/register/manager`

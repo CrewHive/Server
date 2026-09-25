@@ -270,7 +270,7 @@ public class UserService {
                         stringUtils.normalizeString(user.getEmail()),
                         user.getFirstName(),
                         user.getLastName(),
-                        user.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
+                        user.getEffectiveRoleNames(),
                         null),
                 refreshTokenService.issueNewFamily(user));
     }
