@@ -9,6 +9,7 @@ import java.util.UUID;
 public record EventParticipantDTO(
         UUID userId,
         String firstName,
-        String lastName
+        String lastName,
+        EventParticipationStatus status
 ) {
 }

@@ -22,6 +22,11 @@ import java.util.Set;
 @SQLDelete(sql = "UPDATE role SET active = false, deleted_at = now() WHERE role_id = ?")
 public class Role extends SoftDeletableEntity {
 
+    /** Nomi riservati: non creabili via {@code createRole}. */
+    public static final String ROLE_USER = "ROLE_USER";
+    public static final String ROLE_MANAGER = "ROLE_MANAGER";
+    public static final String ROLE_DEV = "ROLE_DEV";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="role_id", nullable = false)

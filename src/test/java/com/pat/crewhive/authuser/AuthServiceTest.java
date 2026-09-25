@@ -6,10 +6,12 @@ import com.pat.crewhive.manager.RoleService;
 import com.pat.crewhive.manager.UserRole;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.TokenBlackListService;
+import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
+import com.pat.crewhive.user.LogoutDTO;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,42 +100,22 @@ class AuthServiceTest {
     void login_returnsTokens_whenCredentialsAreValid() {
         AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "P@ssw0rd!");
         User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
-        RefreshToken existingToken = new RefreshToken(UUID.randomUUID(), "old-token", user, LocalDate.now().plusDays(1));
         Set<String> roles = new HashSet<>();
         roles.add("ROLE_USER");
 
         when(stringUtils.normalizeString("mario.rossi@example.com")).thenReturn("mario.rossi@example.com");
         when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches("P@ssw0rd!", "encoded-pwd")).thenReturn(false);
-        when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(existingToken);
         when(jwtService.generateToken(USER_ID, "mario.rossi@example.com", "Mario", "Rossi", roles, null))
                 .thenReturn("access-jwt");
-        when(refreshTokenService.generateRefreshToken(user)).thenReturn("new-refresh-token");
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
 
         AuthResponseDTO result = authService.login(request);
 
         assertThat(result.accessToken()).isEqualTo("access-jwt");
         assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
-        // the pre-existing session must be invalidated before a new one is issued
-        verify(refreshTokenService).invalidateRefreshToken(existingToken);
-    }
-
-    @Test
-    void login_doesNotInvalidateAnyToken_whenUserHasNoExistingSession() {
-        AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "P@ssw0rd!");
-        User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
-
-        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(passwordUtil.NotMatches(anyString(), anyString())).thenReturn(false);
-        when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(null);
-        when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), any(), any()))
-                .thenReturn("access-jwt");
-        when(refreshTokenService.generateRefreshToken(user)).thenReturn("new-refresh-token");
-
-        authService.login(request);
-
-        verify(refreshTokenService, never()).invalidateRefreshToken(any());
+        // issueNewFamily replaces the previous session by itself
+        verify(refreshTokenService).issueNewFamily(user);
     }
 
     @Test
@@ -146,8 +128,7 @@ class AuthServiceTest {
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(passwordUtil.NotMatches(anyString(), anyString())).thenReturn(false);
-        when(refreshTokenService.getRefreshTokenByUser(user)).thenReturn(null);
-        when(refreshTokenService.generateRefreshToken(user)).thenReturn("new-refresh-token");
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
 
         authService.login(request);
 
@@ -156,6 +137,26 @@ class AuthServiceTest {
         ArgumentCaptor<UUID> companyIdCaptor = ArgumentCaptor.forClass(UUID.class);
         verify(jwtService).generateToken(eq(USER_ID), anyString(), anyString(), anyString(), any(), companyIdCaptor.capture());
         assertThat(companyIdCaptor.getValue()).isEqualTo(COMPANY_ID);
+    }
+
+    @Test
+    void login_dropsLegacyGlobalManagerRole_fromToken() {
+        AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "P@ssw0rd!");
+        Company company = new Company();
+        ReflectionTestUtils.setField(company, "companyId", COMPANY_ID);
+        User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", company);
+        user.addRole(new Role("ROLE_MANAGER", null)); // vecchio ruolo globale
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(passwordUtil.NotMatches(anyString(), anyString())).thenReturn(false);
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
+
+        authService.login(request);
+
+        ArgumentCaptor<Set<String>> rolesCaptor = ArgumentCaptor.forClass(Set.class);
+        verify(jwtService).generateToken(eq(USER_ID), anyString(), anyString(), anyString(), rolesCaptor.capture(), eq(COMPANY_ID));
+        assertThat(rolesCaptor.getValue()).containsExactly("ROLE_USER");
     }
 
     @Test
@@ -276,5 +277,112 @@ class AuthServiceTest {
                 .hasMessage("Weak password provided");
 
         verify(userRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------------
+    // rotate_token()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void rotate_token_returnsNewAccessAndRefreshToken_whenRotationSucceeds() {
+        String raw = UUID.randomUUID().toString();
+        User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
+        Set<String> roles = Set.of("ROLE_USER");
+
+        when(refreshTokenService.rotate(raw)).thenReturn(new RefreshTokenService.Rotation(user, "new-refresh-token"));
+        when(stringUtils.normalizeString("mario.rossi@example.com")).thenReturn("mario.rossi@example.com");
+        when(jwtService.generateToken(USER_ID, "mario.rossi@example.com", "Mario", "Rossi", roles, null))
+                .thenReturn("access-jwt");
+
+        AuthResponseDTO result = authService.rotate_token(raw);
+
+        assertThat(result.accessToken()).isEqualTo("access-jwt");
+        assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
+    }
+
+    @Test
+    void rotate_token_passesCompanyId_whenUserBelongsToACompany() {
+        String raw = UUID.randomUUID().toString();
+        Company company = new Company();
+        ReflectionTestUtils.setField(company, "companyId", COMPANY_ID);
+        User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", company);
+
+        when(refreshTokenService.rotate(raw)).thenReturn(new RefreshTokenService.Rotation(user, "new-refresh-token"));
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+
+        authService.rotate_token(raw);
+
+        verify(jwtService).generateToken(eq(USER_ID), anyString(), anyString(), anyString(), any(), eq(COMPANY_ID));
+    }
+
+    @Test
+    void rotate_token_propagatesInvalidToken_andIssuesNoAccessToken() {
+        String raw = UUID.randomUUID().toString();
+
+        when(refreshTokenService.rotate(raw)).thenThrow(new InvalidTokenException("Invalid refresh token"));
+
+        assertThatThrownBy(() -> authService.rotate_token(raw)).isInstanceOf(InvalidTokenException.class);
+
+        verifyNoInteractions(jwtService);
+    }
+
+    @Test
+    void rotate_token_rejectsBlankOrNonUuidTokens_withoutTouchingTheDatabase() {
+        assertThatThrownBy(() -> authService.rotate_token(null)).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> authService.rotate_token(" ")).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> authService.rotate_token("not-a-uuid")).isInstanceOf(InvalidTokenException.class);
+
+        verifyNoInteractions(refreshTokenService, jwtService);
+    }
+
+    // ---------------------------------------------------------------------
+    // logout()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void logout_revokesFamilyAndBlacklistsAccessToken_whenTokenBelongsToUser() {
+        User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
+        RefreshToken rt = new RefreshToken(UUID.randomUUID(), "hash", UUID.randomUUID(), user, Instant.now().plusSeconds(60), null);
+        Date exp = new Date();
+
+        when(refreshTokenService.getValidToken("raw")).thenReturn(rt);
+
+        authService.logout(new LogoutDTO(USER_ID, "raw"), "jti-1", exp);
+
+        verify(refreshTokenService).revokeFamily(rt);
+        verify(tokenBlackListService).revoke("jti-1", exp);
+    }
+
+    @Test
+    void logout_throwsInvalidToken_whenTokenBelongsToAnotherUser() {
+        User owner = buildUser(UUID.randomUUID(), "other@example.com", "encoded-pwd", null);
+        RefreshToken rt = new RefreshToken(UUID.randomUUID(), "hash", UUID.randomUUID(), owner, Instant.now().plusSeconds(60), null);
+
+        when(refreshTokenService.getValidToken("raw")).thenReturn(rt);
+
+        assertThatThrownBy(() -> authService.logout(new LogoutDTO(USER_ID, "raw"), "jti-1", new Date()))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessage("Refresh Token does not belong to user");
+
+        verify(refreshTokenService, never()).revokeFamily(any());
+        verifyNoInteractions(tokenBlackListService);
+    }
+
+    @Test
+    void logout_throwsInvalidToken_whenTokenIsUnknownOrExpired() {
+        when(refreshTokenService.getValidToken("raw")).thenThrow(new InvalidTokenException("Refresh Token expired or missing"));
+
+        assertThatThrownBy(() -> authService.logout(new LogoutDTO(USER_ID, "raw"), "jti-1", new Date()))
+                .isInstanceOf(InvalidTokenException.class);
+
+        verifyNoInteractions(tokenBlackListService);
+    }
+
+    @Test
+    void logout_throwsInvalidToken_whenRefreshTokenIsBlank() {
+        assertThatThrownBy(() -> authService.logout(new LogoutDTO(USER_ID, " "), "jti-1", new Date()))
+                .isInstanceOf(InvalidTokenException.class);
+
+        verifyNoInteractions(refreshTokenService, tokenBlackListService);
     }
 }

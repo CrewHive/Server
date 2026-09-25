@@ -180,4 +180,52 @@ public interface EventControllerInterface {
     })
     ResponseEntity<String> deleteEvent(@AuthenticationPrincipal CustomUserDetails cud, @PathVariable @NotNull UUID eventId);
 
+
+    @Operation(summary = "Get pending invitations",
+            description = "Retrieves the events the authenticated user has been invited to and has not answered yet.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Invitations retrieved successfully"),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<List<EventOutputDTO>> getPendingInvitations(@AuthenticationPrincipal CustomUserDetails cud);
+
+
+    @Operation(summary = "Answer an event invitation",
+            description = "Accepts or declines the invitation of the authenticated user to an event.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Answer recorded successfully"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data, or the creator tried to decline",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Unauthorized - User not authenticated",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "403", description = "Forbidden - The event belongs to another company",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "404", description = "Not Found - The event does not exist or the user is not a participant",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<String> respondToInvitation(@AuthenticationPrincipal CustomUserDetails cud,
+                                               @PathVariable @NotNull UUID eventId,
+                                               @RequestBody @Valid EventResponseDTO dto);
+
 }

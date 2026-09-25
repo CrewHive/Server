@@ -190,6 +190,37 @@ public class User extends SoftDeletableEntity {
         this.roles = roles;
     }
 
+    /**
+     * Nomi dei ruoli che finiscono nel JWT. Un ruolo conta solo se:
+     * <ul>
+     *   <li>è globale e non è {@code ROLE_MANAGER} (il manager è sempre per-company), oppure</li>
+     *   <li>appartiene alla company corrente dell'utente.</li>
+     * </ul>
+     */
+    public Set<String> getEffectiveRoleNames() {
+
+        Set<String> names = new HashSet<>();
+
+        for (UserRole userRole : roles) {
+
+            Role role = userRole.getRole();
+            Company roleCompany = role.getCompany();
+
+            boolean effective;
+            if (roleCompany == null) {
+                effective = !Role.ROLE_MANAGER.equalsIgnoreCase(role.getRoleName());
+            } else {
+                effective = company != null
+                        && (roleCompany == company
+                        || (roleCompany.getCompanyId() != null && roleCompany.getCompanyId().equals(company.getCompanyId())));
+            }
+
+            if (effective) names.add(role.getRoleName());
+        }
+
+        return names;
+    }
+
     public ContractType getContractType() {
         return contractType;
     }

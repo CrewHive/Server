@@ -411,10 +411,9 @@ Lombok: `@Getter`, `@Setter`, `@AllArgsConstructor`, `@NoArgsConstructor`.
   1. Normalizza l'email (`stringUtils.normalizeString`, trim + lowercase).
   2. Recupera l'utente tramite `userService.getUserByEmail`.
   3. Verifica la password con `passwordUtil.NotMatches`; se non corrisponde, lancia `BadCredentialsException("Invalid credentials")`.
-  4. Se presente un refresh token esistente dell'utente, lo invalida — ogni login invalida la sessione di refresh precedente.
-  5. Determina l'id della company dell'utente (può essere `null`).
-  6. Genera un nuovo JWT e un nuovo refresh token.
-  7. Ritorna `AuthResponseDTO` con entrambi i token.
+  4. Determina l'id della company dell'utente (può essere `null`).
+  5. Genera un nuovo JWT e un nuovo refresh token con `refreshTokenService.issueNewFamily` — ogni login elimina la sessione di refresh precedente (tutti i suoi token) e ne apre una nuova famiglia.
+  6. Ritorna `AuthResponseDTO` con entrambi i token.
 
 - **`void register(RegistrationDTO request)`** — `@Transactional`.
   1. Normalizza l'email.
@@ -427,24 +426,21 @@ Lombok: `@Getter`, `@Setter`, `@AllArgsConstructor`, `@NoArgsConstructor`.
   8. Salva l'utente.
   9. Non ritorna nulla (il Javadoc dichiara erroneamente un valore di ritorno — il metodo è `void`, discrepanza tra commento e implementazione).
 
-- **`AuthResponseDTO rotate_token(String token)`** — `@Transactional`.
+- **`AuthResponseDTO rotate_token(String token)`** — `@Transactional(noRollbackFor = InvalidTokenException.class)`. Endpoint `permitAll` chiamato senza autenticazione. `noRollbackFor` è necessario: la revoca della famiglia per reuse-detection non deve essere annullata dal rollback causato dall'eccezione che rifiuta la richiesta.
   1. Se `token` è nullo/vuoto, `InvalidTokenException`.
   2. Valida che sia un UUID sintatticamente valido, altrimenti `InvalidTokenException`.
-  3. Recupera il `RefreshToken` con utente e ruolo caricati eagerly.
-  4. Se scaduto, `InvalidTokenException`.
-  5. Verifica che il possessore non sia nullo, altrimenti `InvalidTokenException`.
-  6. Estrae dati dell'owner (userId, email normalizzata, nome, cognome, ruolo, company/companyId).
-  7. Genera un nuovo access token.
-  8. Ruota il refresh token esistente (nuovo valore, nuova scadenza, stesso record).
-  9. Ritorna `AuthResponseDTO` aggiornato.
+  3. Delega a `refreshTokenService.rotate(token)` (hash, reuse-detection, scadenza, emissione del nuovo token nella stessa famiglia).
+  4. Verifica che il possessore non sia nullo, altrimenti `InvalidTokenException`.
+  5. Estrae dati dell'owner (userId, email normalizzata, nome, cognome, ruoli, company/companyId).
+  6. Genera un nuovo access token.
+  7. Ritorna `AuthResponseDTO` con access token e nuovo refresh token.
 
-- **`void logout(LogoutDTO request)`** — `@Transactional`.
+- **`void logout(LogoutDTO request, String jti, Date tokenExpiration)`** — `@Transactional`.
   1. Se `refreshToken` è nullo/vuoto, `InvalidTokenException("Refresh Token is missing")`.
-  2. Recupera il `RefreshToken`.
-  3. Se `null` o scaduto, `InvalidTokenException("Refresh Token expired or missing")`.
-  4. Recupera il proprietario; se `null` o `userId` non coincide con quello richiesto, `InvalidTokenException("Refresh Token does not belong to user")` — impedisce che un utente invalidi il token di un altro.
-  5. Invalida (cancella) il refresh token.
-  6. Logga l'avvenuto logout.
+  2. Recupera il token vivo con `refreshTokenService.getValidToken`; se sconosciuto o scaduto, `InvalidTokenException("Refresh Token expired or missing")`.
+  3. Se il proprietario è `null` o `userId` non coincide con quello richiesto, `InvalidTokenException("Refresh Token does not belong to user")` — impedisce che un utente invalidi il token di un altro.
+  4. Revoca l'intera famiglia (`refreshTokenService.revokeFamily`) e mette in blacklist il `jti` dell'access token.
+  5. Logga l'avvenuto logout.
 
 ---
 
@@ -479,13 +475,17 @@ Nota: la documentazione Swagger per `register` indica 200 come codice di success
 ### `com.pat.crewhive.authuser.RefreshToken`
 **Tipo:** Entity JPA, tabella `refresh_token`.
 
-**Campi:**
-- `refreshTokenId` (Long, PK, IDENTITY).
-- `token` (String) — valore del refresh token (UUID stringa).
-- `user` (`User`, `@ManyToOne(LAZY, optional=false)`, `@JoinColumn(user_id, unique=true)`) — il vincolo `unique` implica al massimo un refresh token attivo per utente.
-- `expirationDate` (`LocalDate`).
+Il token in chiaro non viene mai salvato: il DB contiene solo il suo hash SHA-256. I token emessi da rotazioni successive della stessa sessione condividono un `familyId`; un token ruotato resta in tabella (con `usedAt` valorizzato) fino a scadenza, per poterne rilevare il riuso.
 
-Indici: `idx_refreshtoken` su id, `idx_refreshtoken_user_id` su `user_id`.
+**Campi:**
+- `refreshTokenId` (`UUID`, PK).
+- `tokenHash` (String, 64 caratteri hex, `unique`) — SHA-256 del token UUID consegnato al client.
+- `familyId` (`UUID`) — identifica la sessione.
+- `user` (`User`, `@ManyToOne(LAZY, optional=false)`, `@JoinColumn(user_id)`) — più righe per utente (token usati), ma una sola famiglia attiva: il login elimina le precedenti.
+- `expiresAt` (`Instant`) — scadenza al secondo, non al giorno.
+- `usedAt` (`Instant`, nullable) — valorizzato quando il token è stato ruotato.
+
+Indici: `idx_refreshtoken_family_id` su `family_id`, `idx_refreshtoken_user_id` su `user_id`.
 
 ---
 
@@ -493,28 +493,22 @@ Indici: `idx_refreshtoken` su id, `idx_refreshtoken_user_id` su `user_id`.
 **Tipo:** Repository Spring Data JPA.
 
 **Metodi:**
-- `void deleteByUser(User user)`.
-- `Optional<RefreshToken> findByToken(String token)`.
-- `Optional<RefreshToken> findByUser(User user)`.
-- `Optional<RefreshToken> findByTokenWithUserAndRole(String token)` — JPQL con `join fetch rt.user u left join fetch u.role r`, evita N+1.
+- `void deleteByUser(User user)`, `void deleteByFamilyId(UUID familyId)`, `void deleteExpiredByUser(User user, Instant instant)` — delete bulk JPQL.
+- `Optional<RefreshToken> findByTokenHashWithUserAndRole(String tokenHash)` — JPQL con `join fetch` di utente e ruoli, evita N+1.
+- `int markUsed(UUID id, Instant now)` — `update ... set usedAt = :now where id = :id and usedAt is null`: gate atomico della rotazione, ritorna 1 solo al primo chiamante.
 
 ---
 
 ### `com.pat.crewhive.authuser.RefreshTokenService`
-**Tipo:** Service (`@Service`, `@Slf4j`).
+**Tipo:** Service (`@Service`, `@Slf4j`). Usa un `Clock` iniettato (bean in `CoreConfig`). TTL 15 giorni.
 
 **Metodi pubblici:**
 
-- **`String generateRefreshToken(User user)`** — `@Transactional`. Elimina token esistenti per l'utente, crea uno nuovo con `token = UUID.randomUUID().toString()` e `expirationDate = LocalDate.now().plusDays(15)`, salva, ritorna il token.
-- **`RefreshToken getRefreshToken(String token)`** — cerca per token; `ResourceNotFoundException` se assente.
-- **`RefreshToken getRefreshTokenByUser(User user)`** — ritorna `null` se assente o scaduto (non lancia eccezione).
-- **`RefreshToken getRefreshTokenByTokenWithUserAndRole(String token)`** — query con utente+ruolo caricati eagerly; `ResourceNotFoundException` se assente.
-- **`boolean isExpired(RefreshToken rt)`** — `IllegalArgumentException` se `rt == null`; altrimenti confronta `expirationDate` con oggi.
-- **`String getOrIssueRefreshToken(User user)`** — riusa il token valido esistente o ne genera uno nuovo se assente/scaduto.
-- **`String rotateRefreshToken(RefreshToken rt)`** — aggiorna in-place lo stesso record con nuovo token e nuova scadenza (+15 giorni).
-- **`User getOwner(RefreshToken rt)`** — `IllegalArgumentException` se `rt`/`rt.getUser()` nulli.
-- **`void invalidateRefreshToken(RefreshToken rt)`** — `ResourceNotFoundException` se `rt == null` (nota: tipo di eccezione diverso da quello usato in `isExpired`/`getOwner`/`rotateRefreshToken`, che usano `IllegalArgumentException` — incoerenza tra metodi simili). Altrimenti elimina il record.
-- **`void deleteTokenByUser(User user)`** — elimina (se presente) il refresh token dell'utente.
+- **`String issueNewFamily(User user)`** — `@Transactional`. Elimina tutti i token dell'utente, crea un token di una nuova famiglia (`UUID.randomUUID()` come valore grezzo, salvato solo come hash), ritorna il valore grezzo.
+- **`Rotation rotate(String rawToken)`** — `@Transactional(noRollbackFor = InvalidTokenException.class)`. Cerca per hash; se assente `InvalidTokenException`. Se il token è già usato, o `markUsed` ritorna 0 (rotazione concorrente), è **reuse**: elimina l'intera famiglia, logga un WARN e lancia `InvalidTokenException`. Se scaduto, `InvalidTokenException`. Altrimenti emette un nuovo token della stessa famiglia e elimina i token scaduti dell'utente. Ritorna `Rotation(user, nuovoTokenGrezzo)`.
+- **`RefreshToken getValidToken(String rawToken)`** — per il logout; `InvalidTokenException` se sconosciuto o scaduto.
+- **`void revokeFamily(RefreshToken rt)`** — elimina tutti i token della famiglia.
+- **`void deleteTokenByUser(User user)`** — elimina tutti i refresh token dell'utente.
 
 ---
 

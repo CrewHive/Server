@@ -1,15 +1,19 @@
 package com.pat.crewhive.authuser;
 
-import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HexFormat;
 import java.util.UUID;
 
 @Service
@@ -17,213 +21,170 @@ public class RefreshTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenService.class);
 
-    private final RefreshTokenRepository repo;
+    static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(15);
 
-    public RefreshTokenService(RefreshTokenRepository repo) {
+    /**
+     * Outcome of a successful rotation.
+     *
+     * @param user         the owner of the rotated token
+     * @param refreshToken the new raw refresh token (the only place it ever exists in clear)
+     */
+    public record Rotation(User user, String refreshToken) {
+    }
+
+    private final RefreshTokenRepository repo;
+    private final Clock clock;
+
+    public RefreshTokenService(RefreshTokenRepository repo, Clock clock) {
         this.repo = repo;
+        this.clock = clock;
     }
 
     /**
-     * Generates a new refresh token for the given user.
-     * Deletes any existing tokens for the user before creating a new one.
+     * Starts a new session for the user: every existing token of the user is deleted and a token
+     * belonging to a brand-new family is issued.
      *
      * @param user The user for whom the refresh token is generated.
-     * @return The generated refresh token as a String.
+     * @return The raw refresh token. Only its hash is persisted.
      */
     @Transactional
-    public String generateRefreshToken(User user) {
+    public String issueNewFamily(User user) {
 
         repo.deleteByUser(user);
 
-        RefreshToken token = new RefreshToken();
-        token.setUser(user);
-        token.setToken(UUID.randomUUID().toString());
-        token.setExpirationDate(LocalDate.now().plusDays(15));
+        String raw = save(user, UUID.randomUUID());
 
-        repo.save(token);
+        log.info("issueNewFamily: Issued new refresh token family for userId={}", user.getUserId());
 
-        log.info("generateRefreshToken: Generated refresh token for user: {}", user.getEmail());
-        log.info("generateRefreshToken: Expiration date: {}", token.getExpirationDate());
-
-        return token.getToken();
+        return raw;
     }
 
     /**
-     * Retrieves the refresh token for the given token string.
+     * Rotates a refresh token: the presented token is marked as used and a new one of the same
+     * family is issued.
+     * <p>
+     * Presenting a token that was already rotated means it has been copied: the whole family is
+     * revoked, so that both the thief and the legitimate owner have to authenticate again.
+     * {@code noRollbackFor} is required, otherwise the revocation would be rolled back together
+     * with the exception thrown to reject the request.
      *
-     * @param token The refresh token string to retrieve.
-     * @return The RefreshToken object if found.
-     * @throws ResourceNotFoundException if the token is not found.
+     * @param rawToken The raw refresh token presented by the client.
+     * @return The owner of the token and the new raw refresh token.
+     * @throws InvalidTokenException if the token is unknown, expired or was already used.
+     */
+    @Transactional(noRollbackFor = InvalidTokenException.class)
+    public Rotation rotate(String rawToken) {
+
+        Instant now = clock.instant();
+
+        RefreshToken rt = repo.findByTokenHashWithUserAndRole(hash(rawToken))
+                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+
+        // markUsed is the atomic gate: of two concurrent presentations of the same token
+        // only one flips usedAt, the other one is treated exactly like a replay.
+        if (rt.getUsedAt() != null || repo.markUsed(rt.getRefreshTokenId(), now) == 0) {
+
+            repo.deleteByFamilyId(rt.getFamilyId());
+
+            log.warn("rotate: Refresh token reuse detected, family revoked: userId={}, familyId={}",
+                    rt.getUser().getUserId(), rt.getFamilyId());
+
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+
+        if (!rt.getExpiresAt().isAfter(now)) {
+
+            log.info("rotate: Expired refresh token for userId={}", rt.getUser().getUserId());
+
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+
+        User user = rt.getUser();
+
+        String newRaw = save(user, rt.getFamilyId());
+
+        // Used tokens are kept until they expire (that is what makes reuse detectable):
+        // this is the only place where they get purged.
+        repo.deleteExpiredByUser(user, now);
+
+        log.info("rotate: Rotated refresh token for userId={}", user.getUserId());
+
+        return new Rotation(user, newRaw);
+    }
+
+    /**
+     * Finds a live (not expired) token by its raw value, for logout.
+     *
+     * @param rawToken The raw refresh token.
+     * @return The token, with user and roles loaded.
+     * @throws InvalidTokenException if the token is unknown or expired.
      */
     @Transactional(readOnly = true)
-    public RefreshToken getRefreshToken(String token) {
+    public RefreshToken getValidToken(String rawToken) {
 
-        RefreshToken rt = repo.findByToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
+        RefreshToken rt = repo.findByTokenHashWithUserAndRole(hash(rawToken))
+                .orElseThrow(() -> new InvalidTokenException("Refresh Token expired or missing"));
 
-        log.info("getRefreshToken: Found refresh token for user: {}", rt.getUser().getEmail());
-        log.info("getRefreshToken: Expiration date: {}", rt.getExpirationDate());
+        if (!rt.getExpiresAt().isAfter(clock.instant())) {
+
+            throw new InvalidTokenException("Refresh Token expired or missing");
+        }
 
         return rt;
     }
 
     /**
-     * Retrieves the refresh token for the given user.
+     * Revokes every token of the family the given token belongs to.
      *
-     * @param user The user for whom the refresh token is retrieved.
-     * @return The RefreshToken object if found.
-     * @throws ResourceNotFoundException if the refresh token is not found for the user.
-     */
-    @Transactional(readOnly = true)
-    public RefreshToken getRefreshTokenByUser(User user) {
-
-        Optional<RefreshToken> rt = repo.findByUser(user);
-
-        if (rt.isEmpty() ) return null;
-        if (isExpired(rt.get())) return null;
-
-        log.info("getRefreshTokenByUser: Found refresh token for user: {}", rt.get().getUser().getEmail());
-        log.info("getRefreshTokenByUser: Expiration date: {}", rt.get().getExpirationDate());
-
-        return rt.get();
-    }
-
-    /**
-     * Retrieves the refresh token for the given token string, including user and role information.
-     *
-     * @param token The refresh token string to retrieve.
-     * @return The RefreshToken object if found, with user and role information.
-     * @throws ResourceNotFoundException if the token is not found.
-     */
-    @Transactional(readOnly = true)
-    public RefreshToken getRefreshTokenByTokenWithUserAndRole(String token) {
-
-        RefreshToken rt = repo.findByTokenWithUserAndRole(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
-
-        log.info("getRefreshTokenByTokenWithUserAndRole: Found refresh token for user: {}", rt.getUser().getEmail());
-        log.info("getRefreshTokenByTokenWithUserAndRole: Expiration date: {}", rt.getExpirationDate());
-
-        return rt;
-    }
-
-    /**
-     * Checks if the given refresh token is expired.
-     *
-     * @param rt The refresh token to check.
-     * @return true if the token is expired, false otherwise.
-     * @throws  IllegalArgumentException if the token is null.
-     */
-    @Transactional(readOnly = true)
-    public boolean isExpired(RefreshToken rt) {
-
-        if (rt == null) {
-
-            log.error("isExpired: Refresh token is null");
-            throw new IllegalArgumentException("Refresh token is not valid");
-        }
-
-        log.info("isExpired: Checking expiration");
-        log.info("isExpired: Expiration date: {}", rt.getExpirationDate());
-        log.info("isExpired: Is expired: {}", rt.getExpirationDate().isBefore(LocalDate.now()));
-
-        return rt.getExpirationDate().isBefore(LocalDate.now());
-    }
-
-    /**
-     * Returns the user's current valid refresh token, or issues a new one if none exists.
-     * Unlike {@link #generateRefreshToken(User)}, an existing valid token is left untouched
-     * instead of being deleted and replaced.
-     *
-     * @param user The user whose refresh token is requested.
-     * @return The existing valid refresh token, or a newly issued one.
+     * @param rt A token of the family to revoke.
      */
     @Transactional
-    public String getOrIssueRefreshToken(User user) {
+    public void revokeFamily(RefreshToken rt) {
 
-        RefreshToken rt = getRefreshTokenByUser(user);
+        repo.deleteByFamilyId(rt.getFamilyId());
 
-        return (rt != null) ? rt.getToken() : generateRefreshToken(user);
+        log.info("revokeFamily: Revoked refresh token family for userId={}", rt.getUser().getUserId());
     }
 
     /**
-     * Rotates the given refresh token by generating a new token and updating the expiration date.
+     * Deletes every refresh token associated with the given user.
      *
-     * @param rt The refresh token to rotate.
-     * @return The new refresh token as a String.
-     * @throws IllegalArgumentException if the refresh token is null.
-     */
-    @Transactional
-    public String rotateRefreshToken(RefreshToken rt) {
-
-        if (rt == null) {
-
-            log.error("rotateRefreshToken: Refresh token is null");
-            throw new IllegalArgumentException("Refresh token is not valid");
-        }
-
-        rt.setToken(UUID.randomUUID().toString());
-        rt.setExpirationDate(LocalDate.now().plusDays(15));
-
-        repo.save(rt);
-
-        log.info("rotateRefreshToken: Rotated refresh token for user: {}", rt.getUser().getEmail());
-        log.info("rotateRefreshToken: New expiration date: {}", rt.getExpirationDate());
-
-        return rt.getToken();
-    }
-
-    /**
-     * Retrieves the owner of the given refresh token.
-     *
-     * @param rt The refresh token to check.
-     * @return The User who owns the refresh token.
-     * @throws IllegalArgumentException if the refresh token or user is null.
-     */
-    @Transactional(readOnly = true)
-    public User getOwner(RefreshToken rt) {
-
-        if (rt == null || rt.getUser() == null) {
-
-            log.error("getOwner: Refresh token or user is null");
-            throw new IllegalArgumentException("Refresh token or user is not valid");
-        }
-
-        log.info("getOwner: Found owner for token: {}", rt.getUser().getEmail());
-
-        return rt.getUser();
-    }
-
-    /**
-     * Invalidates the given refresh token by deleting it from the repository.
-     * @param rt The refresh token to invalidate.
-     * @throws ResourceNotFoundException If the refresh token is null.
-     */
-    @Transactional
-    public void invalidateRefreshToken(RefreshToken rt) {
-
-        if (rt == null) {
-
-            log.error("invalidateRefreshToken: Refresh token is null");
-            throw new ResourceNotFoundException("Refresh token not found");
-        }
-
-        repo.delete(rt);
-
-        log.info("invalidateRefreshToken: Invalidated refresh token for user: {}", rt.getUser().getEmail());
-    }
-
-
-    /**
-     * Deletes the refresh token associated with the given user.
-     *
-     * @param user The user whose refresh token is to be deleted.
+     * @param user The user whose refresh tokens are to be deleted.
      */
     @Transactional
     public void deleteTokenByUser(User user) {
 
         repo.deleteByUser(user);
 
-        log.info("deleteTokenByUser: Deleted refresh token for user: {}", user.getEmail());
+        log.info("deleteTokenByUser: Deleted refresh tokens for userId={}", user.getUserId());
+    }
+
+    private String save(User user, UUID familyId) {
+
+        String raw = UUID.randomUUID().toString();
+
+        RefreshToken token = new RefreshToken();
+        token.setUser(user);
+        token.setFamilyId(familyId);
+        token.setTokenHash(hash(raw));
+        token.setExpiresAt(clock.instant().plus(REFRESH_TOKEN_TTL));
+
+        repo.save(token);
+
+        return raw;
+    }
+
+    /**
+     * SHA-256 hex of the raw token. A fast hash is enough here: the token is a random 122-bit
+     * value, not a low-entropy secret, so the only goal is that a leaked table is not spendable.
+     */
+    static String hash(String rawToken) {
+
+        try {
+            return HexFormat.of().formatHex(
+                    MessageDigest.getInstance("SHA-256").digest(rawToken.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 }

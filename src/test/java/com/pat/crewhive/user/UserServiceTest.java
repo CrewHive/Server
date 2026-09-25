@@ -79,7 +79,7 @@ class UserServiceTest {
     // ---------------------------------------------------------------------
 
     @Test
-    void leaveCompany_reusesExistingRefreshToken_insteadOfDeletingAndRegeneratingIt() {
+    void leaveCompany_startsNewRefreshTokenFamily() {
         Company company = buildCompany(COMPANY_ID);
         User user = buildUser(USER_ID, company);
         company.getUsers().add(user);
@@ -88,15 +88,14 @@ class UserServiceTest {
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
         when(jwtService.generateToken(eq(USER_ID), anyString(), anyString(), anyString(), any(), isNull()))
                 .thenReturn("access-jwt");
-        when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
 
         AuthResponseDTO result = userService.leaveCompany(USER_ID);
 
         assertThat(result.accessToken()).isEqualTo("access-jwt");
-        assertThat(result.refreshToken()).isEqualTo("reused-refresh-token");
-        // the pre-existing refresh token must not be manually invalidated/regenerated here anymore
+        assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
+        // issueNewFamily already replaces the previous session: no separate delete is needed
         verify(refreshTokenService, never()).deleteTokenByUser(any());
-        verify(refreshTokenService, never()).generateRefreshToken(any());
         // the user must be brought back down to the base role once they leave the company
         verify(roleAssignmentService).resetToBaseRole(user);
     }
@@ -111,7 +110,7 @@ class UserServiceTest {
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
         when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn("access-jwt");
-        when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
 
         userService.leaveCompany(USER_ID);
 
@@ -156,5 +155,61 @@ class UserServiceTest {
         org.mockito.InOrder order = org.mockito.Mockito.inOrder(userRepository);
         order.verify(userRepository).save(user);
         order.verify(userRepository).delete(user);
+    }
+
+    // ---------------------------------------------------------------------
+    // getUsersInCompany() — single point of participant resolution (H7)
+    // ---------------------------------------------------------------------
+
+    @Test
+    void getUsersInCompany_allInCompany_returnsThem() {
+        Company company = buildCompany(COMPANY_ID);
+        User u1 = buildUser(UUID.randomUUID(), company);
+        User u2 = buildUser(UUID.randomUUID(), company);
+        java.util.Set<UUID> ids = java.util.Set.of(u1.getUserId(), u2.getUserId());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of(u1, u2));
+
+        assertThat(userService.getUsersInCompany(ids, COMPANY_ID)).containsExactlyInAnyOrder(u1, u2);
+    }
+
+    @Test
+    void getUsersInCompany_userOfAnotherCompany_isDenied() {
+        User mine = buildUser(UUID.randomUUID(), buildCompany(COMPANY_ID));
+        User foreign = buildUser(UUID.randomUUID(), buildCompany(UUID.randomUUID()));
+        java.util.Set<UUID> ids = java.util.Set.of(mine.getUserId(), foreign.getUserId());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of(mine, foreign));
+
+        assertThatThrownBy(() -> userService.getUsersInCompany(ids, COMPANY_ID))
+                .isInstanceOf(org.springframework.security.authorization.AuthorizationDeniedException.class);
+    }
+
+    @Test
+    void getUsersInCompany_userWithoutCompany_isDenied() {
+        User companyless = buildUser(UUID.randomUUID(), null);
+        java.util.Set<UUID> ids = java.util.Set.of(companyless.getUserId());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of(companyless));
+
+        assertThatThrownBy(() -> userService.getUsersInCompany(ids, COMPANY_ID))
+                .isInstanceOf(org.springframework.security.authorization.AuthorizationDeniedException.class);
+    }
+
+    @Test
+    void getUsersInCompany_emptyOrNullIds_returnsEmptyList() {
+        assertThat(userService.getUsersInCompany(java.util.Set.of(), COMPANY_ID)).isEmpty();
+        assertThat(userService.getUsersInCompany(null, COMPANY_ID)).isEmpty();
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void getUsersInCompany_unknownId_throwsResourceNotFound() {
+        java.util.Set<UUID> ids = java.util.Set.of(UUID.randomUUID());
+
+        when(userRepository.findAllByIds(ids)).thenReturn(java.util.List.of());
+
+        assertThatThrownBy(() -> userService.getUsersInCompany(ids, COMPANY_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

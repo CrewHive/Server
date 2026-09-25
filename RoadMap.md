@@ -149,20 +149,47 @@ Tutti `@PreAuthorize("hasRole('MANAGER')")` (autorità *globale*), ma `companyId
 path/body e non è mai confrontato con la company del chiamante (`ShiftTemplateService`). Un manager
 qualsiasi fa CRUD sui template di un'altra azienda.
 
-**H5 — Refresh token in chiaro nel DB, nessuna reuse-detection.**
+~~**H5 — Refresh token in chiaro nel DB, nessuna reuse-detection.**~~ **risolto**: nel DB solo l'hash
+SHA-256 (`token_hash`); rotazione per famiglia (`family_id`) con token ruotati marcati `used_at`; il riuso
+di un token già ruotato revoca l'intera famiglia (log WARN); scadenza `Instant` al secondo; rotazione
+atomica (`markUsed` condizionale, `noRollbackFor` per non annullare la revoca). Corretto anche
+`POST /api/auth/rotate`, che andava in NPE (`cud` null su endpoint `permitAll`) dopo aver già ruotato il token.
+`getOrIssueRefreshToken` rimosso: register company / leave company aprono una nuova famiglia.
+*Deploy:* con `DDL_AUTO=update/validate` fare `DROP TABLE refresh_token` prima (tutte le sessioni rifanno login).
+*(Testo originale:)*
 `RefreshToken.token` = `UUID.randomUUID().toString()` salvato così com'è (`RefreshTokenService.java:34-49`).
 Rotazione in-place senza invalidazione della "famiglia": un token rubato e usato causa solo un 404
 silenzioso al legittimo proprietario. Scadenza a granularità di *giorno* (`LocalDate` +15gg).
 Chi legge la tabella (backup, log, altra vuln) ha token immediatamente spendibili su
 `POST /api/auth/rotate` (che è `permitAll`).
 
-**H6 — Escalation self-service a MANAGER + assenza di scoping a valle.**
+~~**H6 — Escalation self-service a MANAGER + assenza di scoping a valle.**~~ **risolto**: `ROLE_MANAGER`
+è ora un ruolo *per-company* (riga `role` con `company_id`, creata in `registerCompany`); `User.getEffectiveRoleNames()`
+mette nel JWT un ruolo company solo se è della company corrente dell'utente, e ignora il vecchio `ROLE_MANAGER`
+globale. `registerCompany` risponde 409 se l'utente ha già una company. `createRole` rifiuta i nomi riservati
+`ROLE_USER/ROLE_DEV/ROLE_MANAGER` (prima un manager poteva creare il ruolo company `dev` → `ROLE_DEV` → `/docs`).
+Rimossa la regola morta `/api/auth/register/manager` da `SecurityConfig` e `JwtAuthenticationFilter`.
+*Nota:* resta possibile per qualunque utente registrare una propria company (onboarding); nessuna migrazione dati
+(i vecchi manager globali perdono l'autorità finché non viene creato un `ROLE_MANAGER` della loro company).
+*(Testo originale:)*
 `POST /company/register` richiede solo autenticazione e assegna il ruolo **globale** `ROLE_MANAGER`
 (`CompanyService.java:66-107`). Combinato con H4, qualunque utente si promuove e ottiene CRUD
 cross-tenant sui template. (Nota: `SecurityConfig` fa `permitAll` su `/api/auth/register/manager`
 che **non esiste** come endpoint — regola morta.)
 
-**H7 — Assegnazione di massa di eventi/turni a utenti arbitrari.**
+~~**H7 — Assegnazione di massa di eventi/turni a utenti arbitrari.**~~ **risolto**: la parte cross-tenant era già
+chiusa (H1); ora un unico `UserService.getUsersInCompany` (404 per ID inesistenti, 403 per utenti di altra company)
+sostituisce le due copie di `resolveParticipantsSameCompany`. Limiti sulla lista partecipanti: 50 per evento, 200 per
+turno (`@Size` sui 4 DTO, 400 se superati). Inviti agli eventi: `event_users.status` (`PENDING/ACCEPTED/DECLINED`);
+il creatore è ACCEPTED, gli invitati a eventi PRIVATE sono PENDING (PUBLIC → ACCEPTED). Agenda e visibilità verso i
+colleghi contano solo gli ACCEPTED; nuovi `GET /event/invitations` e `POST /event/{id}/respond`. Un rifiuto non si
+annulla ri-invitando; il creatore non può rifiutare il proprio evento. `EventParticipantDTO` espone `status`.
+*Chiusi anche i residui:* patch PRIVATE→PUBLIC porta i PENDING ad ACCEPTED (i DECLINED restano) e, come `createEvent`,
+richiede `ROLE_MANAGER` (prima un utente qualunque poteva rendere pubblico un proprio evento via patch);
+`CreateShiftProgrammedDTO.userId` è `@NotNull` (set vuoto ammesso); `getUsersByIds` logga a INFO solo il numero di
+utenti, gli ID a DEBUG. *Deploy:* con `DDL_AUTO=update` la colonna `status`
+nasce con default `ACCEPTED` (righe esistenti = ACCEPTED).
+*(Testo originale:)*
 `createEvent` / `createShift` accettano qualsiasi lista di UUID; unico gate è "gli eventi PUBLIC
 richiedono ROLE_MANAGER". Calendar spam / molestie / inquinamento dati cross-tenant.
 

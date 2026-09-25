@@ -240,7 +240,7 @@ class EventServiceTest {
 
         when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
         when(userService.getUserById(creator.getUserId())).thenReturn(creator);
-        when(userService.getUsersByIds(Set.of(p1.getUserId(), p2.getUserId()))).thenReturn(List.of(p1, p2));
+        when(userService.getUsersInCompany(Set.of(p1.getUserId(), p2.getUserId()), COMPANY_A)).thenReturn(List.of(p1, p2));
         when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
         when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -266,7 +266,8 @@ class EventServiceTest {
 
         when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
         when(userService.getUserById(creator.getUserId())).thenReturn(creator);
-        when(userService.getUsersByIds(Set.of(foreign.getUserId()))).thenReturn(List.of(foreign));
+        when(userService.getUsersInCompany(Set.of(foreign.getUserId()), COMPANY_A))
+                .thenThrow(new AuthorizationDeniedException("Un partecipante non appartiene alla tua company"));
 
         assertThatThrownBy(() ->
                 eventService.createEvent(dto, creator.getUserId(), COMPANY_A, Collections.singleton("ROLE_USER")))
@@ -287,7 +288,7 @@ class EventServiceTest {
 
         when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
         when(userService.getUserById(creator.getUserId())).thenReturn(creator);
-        when(userService.getUsersByIds(Set.of(user1.getUserId(), user2.getUserId())))
+        when(userService.getUsersInCompany(Set.of(user1.getUserId(), user2.getUserId()), COMPANY_A))
                 .thenReturn(List.of(user1, user2));
         when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
         when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -381,7 +382,8 @@ class EventServiceTest {
         when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
         when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
         when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
-        when(userService.getUsersByIds(Set.of(foreign.getUserId()))).thenReturn(List.of(foreign));
+        when(userService.getUsersInCompany(Set.of(foreign.getUserId()), COMPANY_A))
+                .thenThrow(new AuthorizationDeniedException("Un partecipante non appartiene alla tua company"));
 
         assertThatThrownBy(() -> eventService.patchEvent(
                 patchDto(eventId, Set.of(foreign.getUserId())), creator.getUserId(), COMPANY_A, Set.of("ROLE_USER")))
@@ -402,7 +404,7 @@ class EventServiceTest {
 
         when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
         when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
-        when(userService.getUsersByIds(Set.of(participant.getUserId()))).thenReturn(List.of(participant));
+        when(userService.getUsersInCompany(Set.of(participant.getUserId()), COMPANY_A)).thenReturn(List.of(participant));
         when(eventUsersRepository.findByIdIncludingDeleted(participant.getUserId(), eventId))
                 .thenReturn(Optional.of(softDeletedLink));
         when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
@@ -481,5 +483,307 @@ class EventServiceTest {
         eventService.deleteEvent(eventId, manager, COMPANY_A, Set.of("ROLE_MANAGER"));
 
         verify(eventRepository).delete(event);
+    }
+
+    // ---------------------------------------------------------------------
+    // invitations (H7): status on create / patch
+    // ---------------------------------------------------------------------
+
+    private Event createAndCapture(CreateEventDTO dto, User creator, List<User> participants, Set<String> roles, short typeId) {
+        when(stringUtils.normalizeString(dto.name())).thenReturn(dto.name());
+        when(userService.getUserById(creator.getUserId())).thenReturn(creator);
+        when(userService.getUsersInCompany(dto.userId(), COMPANY_A)).thenReturn(participants);
+        when(eventTypeRepository.getReferenceById(typeId)).thenReturn(new EventTypeEntity(typeId, "x"));
+        when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        eventService.createEvent(dto, creator.getUserId(), COMPANY_A, roles);
+
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(eventRepository).save(captor.capture());
+        return captor.getValue();
+    }
+
+    private EventParticipationStatus statusOf(Event event, User user) {
+        return event.getUsers().stream()
+                .filter(eu -> eu.getUser().getUserId().equals(user.getUserId()))
+                .findFirst().orElseThrow().getStatus();
+    }
+
+    @Test
+    void createEvent_private_creatorAcceptedAndInviteesPending() {
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User invitee = user(UUID.randomUUID(), COMPANY_A);
+        CreateEventDTO dto = new CreateEventDTO(
+                "Riunione", null, START, END, "FF0000", EventType.PRIVATE, Set.of(invitee.getUserId()));
+
+        Event saved = createAndCapture(dto, creator, List.of(invitee), Set.of("ROLE_USER"), (short) 2);
+
+        assertThat(statusOf(saved, creator)).isEqualTo(EventParticipationStatus.ACCEPTED);
+        assertThat(statusOf(saved, invitee)).isEqualTo(EventParticipationStatus.PENDING);
+    }
+
+    @Test
+    void createEvent_public_byManager_everyoneAccepted() {
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User invitee = user(UUID.randomUUID(), COMPANY_A);
+        CreateEventDTO dto = new CreateEventDTO(
+                "Assemblea", null, START, END, "FF0000", EventType.PUBLIC, Set.of(invitee.getUserId()));
+
+        Event saved = createAndCapture(dto, creator, List.of(invitee), Set.of("ROLE_MANAGER"), (short) 1);
+
+        assertThat(statusOf(saved, creator)).isEqualTo(EventParticipationStatus.ACCEPTED);
+        assertThat(statusOf(saved, invitee)).isEqualTo(EventParticipationStatus.ACCEPTED);
+    }
+
+    @Test
+    void createEvent_creatorListedAmongParticipants_staysAccepted() {
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User invitee = user(UUID.randomUUID(), COMPANY_A);
+        CreateEventDTO dto = new CreateEventDTO(
+                "Riunione", null, START, END, "FF0000", EventType.PRIVATE,
+                Set.of(creator.getUserId(), invitee.getUserId()));
+
+        Event saved = createAndCapture(dto, creator, List.of(creator, invitee), Set.of("ROLE_USER"), (short) 2);
+
+        assertThat(saved.getUsers()).hasSize(2);
+        assertThat(statusOf(saved, creator)).isEqualTo(EventParticipationStatus.ACCEPTED);
+        assertThat(statusOf(saved, invitee)).isEqualTo(EventParticipationStatus.PENDING);
+    }
+
+    @Test
+    void patchEvent_newParticipantOnPrivateEvent_isPending() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        User invitee = user(UUID.randomUUID(), COMPANY_A);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+        when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
+        when(userService.getUsersInCompany(Set.of(invitee.getUserId()), COMPANY_A)).thenReturn(List.of(invitee));
+        when(eventUsersRepository.findByIdIncludingDeleted(invitee.getUserId(), eventId)).thenReturn(Optional.empty());
+        when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
+        when(eventRepository.save(event)).thenReturn(event);
+
+        eventService.patchEvent(patchDto(eventId, Set.of(invitee.getUserId())), creator.getUserId(), COMPANY_A, Set.of("ROLE_USER"));
+
+        assertThat(statusOf(event, invitee)).isEqualTo(EventParticipationStatus.PENDING);
+    }
+
+    @Test
+    void patchEvent_reinvitingSoftDeletedDeclinedParticipant_keepsDeclined() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        User participant = user(UUID.randomUUID(), COMPANY_A);
+        EventUsers softDeletedLink = new EventUsers(participant, event, EventParticipationStatus.DECLINED);
+        softDeletedLink.markDeleted(participant);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+        when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
+        when(userService.getUsersInCompany(Set.of(participant.getUserId()), COMPANY_A)).thenReturn(List.of(participant));
+        when(eventUsersRepository.findByIdIncludingDeleted(participant.getUserId(), eventId))
+                .thenReturn(Optional.of(softDeletedLink));
+        when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
+        when(eventRepository.save(event)).thenReturn(event);
+
+        eventService.patchEvent(patchDto(eventId, Set.of(participant.getUserId())), creator.getUserId(), COMPANY_A, Set.of("ROLE_USER"));
+
+        assertThat(softDeletedLink.isActive()).isTrue();
+        assertThat(softDeletedLink.getStatus()).isEqualTo(EventParticipationStatus.DECLINED);
+    }
+
+    @Test
+    void patchEvent_reinvitingSoftDeletedAcceptedParticipant_becomesPendingAgain() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        User participant = user(UUID.randomUUID(), COMPANY_A);
+        EventUsers softDeletedLink = new EventUsers(participant, event, EventParticipationStatus.ACCEPTED);
+        softDeletedLink.markDeleted(participant);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+        when(eventTypeRepository.getReferenceById((short) 2)).thenReturn(new EventTypeEntity((short) 2, "Private"));
+        when(userService.getUsersInCompany(Set.of(participant.getUserId()), COMPANY_A)).thenReturn(List.of(participant));
+        when(eventUsersRepository.findByIdIncludingDeleted(participant.getUserId(), eventId))
+                .thenReturn(Optional.of(softDeletedLink));
+        when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
+        when(eventRepository.save(event)).thenReturn(event);
+
+        eventService.patchEvent(patchDto(eventId, Set.of(participant.getUserId())), creator.getUserId(), COMPANY_A, Set.of("ROLE_USER"));
+
+        assertThat(softDeletedLink.getStatus()).isEqualTo(EventParticipationStatus.PENDING);
+    }
+
+    @Test
+    void patchEvent_toPublicByManager_turnsPendingInviteesIntoAccepted_andKeepsDeclined() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User pending = user(UUID.randomUUID(), COMPANY_A);
+        User declined = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        event.addUser(creator);
+        event.addUser(pending, EventParticipationStatus.PENDING);
+        event.addUser(declined, EventParticipationStatus.DECLINED);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+        when(eventTypeRepository.getReferenceById((short) 1)).thenReturn(new EventTypeEntity((short) 1, "Public"));
+        when(stringUtils.normalizeString("Riunione")).thenReturn("Riunione");
+        when(eventRepository.save(event)).thenReturn(event);
+
+        eventService.patchEvent(
+                new PatchEventDTO(eventId, "Riunione", null, START, END, "FF0000", EventType.PUBLIC, null),
+                creator.getUserId(), COMPANY_A, Set.of("ROLE_MANAGER"));
+
+        assertThat(statusOf(event, pending)).isEqualTo(EventParticipationStatus.ACCEPTED);
+        assertThat(statusOf(event, declined)).isEqualTo(EventParticipationStatus.DECLINED);
+    }
+
+    @Test
+    void patchEvent_toPublicByNonManager_isDenied_andInvitationsStayPending() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User pending = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        event.addUser(creator);
+        event.addUser(pending, EventParticipationStatus.PENDING);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+
+        assertThatThrownBy(() -> eventService.patchEvent(
+                new PatchEventDTO(eventId, "Riunione", null, START, END, "FF0000", EventType.PUBLIC, null),
+                creator.getUserId(), COMPANY_A, Set.of("ROLE_USER")))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        assertThat(statusOf(event, pending)).isEqualTo(EventParticipationStatus.PENDING);
+        verify(eventRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------------
+    // invitations (H7): visibility, listing, answering
+    // ---------------------------------------------------------------------
+
+    @Test
+    void getEventsByPeriodAndUser_colleague_pendingOrDeclinedInviteeDoesNotSeeInviterPrivateEvent() {
+        User me = user(UUID.randomUUID(), COMPANY_A);
+        User colleague = user(UUID.randomUUID(), COMPANY_A);
+
+        Event pending = event(UUID.randomUUID(), colleague);
+        pending.addUser(colleague);
+        pending.addUser(me, EventParticipationStatus.PENDING);
+
+        Event declined = event(UUID.randomUUID(), colleague);
+        declined.addUser(colleague);
+        declined.addUser(me, EventParticipationStatus.DECLINED);
+
+        LocalDate from = LocalDate.of(2026, 8, 17);
+        LocalDate to = LocalDate.of(2026, 8, 23);
+        when(userService.getUserById(colleague.getUserId())).thenReturn(colleague);
+        when(dateUtils.getStartDateForPeriod(Period.WEEK)).thenReturn(from);
+        when(dateUtils.getEndDateForPeriod(Period.WEEK)).thenReturn(to);
+        when(eventRepository.findWithParticipantsByUserAndDateBetween(colleague.getUserId(), from, to))
+                .thenReturn(List.of(pending, declined));
+
+        assertThat(eventService.getEventsByPeriodAndUser(Period.WEEK, colleague.getUserId(), me.getUserId(), COMPANY_A))
+                .isEmpty();
+    }
+
+    @Test
+    void getPendingInvitations_returnsEventsFromRepositoryMappedToDtos() {
+        User me = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(UUID.randomUUID(), user(UUID.randomUUID(), COMPANY_A));
+        event.addUser(me, EventParticipationStatus.PENDING);
+
+        when(eventRepository.findPendingWithParticipantsByUser(eq(me.getUserId()), any(OffsetDateTime.class)))
+                .thenReturn(List.of(event));
+
+        assertThat(eventService.getPendingInvitations(me.getUserId())).containsExactly(EventOutputDTO.from(event));
+    }
+
+    @Test
+    void respondToInvitation_accept_setsAccepted() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User invitee = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        event.addUser(creator);
+        event.addUser(invitee, EventParticipationStatus.PENDING);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+
+        eventService.respondToInvitation(eventId, invitee.getUserId(), COMPANY_A, true);
+
+        assertThat(statusOf(event, invitee)).isEqualTo(EventParticipationStatus.ACCEPTED);
+    }
+
+    @Test
+    void respondToInvitation_decline_setsDeclined_andCanBeChangedBackToAccepted() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User invitee = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        event.addUser(creator);
+        event.addUser(invitee, EventParticipationStatus.PENDING);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+
+        eventService.respondToInvitation(eventId, invitee.getUserId(), COMPANY_A, false);
+        assertThat(statusOf(event, invitee)).isEqualTo(EventParticipationStatus.DECLINED);
+
+        eventService.respondToInvitation(eventId, invitee.getUserId(), COMPANY_A, true);
+        assertThat(statusOf(event, invitee)).isEqualTo(EventParticipationStatus.ACCEPTED);
+    }
+
+    @Test
+    void respondToInvitation_callerNotInvited_throwsResourceNotFound() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        event.addUser(creator);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+
+        assertThatThrownBy(() -> eventService.respondToInvitation(eventId, UUID.randomUUID(), COMPANY_A, true))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void respondToInvitation_unknownEvent_throwsResourceNotFound() {
+        UUID eventId = UUID.randomUUID();
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> eventService.respondToInvitation(eventId, UUID.randomUUID(), COMPANY_A, true))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void respondToInvitation_eventOfAnotherCompany_isDenied() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        User outsider = user(UUID.randomUUID(), COMPANY_B);
+        Event event = event(eventId, creator);
+        event.addUser(creator);
+        event.addUser(outsider, EventParticipationStatus.PENDING);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+
+        assertThatThrownBy(() -> eventService.respondToInvitation(eventId, outsider.getUserId(), COMPANY_B, true))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        assertThat(statusOf(event, outsider)).isEqualTo(EventParticipationStatus.PENDING);
+    }
+
+    @Test
+    void respondToInvitation_creatorCannotDeclineOwnEvent() {
+        UUID eventId = UUID.randomUUID();
+        User creator = user(UUID.randomUUID(), COMPANY_A);
+        Event event = event(eventId, creator);
+        event.addUser(creator);
+
+        when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
+
+        assertThatThrownBy(() -> eventService.respondToInvitation(eventId, creator.getUserId(), COMPANY_A, false))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(statusOf(event, creator)).isEqualTo(EventParticipationStatus.ACCEPTED);
     }
 }

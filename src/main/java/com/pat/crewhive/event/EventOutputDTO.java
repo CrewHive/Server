@@ -24,8 +24,8 @@ public record EventOutputDTO(
     public static EventOutputDTO from(Event event) {
 
         List<EventParticipantDTO> participants = event.getUsers().stream()
-                .map(EventUsers::getUser)
-                .map(u -> new EventParticipantDTO(u.getUserId(), u.getFirstName(), u.getLastName()))
+                .map(eu -> new EventParticipantDTO(
+                        eu.getUser().getUserId(), eu.getUser().getFirstName(), eu.getUser().getLastName(), eu.getStatus()))
                 .collect(Collectors.toList());
 
         return new EventOutputDTO(

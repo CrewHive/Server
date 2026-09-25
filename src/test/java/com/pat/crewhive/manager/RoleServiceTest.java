@@ -11,6 +11,8 @@ import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -106,6 +108,36 @@ class RoleServiceTest {
 
         assertThatThrownBy(() -> roleService.updateUserRole(UUID.randomUUID(), "cashier", company.getCompanyId()))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ---------------------------------------------------------------------
+    // createRole: nomi riservati (H6)
+    // ---------------------------------------------------------------------
+
+    @ParameterizedTest
+    @ValueSource(strings = {"user", "dev", "manager", "ROLE_DEV", "ROLE_MANAGER", "ROLE_USER"})
+    void createRole_reservedName_throwsIllegalArgumentAndSavesNothing(String name) {
+        // StringUtils è un mock: replico normalizeRole
+        String normalized = name.toUpperCase().startsWith("ROLE_") ? name.toUpperCase() : "ROLE_" + name.toUpperCase();
+        when(stringUtils.normalizeRole(name)).thenReturn(normalized);
+
+        assertThatThrownBy(() -> roleService.createRole(name, UUID.randomUUID()))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(roleRepository, never()).save(any());
+        verifyNoInteractions(companyService);
+    }
+
+    @Test
+    void createRole_regularName_savesCompanyRole() {
+        Company company = company(UUID.randomUUID());
+        when(stringUtils.normalizeRole("cashier")).thenReturn("ROLE_CASHIER");
+        when(companyService.getCompanyById(company.getCompanyId())).thenReturn(company);
+        when(roleRepository.existsByRoleNameIgnoreCaseAndCompany("ROLE_CASHIER", company)).thenReturn(false);
+
+        roleService.createRole("cashier", company.getCompanyId());
+
+        verify(roleRepository).save(argThat(r -> r.getRoleName().equals("ROLE_CASHIER") && r.getCompany() == company));
     }
 
     // ---------------------------------------------------------------------

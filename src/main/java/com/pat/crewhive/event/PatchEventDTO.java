@@ -36,6 +36,7 @@ public record PatchEventDTO(
         @NotNull(message = "Event type cannot be null")
         EventType eventType,
 
+        @Size(max = 50, message = "An event cannot have more than 50 participants")
         Set<UUID> userId
 ) {
 }

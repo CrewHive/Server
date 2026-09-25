@@ -77,29 +77,68 @@ class CompanyServiceTest {
     // ---------------------------------------------------------------------
 
     @Test
-    void registerCompany_reusesExistingRefreshToken_insteadOfDeletingIt() {
+    void registerCompany_startsNewRefreshTokenFamily() {
         CompanyRegistrationDTO request = new CompanyRegistrationDTO("Acme", CompanyType.RESTAURANT, null);
         UUID managerId = UUID.randomUUID();
         User manager = buildManager(managerId);
-        Role managerRole = new Role("ROLE_MANAGER", null);
 
         when(stringUtils.normalizeString("Acme")).thenReturn("acme");
         when(companyRepository.existsByName("acme")).thenReturn(false);
         when(userService.getUserById(managerId)).thenReturn(manager);
-        when(roleRepository.findByRoleNameIgnoreCaseAndCompanyIsNull("ROLE_MANAGER"))
-                .thenReturn(java.util.Optional.of(managerRole));
+        when(roleRepository.save(any(Role.class))).thenAnswer(inv -> inv.getArgument(0));
         when(stringUtils.normalizeString("manager@example.com")).thenReturn("manager@example.com");
         when(jwtService.generateToken(eq(managerId), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn("access-jwt");
-        when(refreshTokenService.getOrIssueRefreshToken(manager)).thenReturn("reused-refresh-token");
+        when(refreshTokenService.issueNewFamily(manager)).thenReturn("new-refresh-token");
 
         AuthResponseDTO result = companyService.registerCompany(managerId, request);
 
         assertThat(result.accessToken()).isEqualTo("access-jwt");
-        assertThat(result.refreshToken()).isEqualTo("reused-refresh-token");
-        // registering a company must not manually invalidate/regenerate the session's refresh token anymore
+        assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
+        // issueNewFamily already replaces the previous session: no separate delete is needed
         verify(refreshTokenService, never()).deleteTokenByUser(any());
-        verify(refreshTokenService, never()).generateRefreshToken(any());
+    }
+
+    @Test
+    void registerCompany_assignsCompanyScopedManagerRole() {
+        CompanyRegistrationDTO request = new CompanyRegistrationDTO("Acme", CompanyType.RESTAURANT, null);
+        UUID managerId = UUID.randomUUID();
+        User manager = buildManager(managerId);
+
+        when(stringUtils.normalizeString("Acme")).thenReturn("acme");
+        when(companyRepository.existsByName("acme")).thenReturn(false);
+        when(userService.getUserById(managerId)).thenReturn(manager);
+        when(roleRepository.save(any(Role.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(stringUtils.normalizeString("manager@example.com")).thenReturn("manager@example.com");
+        when(jwtService.generateToken(eq(managerId), anyString(), anyString(), anyString(), any(), any()))
+                .thenReturn("access-jwt");
+        when(refreshTokenService.issueNewFamily(manager)).thenReturn("new-refresh-token");
+
+        companyService.registerCompany(managerId, request);
+
+        org.mockito.ArgumentCaptor<Role> saved = org.mockito.ArgumentCaptor.forClass(Role.class);
+        verify(roleRepository).save(saved.capture());
+        assertThat(saved.getValue().getRoleName()).isEqualTo(Role.ROLE_MANAGER);
+        assertThat(saved.getValue().getCompany()).isSameAs(manager.getCompany());
+        verify(roleRepository, never()).findByRoleNameIgnoreCaseAndCompanyIsNull(anyString());
+    }
+
+    @Test
+    void registerCompany_throwsResourceAlreadyExistsException_whenUserAlreadyInCompany() {
+        CompanyRegistrationDTO request = new CompanyRegistrationDTO("Acme", CompanyType.RESTAURANT, null);
+        UUID managerId = UUID.randomUUID();
+        User manager = buildManager(managerId);
+        manager.setCompany(new Company());
+
+        when(stringUtils.normalizeString("Acme")).thenReturn("acme");
+        when(companyRepository.existsByName("acme")).thenReturn(false);
+        when(userService.getUserById(managerId)).thenReturn(manager);
+
+        assertThatThrownBy(() -> companyService.registerCompany(managerId, request))
+                .isInstanceOf(ResourceAlreadyExistsException.class);
+
+        verify(companyRepository, never()).save(any());
+        verifyNoInteractions(roleRepository, jwtService, refreshTokenService);
     }
 
     @Test
