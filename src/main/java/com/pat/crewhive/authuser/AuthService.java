@@ -93,13 +93,6 @@ public class AuthService {
 
         log.info("User {} authenticated successfully", normalizedEmail);
 
-        RefreshToken rt = refreshTokenService.getRefreshTokenByUser(user);
-
-        if (rt != null) {
-
-            refreshTokenService.invalidateRefreshToken(rt);
-        }
-
         UUID company = user.getCompany() == null ? null : user.getCompany().getCompanyId();
 
         return new AuthResponseDTO(
@@ -111,7 +104,7 @@ public class AuthService {
                         user.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
                         company
                 ),
-                refreshTokenService.generateRefreshToken(user)
+                refreshTokenService.issueNewFamily(user)
         );
     }
 
@@ -164,7 +157,7 @@ public class AuthService {
      * @return AuthResponseDTO containing new JWT and Refresh Token.
      * @throws InvalidTokenException if the refresh token is invalid or expired.
      */
-    @Transactional
+    @Transactional(noRollbackFor = InvalidTokenException.class)
     public AuthResponseDTO rotate_token(String token) {
 
         if (token == null || token.isBlank()) {
@@ -174,13 +167,9 @@ public class AuthService {
         try { UUID.fromString(token); }
         catch (IllegalArgumentException e) { throw new InvalidTokenException("Invalid refresh token"); }
 
-        RefreshToken rt = refreshTokenService.getRefreshTokenByTokenWithUserAndRole(token);
+        RefreshTokenService.Rotation rotation = refreshTokenService.rotate(token);
 
-        if (refreshTokenService.isExpired(rt)) {
-            throw new InvalidTokenException("Invalid refresh token");
-        }
-
-        User owner = rt.getUser();
+        User owner = rotation.user();
         if (owner == null || owner.getUserId() == null) {
             throw new InvalidTokenException("Invalid refresh token");
         }
@@ -203,14 +192,12 @@ public class AuthService {
                 companyId
         );
 
-        String newRefreshToken = refreshTokenService.rotateRefreshToken(rt);
-
         log.info("Refresh rotated for userId={}", userId);
-        return new AuthResponseDTO(newAccessToken, newRefreshToken);
+        return new AuthResponseDTO(newAccessToken, rotation.refreshToken());
     }
 
     /**
-     * Logs out a user by invalidating their refresh token.
+     * Logs out a user by revoking the whole family of their refresh token.
      *
      * @param request The logout request containing the refresh token and username.
      * @throws InvalidTokenException if the refresh token is invalid or does not belong to the user.
@@ -220,20 +207,15 @@ public class AuthService {
 
         if (request.refreshToken() == null || request.refreshToken().isBlank()) throw new InvalidTokenException("Refresh Token is missing");
 
-        RefreshToken rt = refreshTokenService.getRefreshToken(request.refreshToken());
+        RefreshToken rt = refreshTokenService.getValidToken(request.refreshToken());
 
-        if (rt == null || refreshTokenService.isExpired(rt)) {
-
-            throw new InvalidTokenException("Refresh Token expired or missing");
-        }
-
-        User owner = refreshTokenService.getOwner(rt);
+        User owner = rt.getUser();
         if (owner == null || !owner.getUserId().equals(request.userId())) {
 
             throw new InvalidTokenException("Refresh Token does not belong to user");
         }
 
-        refreshTokenService.invalidateRefreshToken(rt);
+        refreshTokenService.revokeFamily(rt);
         tokenBlackListService.revoke(jti, tokenExpiration);
 
         log.info("User {} logged out successfully", request.userId());

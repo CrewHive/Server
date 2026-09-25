@@ -103,7 +103,7 @@ public class CompanyService {
                         manager.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
                         company.getCompanyId()
                 ),
-                refreshTokenService.getOrIssueRefreshToken(manager));
+                refreshTokenService.issueNewFamily(manager));
     }
 
     /**

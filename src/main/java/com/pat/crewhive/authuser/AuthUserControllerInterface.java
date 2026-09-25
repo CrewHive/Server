@@ -1,7 +1,6 @@
 package com.pat.crewhive.authuser;
 
 import com.pat.crewhive.api.swagger.schema.ApiError;
-import com.pat.crewhive.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Authentication", description = "Operations related to user authentication")
@@ -36,8 +34,7 @@ public interface AuthUserControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<AuthResponseDTO> rotate(@AuthenticationPrincipal CustomUserDetails cud,
-                                           @Valid @RequestBody RotateRequestDTO request);
+    ResponseEntity<AuthResponseDTO> rotate(@Valid @RequestBody RotateRequestDTO request);
 
 
 

@@ -79,7 +79,7 @@ class UserServiceTest {
     // ---------------------------------------------------------------------
 
     @Test
-    void leaveCompany_reusesExistingRefreshToken_insteadOfDeletingAndRegeneratingIt() {
+    void leaveCompany_startsNewRefreshTokenFamily() {
         Company company = buildCompany(COMPANY_ID);
         User user = buildUser(USER_ID, company);
         company.getUsers().add(user);
@@ -88,15 +88,14 @@ class UserServiceTest {
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
         when(jwtService.generateToken(eq(USER_ID), anyString(), anyString(), anyString(), any(), isNull()))
                 .thenReturn("access-jwt");
-        when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
 
         AuthResponseDTO result = userService.leaveCompany(USER_ID);
 
         assertThat(result.accessToken()).isEqualTo("access-jwt");
-        assertThat(result.refreshToken()).isEqualTo("reused-refresh-token");
-        // the pre-existing refresh token must not be manually invalidated/regenerated here anymore
+        assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
+        // issueNewFamily already replaces the previous session: no separate delete is needed
         verify(refreshTokenService, never()).deleteTokenByUser(any());
-        verify(refreshTokenService, never()).generateRefreshToken(any());
         // the user must be brought back down to the base role once they leave the company
         verify(roleAssignmentService).resetToBaseRole(user);
     }
@@ -111,7 +110,7 @@ class UserServiceTest {
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
         when(jwtService.generateToken(any(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn("access-jwt");
-        when(refreshTokenService.getOrIssueRefreshToken(user)).thenReturn("reused-refresh-token");
+        when(refreshTokenService.issueNewFamily(user)).thenReturn("new-refresh-token");
 
         userService.leaveCompany(USER_ID);
 

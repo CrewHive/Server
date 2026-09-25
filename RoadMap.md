@@ -149,7 +149,14 @@ Tutti `@PreAuthorize("hasRole('MANAGER')")` (autorità *globale*), ma `companyId
 path/body e non è mai confrontato con la company del chiamante (`ShiftTemplateService`). Un manager
 qualsiasi fa CRUD sui template di un'altra azienda.
 
-**H5 — Refresh token in chiaro nel DB, nessuna reuse-detection.**
+~~**H5 — Refresh token in chiaro nel DB, nessuna reuse-detection.**~~ **risolto**: nel DB solo l'hash
+SHA-256 (`token_hash`); rotazione per famiglia (`family_id`) con token ruotati marcati `used_at`; il riuso
+di un token già ruotato revoca l'intera famiglia (log WARN); scadenza `Instant` al secondo; rotazione
+atomica (`markUsed` condizionale, `noRollbackFor` per non annullare la revoca). Corretto anche
+`POST /api/auth/rotate`, che andava in NPE (`cud` null su endpoint `permitAll`) dopo aver già ruotato il token.
+`getOrIssueRefreshToken` rimosso: register company / leave company aprono una nuova famiglia.
+*Deploy:* con `DDL_AUTO=update/validate` fare `DROP TABLE refresh_token` prima (tutte le sessioni rifanno login).
+*(Testo originale:)*
 `RefreshToken.token` = `UUID.randomUUID().toString()` salvato così com'è (`RefreshTokenService.java:34-49`).
 Rotazione in-place senza invalidazione della "famiglia": un token rubato e usato causa solo un 404
 silenzioso al legittimo proprietario. Scadenza a granularità di *giorno* (`LocalDate` +15gg).

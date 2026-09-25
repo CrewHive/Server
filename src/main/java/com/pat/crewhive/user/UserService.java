@@ -272,7 +272,7 @@ public class UserService {
                         user.getLastName(),
                         user.getRoles().stream().map(r -> r.getRole().getRoleName()).collect(Collectors.toSet()),
                         null),
-                refreshTokenService.getOrIssueRefreshToken(user));
+                refreshTokenService.issueNewFamily(user));
     }
 
 

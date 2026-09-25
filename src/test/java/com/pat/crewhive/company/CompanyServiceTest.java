@@ -77,7 +77,7 @@ class CompanyServiceTest {
     // ---------------------------------------------------------------------
 
     @Test
-    void registerCompany_reusesExistingRefreshToken_insteadOfDeletingIt() {
+    void registerCompany_startsNewRefreshTokenFamily() {
         CompanyRegistrationDTO request = new CompanyRegistrationDTO("Acme", CompanyType.RESTAURANT, null);
         UUID managerId = UUID.randomUUID();
         User manager = buildManager(managerId);
@@ -91,15 +91,14 @@ class CompanyServiceTest {
         when(stringUtils.normalizeString("manager@example.com")).thenReturn("manager@example.com");
         when(jwtService.generateToken(eq(managerId), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn("access-jwt");
-        when(refreshTokenService.getOrIssueRefreshToken(manager)).thenReturn("reused-refresh-token");
+        when(refreshTokenService.issueNewFamily(manager)).thenReturn("new-refresh-token");
 
         AuthResponseDTO result = companyService.registerCompany(managerId, request);
 
         assertThat(result.accessToken()).isEqualTo("access-jwt");
-        assertThat(result.refreshToken()).isEqualTo("reused-refresh-token");
-        // registering a company must not manually invalidate/regenerate the session's refresh token anymore
+        assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
+        // issueNewFamily already replaces the previous session: no separate delete is needed
         verify(refreshTokenService, never()).deleteTokenByUser(any());
-        verify(refreshTokenService, never()).generateRefreshToken(any());
     }
 
     @Test
