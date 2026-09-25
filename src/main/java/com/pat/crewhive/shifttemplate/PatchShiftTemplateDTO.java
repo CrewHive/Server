@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.OffsetTime;
-import java.util.UUID;
 
 public record PatchShiftTemplateDTO(
 
@@ -29,9 +28,6 @@ public record PatchShiftTemplateDTO(
 
         @NotNull(message = "End time must not be null")
         OffsetTime end,
-
-        @NotNull(message = "Company ID must not be null")
-        UUID companyId,
 
         //TODO: Immagino sia per fare il controllo che tra il nome vecchio e il nuovo
         @NotBlank(message = "Shift name must not be blank")

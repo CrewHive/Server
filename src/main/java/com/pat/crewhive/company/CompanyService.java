@@ -236,7 +236,6 @@ public class CompanyService {
      */
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "companyById", key = "#companyId"),
             @CacheEvict(value = "usersInCompany", key = "#companyId"),
             @CacheEvict(value = "companyByUserId", key = "#request.userId")
     })
@@ -278,7 +277,6 @@ public class CompanyService {
      */
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "companyById", key = "#companyId"),
             @CacheEvict(value = "usersInCompany", key = "#companyId"),
             @CacheEvict(value = "companyByUserId", allEntries = true)
     })

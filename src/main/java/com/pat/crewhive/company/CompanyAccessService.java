@@ -7,7 +7,6 @@ import com.pat.crewhive.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +44,6 @@ public class CompanyAccessService {
      * @throws ResourceAlreadyExistsException if the company does not exist.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "companyById", key = "#companyId")
     public Company getCompanyById(UUID companyId) {
 
         return companyRepository.findById(companyId)

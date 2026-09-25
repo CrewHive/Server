@@ -10,6 +10,7 @@ import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,43 +38,63 @@ public class ShiftTemplateService {
 
 
     /**
-     * Retrieves a shift template by its name and company ID.
+     * Every operation is scoped to the caller's company (taken from the token, never from the request):
+     * a template of another company is indistinguishable from a missing one.
+     * @throws AuthorizationDeniedException if the caller does not belong to any company.
+     */
+    private void requireCompany(UUID companyId) {
+
+        if (companyId == null) {
+
+            log.warn("Shift template operation denied: caller does not belong to any company");
+            throw new AuthorizationDeniedException("User does not belong to any company.");
+        }
+    }
+
+
+    /**
+     * Retrieves a shift template by its name within the caller's company.
      * @param shiftName The name of the shift template.
-     * @param companyId The ID of the company.
-     * @return The ShiftTemplate object if found.
+     * @param companyId The caller's company ID (from the token).
+     * @return The shift template if found.
+     * @throws AuthorizationDeniedException if the caller does not belong to any company.
      * @throws ResourceNotFoundException if the shift template does not exist in the company.
      */
     @Transactional(readOnly = true)
-    public ShiftTemplate getShiftTemplate(String shiftName, UUID companyId) {
+    public ShiftTemplateOutputDTO getShiftTemplate(String shiftName, UUID companyId) {
 
-        //todo ritorna un dto
+        requireCompany(companyId);
 
         log.info("Fetching Shift Template '{}' for company {}", shiftName, companyId);
 
         String normalizedShiftName = stringUtils.normalizeString(shiftName);
 
-        return repo.findByShiftNameAndCompanyCompanyId(normalizedShiftName, companyId)
+        ShiftTemplate shiftTemplate = repo.findByShiftNameAndCompanyCompanyId(normalizedShiftName, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Shift template with name '" + normalizedShiftName + "' does not exist in company with ID " + companyId));
+
+        return ShiftTemplateOutputDTO.from(shiftTemplate);
     }
 
 
     /**
-     * Creates a new shift template in the database.
+     * Creates a new shift template in the caller's company.
      * @param dto Data transfer object containing shift template details.
-     * @return The ID of the newly created shift template.
+     * @param companyId The caller's company ID (from the token).
+     * @return The newly created shift template.
+     * @throws AuthorizationDeniedException if the caller does not belong to any company.
      * @throws ResourceAlreadyExistsException if a shift template with the same name already exists in the company.
      */
     @Transactional
-    public ShiftTemplate createShiftTemplate(CreateShiftTemplateDTO dto) {
+    public ShiftTemplateOutputDTO createShiftTemplate(CreateShiftTemplateDTO dto, UUID companyId) {
 
-        //todo ritorna un dto
+        requireCompany(companyId);
 
-        if (repo.existsByShiftNameAndCompanyCompanyId(dto.shiftName(), dto.companyId())) {
+        if (repo.existsByShiftNameAndCompanyCompanyId(dto.shiftName(), companyId)) {
             //TODO: L'ID dev'essere lasciato solo nel log
-            throw new ResourceAlreadyExistsException("Shift template with name '" + dto.shiftName() + "' already exists in company with ID " + dto.companyId());
+            throw new ResourceAlreadyExistsException("Shift template with name '" + dto.shiftName() + "' already exists in company with ID " + companyId);
         }
 
-        log.info("Creating Shift Template for company {}", dto.companyId());
+        log.info("Creating Shift Template for company {}", companyId);
 
         ShiftTemplate shift = new ShiftTemplate();
 
@@ -85,39 +106,41 @@ public class ShiftTemplateService {
         shift.setStartShift(dto.start());
         shift.setEndShift(dto.end());
 
-        Company company = companyService.getCompanyById(dto.companyId());
+        Company company = companyService.getCompanyById(companyId);
         shift.setCompany(company);
 
-        return repo.save(shift);
+        return ShiftTemplateOutputDTO.from(repo.save(shift));
     }
 
 
     /**
-     * Updates an existing shift template in the database.
+     * Updates an existing shift template of the caller's company.
      * @param dto Data transfer object containing updated shift template details.
-     * @return The ID of the updated shift template.
+     * @param companyId The caller's company ID (from the token).
+     * @return The updated shift template.
+     * @throws AuthorizationDeniedException if the caller does not belong to any company.
      * @throws ResourceNotFoundException if the shift template does not exist in the company.
      */
     @Transactional
-    public ShiftTemplate patchShiftTemplate(PatchShiftTemplateDTO dto) {
+    public ShiftTemplateOutputDTO patchShiftTemplate(PatchShiftTemplateDTO dto, UUID companyId) {
 
-        //todo ritorna un dto
+        requireCompany(companyId);
 
-        log.info("Patching Shift Template for company {}", dto.companyId());
+        log.info("Patching Shift Template for company {}", companyId);
 
         String normalizedShiftName = stringUtils.normalizeString(dto.shiftName());
         String normalizedOldShiftName = stringUtils.normalizeString(dto.oldShiftName());
 
-        if (repo.existsByShiftNameAndCompanyCompanyId(normalizedShiftName, dto.companyId())) {
+        if (repo.existsByShiftNameAndCompanyCompanyId(normalizedShiftName, companyId)) {
 
             if (!normalizedOldShiftName.equals(normalizedShiftName)) {
                 //TODO: L'ID dev'essere lasciato solo nel log
-                throw new ResourceAlreadyExistsException("Shift template with name '" + normalizedShiftName + "' already exists in company with ID " + dto.companyId());
+                throw new ResourceAlreadyExistsException("Shift template with name '" + normalizedShiftName + "' already exists in company with ID " + companyId);
             }
         }
 
-        ShiftTemplate shiftTemplate = repo.findByShiftNameAndCompanyCompanyId(normalizedOldShiftName, dto.companyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Shift template with name '" + normalizedOldShiftName + "' does not exist in company with ID " + dto.companyId()));
+        ShiftTemplate shiftTemplate = repo.findByShiftNameAndCompanyCompanyId(normalizedOldShiftName, companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Shift template with name '" + normalizedOldShiftName + "' does not exist in company with ID " + companyId));
 
         shiftTemplate.setShiftName(normalizedShiftName);
         shiftTemplate.setDescription(dto.description());
@@ -127,18 +150,22 @@ public class ShiftTemplateService {
 
         repo.save(shiftTemplate);
 
-        return shiftTemplate;
+        return ShiftTemplateOutputDTO.from(shiftTemplate);
     }
 
 
     /**
-     * Deletes a shift template from the database.
+     * Soft-deletes a shift template of the caller's company.
      * @param shiftName The name of the shift template to delete.
-     * @param companyId The ID of the company.
+     * @param companyId The caller's company ID (from the token).
+     * @param actorId The caller's user ID (recorded as {@code deletedBy}).
+     * @throws AuthorizationDeniedException if the caller does not belong to any company.
      * @throws ResourceNotFoundException if the shift template does not exist in the company.
      */
     @Transactional
     public void deleteShiftTemplate(String shiftName, UUID companyId, UUID actorId) {
+
+        requireCompany(companyId);
 
         log.info("Deleting Shift Template '{}' for company {}", shiftName, companyId);
 

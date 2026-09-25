@@ -12,22 +12,19 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.UUID;
-
 @Tag(name = "Shift template management", description = "Operations related to shift templates")
 public interface ShiftTemplateControllerInterface {
 
 
     @Operation(
-            summary = "Get a shift template by name and company",
-            description = "Returns the shift template identified by {shiftName} within the given company {companyId}.",
+            summary = "Get a shift template by name",
+            description = "Returns the shift template identified by {shiftName} within the caller's company.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -53,16 +50,16 @@ public interface ShiftTemplateControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<ShiftTemplate> getShiftTemplate(
-            @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
-            @PathVariable @NotNull UUID companyId
+    ResponseEntity<ShiftTemplateOutputDTO> getShiftTemplate(
+            @AuthenticationPrincipal CustomUserDetails cud,
+            @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName
     );
 
 
 
     @Operation(
             summary = "Create a new shift template",
-            description = "Creates a new shift template for the specified company.",
+            description = "Creates a new shift template in the caller's company.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -88,13 +85,14 @@ public interface ShiftTemplateControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<ShiftTemplate> createShiftTemplate(@RequestBody @Valid CreateShiftTemplateDTO request);
+    ResponseEntity<ShiftTemplateOutputDTO> createShiftTemplate(@AuthenticationPrincipal CustomUserDetails cud,
+                                                      @RequestBody @Valid CreateShiftTemplateDTO request);
 
 
 
     @Operation(
             summary = "Update (patch) an existing shift template",
-            description = "Applies partial updates to an existing shift template.",
+            description = "Applies partial updates to an existing shift template of the caller's company.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -124,13 +122,14 @@ public interface ShiftTemplateControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<ShiftTemplate> updateShiftTemplate(@RequestBody @Valid PatchShiftTemplateDTO request);
+    ResponseEntity<ShiftTemplateOutputDTO> updateShiftTemplate(@AuthenticationPrincipal CustomUserDetails cud,
+                                                      @RequestBody @Valid PatchShiftTemplateDTO request);
 
 
 
     @Operation(
             summary = "Delete a shift template",
-            description = "Deletes the shift template identified by {shiftName} within the given company {companyId}.",
+            description = "Deletes the shift template identified by {shiftName} within the caller's company.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -158,7 +157,6 @@ public interface ShiftTemplateControllerInterface {
     })
     ResponseEntity<?> deleteShiftTemplate(
             @AuthenticationPrincipal CustomUserDetails cud,
-            @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName,
-            @PathVariable @NotNull UUID companyId
+            @PathVariable @NotBlank @NoHtml @Size(min = 1, max = 32) String shiftName
     );
 }

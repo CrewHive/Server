@@ -141,7 +141,10 @@ email, contratto, ore, saldi ferie/permessi di qualsiasi utente di qualsiasi azi
 **risolto**: target verificato nella company del manager (404 uniforme); DTO corretto
 (`@NotBlank/@Size/@NoHtml`, `userId` `@NotNull`).
 
-**H4 — Gli endpoint ShiftTemplate si fidano del `companyId` fornito dall'attaccante.**
+~~**H4 — Gli endpoint ShiftTemplate si fidano del `companyId` fornito dall'attaccante.**~~ **risolto**:
+`companyId` rimosso da path/body; il service usa solo `cud.getCompanyId()` (403 se il chiamante non ha company,
+404 uniforme per template di altre company).
+*(Testo originale:)*
 Tutti `@PreAuthorize("hasRole('MANAGER')")` (autorità *globale*), ma `companyId` arriva da
 path/body e non è mai confrontato con la company del chiamante (`ShiftTemplateService`). Un manager
 qualsiasi fa CRUD sui template di un'altra azienda.
@@ -192,7 +195,7 @@ autenticazione JWT + ruolo `DEV` (`SecurityConfig`/`JwtAuthenticationFilter`); C
 metodo fittizio `"QUERY"` (L4); credenziali DB `crewhive/crewhive` in `docker-compose.yml` con
 Postgres/Redis esposti sull'host, Redis senza auth (L5); `GlobalExceptionHandler` rimanda
 `ex.getMessage()` degli `IllegalArgumentException` al client, a volte con identificatori (L6);
-`ShiftTemplateController` ritorna l'entity invece di un DTO (L7); policy password incoerente
+~~`ShiftTemplateController` ritorna l'entity invece di un DTO (L7)~~ **risolto** (`ShiftTemplateOutputDTO`); policy password incoerente
 (`RegistrationDTO` 12–32 vs `PasswordUtil` 8–20 → effettivo 12–20) (L8); `.env` in chiaro sul disco
 con AWS key + RSA private key, anche se il profilo attivo è `onpremise` (L9); `/api/auth/rotate`
 va in NPE su `cud` null *dopo* aver già ruotato il refresh (L10); outage Redis = outage auth

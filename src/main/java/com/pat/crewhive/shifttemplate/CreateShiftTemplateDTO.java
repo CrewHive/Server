@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.OffsetTime;
-import java.util.UUID;
 
 public record CreateShiftTemplateDTO(
 
@@ -29,9 +28,6 @@ public record CreateShiftTemplateDTO(
         OffsetTime start,
 
         @NotNull(message = "End time must not be null")
-        OffsetTime end,
-
-        @NotNull(message = "Company ID must not be null")
-        UUID companyId
+        OffsetTime end
 ) {
 }

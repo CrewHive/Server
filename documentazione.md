@@ -741,7 +741,7 @@ Tutti gli endpoint richiedono autenticazione (Bearer JWT).
 **Scopo:** Bean separato per operazioni di `CompanyService` che devono passare per il proxy Spring (cache/transazioni), evitando problemi di self-invocation.
 
 **Metodi pubblici:**
-- `getCompanyById(Long companyId): Company` — `@Cacheable("companyById", key="#companyId")`. `ResourceAlreadyExistsException` se non trovata (nome eccezione fuorviante — di fatto "non trovata").
+- `getCompanyById(UUID companyId): Company` — **non** in cache (cachare l'entity `Company` rompeva la serializzazione Redis per il ciclo `Company`↔`User`). `ResourceAlreadyExistsException` se non trovata (nome eccezione fuorviante — di fatto "non trovata").
 - `isNotPartOfCompany(Long userId, Long companyId): boolean` — `true` se l'utente non ha company o ha una company diversa. Controllo di autorizzazione centrale del package.
 - `removeCompanyFromUsers(Long companyId): void` — `@Caching(evict=...)` su `usersInCompany`/`companyByUserId`. Imposta `company = null` per tutti gli utenti dell'azienda, passo preparatorio prima di eliminarla.
 
@@ -981,7 +981,7 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 ---
 
 ### `com.pat.crewhive.shifttemplate.CreateShiftTemplateDTO`
-**Campi e validazioni:** `shiftName` (`@NotBlank`, `@NoHtml`, `@Size(1,32)`), `description` (`@NoHtml`, `@Size(1,255)`, non `@NotBlank`), `color` (`@NotBlank`, `@NoHtml`, `@Size(6,6)`), `start`/`end` (`@NotNull`), `companyId` (`@NotNull`).
+**Campi e validazioni:** `shiftName` (`@NotBlank`, `@NoHtml`, `@Size(1,32)`), `description` (`@NoHtml`, `@Size(1,255)`, non `@NotBlank`), `color` (`@NotBlank`, `@NoHtml`, `@Size(6,6)`), `start`/`end` (`@NotNull`). Nessun `companyId`: la company è sempre quella del chiamante (token).
 
 ### `com.pat.crewhive.shifttemplate.PatchShiftTemplateDTO`
 **Tipo:** `extends CreateShiftTemplateDTO`. Campo aggiuntivo: `oldShiftName` (`@NotBlank`, `@NoHtml`, `@Size(3,32)`) — identifica il template esistente da patchare (anche l'autore originale segnala incertezza sull'intento esatto in un commento TODO nel codice).
@@ -998,10 +998,11 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 
 **Metodi pubblici:**
 
-- `getShiftTemplate(String shiftName, Long companyId): ShiftTemplate` — readOnly. Normalizza il nome; `ResourceNotFoundException` se assente. Commento `//todo ritorna un dto`.
-- `createShiftTemplate(CreateShiftTemplateDTO dto): ShiftTemplate` — `@Transactional`. Controllo duplicati eseguito su `dto.getShiftName()` **non ancora normalizzato** mentre l'entity viene poi salvata con il nome normalizzato — potenziale incoerenza se la normalizzazione cambia la stringa. `ResourceAlreadyExistsException` se duplicato.
-- `patchShiftTemplate(PatchShiftTemplateDTO dto): ShiftTemplate` — `@Transactional`. Normalizza entrambi i nomi; se il nuovo nome collide con un template esistente diverso da quello in modifica (`oldShiftName != shiftName`), `ResourceAlreadyExistsException`; carica il template esistente (`ResourceNotFoundException` altrimenti); aggiorna i campi.
-- `deleteShiftTemplate(String shiftName, Long companyId): void` — `@Transactional`. `ResourceNotFoundException` se assente (messaggio con nome non normalizzato — incoerenza minore).
+- Tutti i metodi ricevono `UUID companyId` dal token del chiamante (mai dalla request); `companyId == null` → `AuthorizationDeniedException` (403); un template di un'altra company risulta `ResourceNotFoundException` (404).
+- `getShiftTemplate(String shiftName, UUID companyId): ShiftTemplateOutputDTO` — readOnly. Normalizza il nome; `ResourceNotFoundException` se assente.
+- `createShiftTemplate(CreateShiftTemplateDTO dto, UUID companyId): ShiftTemplateOutputDTO` — `@Transactional`. Controllo duplicati eseguito su `dto.getShiftName()` **non ancora normalizzato** mentre l'entity viene poi salvata con il nome normalizzato — potenziale incoerenza se la normalizzazione cambia la stringa. `ResourceAlreadyExistsException` se duplicato.
+- `patchShiftTemplate(PatchShiftTemplateDTO dto, UUID companyId): ShiftTemplateOutputDTO` — `@Transactional`. Normalizza entrambi i nomi; se il nuovo nome collide con un template esistente diverso da quello in modifica (`oldShiftName != shiftName`), `ResourceAlreadyExistsException`; carica il template esistente (`ResourceNotFoundException` altrimenti); aggiorna i campi.
+- `deleteShiftTemplate(String shiftName, UUID companyId, UUID actorId): void` — `@Transactional`. `ResourceNotFoundException` se assente (messaggio con nome non normalizzato — incoerenza minore).
 
 ---
 
@@ -1012,10 +1013,10 @@ Nessun endpoint verifica esplicitamente in questo controller che ruolo/utente ta
 **Tipo:** Controller REST, `/shift-template`. **Tutti gli endpoint protetti da `@PreAuthorize("hasRole('ROLE_MANAGER')")`**.
 
 **Endpoint:**
-- `GET /shift-template/get/{shiftName}/company/{companyId}`.
+- `GET /shift-template/get/{shiftName}`.
 - `POST /shift-template/create`.
 - `PATCH /shift-template/update`.
-- `DELETE /shift-template/delete/{shiftName}/company/{companyId}`.
+- `DELETE /shift-template/delete/{shiftName}`.
 
 **Nota:** a differenza di `EventController`, qui l'autorizzazione basata sul ruolo è dichiarativa a livello di controller (`@PreAuthorize`), non dentro il service.
 
