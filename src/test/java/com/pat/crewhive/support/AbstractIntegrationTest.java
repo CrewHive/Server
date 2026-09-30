@@ -1,5 +1,6 @@
 package com.pat.crewhive.support;
 
+import com.pat.crewhive.authuser.MailService;
 import com.pat.crewhive.security.CustomUserDetails;
 import com.redis.testcontainers.RedisContainer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -78,6 +80,10 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    // Nessuna mail reale nei test: i test che passano da /register recuperano il token da qui.
+    @MockitoBean
+    protected MailService mailService;
 
     /**
      * A request post-processor that authenticates the request as {@code principal},

@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Component
 public class PasswordUtil {
@@ -13,8 +14,13 @@ public class PasswordUtil {
 
     private final PasswordEncoder passwordEncoder;
 
+    // Hash fittizio calcolato una volta con lo stesso encoder: serve a spendere lo stesso tempo di un
+    // confronto reale quando l'account non esiste o e' disattivato (vedi burnMatch).
+    private final String dummyHash;
+
     public PasswordUtil(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
+        this.dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
     /**
@@ -98,6 +104,17 @@ public class PasswordUtil {
      */
     public boolean NotMatches(String rawPassword, String encodedPassword) {
         return !passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    /**
+     * Esegue un confronto contro un hash fittizio e scarta il risultato. Va chiamato quando non c'e'
+     * un hash reale da verificare (account inesistente o disattivato), cosi' il tempo di risposta
+     * non rivela se l'account esiste.
+     *
+     * @param rawPassword the raw password received in the request
+     */
+    public void burnMatch(String rawPassword) {
+        passwordEncoder.matches(rawPassword, dummyHash);
     }
 
 }

@@ -11,17 +11,17 @@ import com.pat.crewhive.user.UserRepository;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.manager.RoleService;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
-import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
-import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,6 +38,8 @@ public class AuthService {
     private final EmailUtil emailUtil;
     private final StringUtils stringUtils;
     private final TokenBlackListService tokenBlackListService;
+    private final PendingRegistrationService pendingRegistrationService;
+    private final MailService mailService;
 
     public AuthService(JwtService jwtService,
                        RefreshTokenService refreshTokenService,
@@ -46,7 +48,9 @@ public class AuthService {
                        PasswordUtil passwordUtil,
                        EmailUtil emailUtil,
                        StringUtils stringUtils,
-                       TokenBlackListService tokenBlackListService) {
+                       TokenBlackListService tokenBlackListService,
+                       PendingRegistrationService pendingRegistrationService,
+                       MailService mailService) {
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
@@ -55,6 +59,8 @@ public class AuthService {
         this.emailUtil = emailUtil;
         this.stringUtils = stringUtils;
         this.tokenBlackListService = tokenBlackListService;
+        this.pendingRegistrationService = pendingRegistrationService;
+        this.mailService = mailService;
     }
 
 
@@ -70,19 +76,25 @@ public class AuthService {
 
         String normalizedEmail = stringUtils.normalizeString(request.email());
 
-        // @SQLRestriction su User nasconde gli account disattivati a findByEmail: se
-        // la riga non c'è, verifichiamo separatamente se esiste ma è inattiva, per dare
-        // un messaggio distinto. Nota: questo significa che per un account disattivato
-        // la password non viene nemmeno controllata - è una conseguenza accettata del
-        // filtro automatico, non una scelta di questo metodo.
-        User user = userRepository.findByEmail(normalizedEmail)
-                .orElseGet(() -> {
-                    if (userRepository.existsInactiveByEmail(normalizedEmail)) {
-                        log.error("Login attempt for deactivated account: {}", normalizedEmail);
-                        throw new BadCredentialsException("Account disabled");
-                    }
-                    throw new ResourceNotFoundException("User not found");
-                });
+        // @SQLRestriction su User nasconde gli account disattivati a findByEmail. Per non rivelare
+        // se l'account esiste (M3) i tre casi "inesistente", "disattivato" e "password errata"
+        // escono con la stessa eccezione e, grazie a burnMatch, con lo stesso costo di bcrypt.
+        // Solo il log interno li distingue. Per un account disattivato la password non viene
+        // controllata: e' una conseguenza del filtro automatico, non una scelta di questo metodo.
+        Optional<User> found = userRepository.findByEmail(normalizedEmail);
+
+        if (found.isEmpty()) {
+            passwordUtil.burnMatch(request.password());
+
+            if (userRepository.existsInactiveByEmail(normalizedEmail)) {
+                log.error("Login attempt for deactivated account: {}", normalizedEmail);
+            } else {
+                log.error("Login attempt for unknown account: {}", normalizedEmail);
+            }
+            throw new BadCredentialsException("Invalid credentials");
+        }
+
+        User user = found.get();
 
         if (passwordUtil.NotMatches(request.password(), user.getPassword())) {
             log.error("Invalid password for user: {}", normalizedEmail);
@@ -108,13 +120,13 @@ public class AuthService {
     }
 
     /**
-     * Registers a new user with the provided details.
+     * Starts the registration of a new user. The response to the caller is the same whether the
+     * email is new or already registered (M3): in both cases an email is sent, and the user is
+     * created only when the link it contains is confirmed (see {@link #verifyEmail(String)}).
      *
-     * @param request The registration request containing username, email, and password.
+     * @param request The registration request containing email, names and password.
      * @throws BadCredentialsException if the email format is invalid or the password is weak.
-     * @throws ResourceAlreadyExistsException if the username or email already exist.
      */
-    @Transactional
     public void register(RegistrationDTO request) {
 
         String normalizedEmail = stringUtils.normalizeString(request.email());
@@ -124,29 +136,67 @@ public class AuthService {
             throw new BadCredentialsException("Invalid email format");
         }
 
-        if (userRepository.existsByEmail(normalizedEmail)) {
-
-            log.error("Email already registered: {}", normalizedEmail);
-            throw new ResourceAlreadyExistsException("Email already registered");
-        }
-
         if (!passwordUtil.isStrong(request.password())) {
 
             log.error("Weak password provided for user: {}", normalizedEmail);
             throw new BadCredentialsException("Weak password provided");
         }
 
+        // Calcolato anche se l'email esiste, per non differenziare i tempi dei due rami.
         String encodedPassword = passwordUtil.encodePassword(request.password());
 
-        User newUser = new User(normalizedEmail, request.firstName(), request.lastName(), encodedPassword);
+        if (emailTaken(normalizedEmail)) {
 
-        Role role = roleService.getOrCreateGlobalRoleUser();
+            log.info("Registration requested for an already registered email: {}", normalizedEmail);
+            mailService.sendAccountAlreadyExists(normalizedEmail);
+            return;
+        }
 
-        newUser.addRole(role);
+        String token = pendingRegistrationService.create(
+                normalizedEmail, request.firstName(), request.lastName(), encodedPassword);
+        mailService.sendVerification(normalizedEmail, token);
 
-        userRepository.save(newUser);
+        log.info("Registration pending confirmation: {}", normalizedEmail);
+    }
 
-        log.info("User registered successfully: {}", normalizedEmail);
+    /**
+     * Completes a registration: consumes the single-use token received by email and creates the user.
+     *
+     * @param token The token contained in the verification link.
+     * @throws InvalidTokenException if the token is unknown, expired, already used, or the email
+     *                               has been registered in the meantime.
+     */
+    @Transactional
+    public void verifyEmail(String token) {
+
+        PendingRegistrationService.PendingRegistration pending = pendingRegistrationService.consume(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid verification token"));
+
+        if (emailTaken(pending.email())) {
+            log.error("Verification for an email registered in the meantime: {}", pending.email());
+            throw new InvalidTokenException("Invalid verification token");
+        }
+
+        User newUser = new User(pending.email(), pending.firstName(), pending.lastName(), pending.encodedPassword());
+        newUser.addRole(roleService.getOrCreateGlobalRoleUser());
+
+        try {
+            userRepository.saveAndFlush(newUser);
+        } catch (DataIntegrityViolationException e) {
+            // Race con un'altra conferma per la stessa email: il vincolo unique ha vinto l'altra.
+            log.error("Concurrent verification for the same email: {}", pending.email());
+            throw new InvalidTokenException("Invalid verification token");
+        }
+
+        log.info("User registered successfully: userId={}", newUser.getUserId());
+    }
+
+    /**
+     * True if the email belongs to an active or a deactivated account (the unique constraint on
+     * {@code email} covers both, while {@code existsByEmail} sees only the active ones).
+     */
+    private boolean emailTaken(String normalizedEmail) {
+        return userRepository.existsByEmail(normalizedEmail) || userRepository.existsInactiveByEmail(normalizedEmail);
     }
 
     /**

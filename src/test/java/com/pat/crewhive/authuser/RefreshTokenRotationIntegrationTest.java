@@ -5,6 +5,7 @@ import com.pat.crewhive.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import tools.jackson.databind.ObjectMapper;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,6 +47,14 @@ class RefreshTokenRotationIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(post("/api/auth/register").contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "email", EMAIL, "firstName", "Mario", "lastName", "Rossi", "password", PASSWORD))))
+                .andExpect(status().isAccepted());
+
+        // La registrazione si completa solo confermando il token ricevuto via mail.
+        ArgumentCaptor<String> token = ArgumentCaptor.forClass(String.class);
+        verify(mailService).sendVerification(eq(EMAIL), token.capture());
+
+        mockMvc.perform(post("/api/auth/verify-email").contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("token", token.getValue()))))
                 .andExpect(status().isCreated());
     }
 
