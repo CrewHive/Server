@@ -2,6 +2,7 @@ package com.pat.crewhive.security;
 
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.SignatureException;
@@ -55,18 +56,23 @@ public class JwtService {
 
         Date now = new Date();
 
-        String jwt = Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
                 .claim("role", String.join(",", roles)) // ROLE_USER,ROLE_MANAGER, ...
                 .claim("email", email)
                 .claim("firstName", firstName)
                 .claim("lastName", lastName)
-                .claim("companyId", String.valueOf(companyId))
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + ACCESS_TOKEN_TTL_MILLIS))
-                .signWith(privateKey, Jwts.SIG.RS256)
-                .compact();
+                .expiration(new Date(now.getTime() + ACCESS_TOKEN_TTL_MILLIS));
+
+        // Senza company il claim non c'e': String.valueOf(null) scriverebbe la stringa "null",
+        // che il filtro non riesce a convertire in UUID.
+        if (companyId != null) {
+            builder.claim("companyId", companyId.toString());
+        }
+
+        String jwt = builder.signWith(privateKey, Jwts.SIG.RS256).compact();
 
         log.info("Generated JWT token for userId={}", userId);
         return jwt;

@@ -130,6 +130,22 @@ class EventInvitationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void patch_removingAParticipant_softDeletesOnlyThatParticipantLink() throws Exception {
+        UUID eventId = createPrivateEvent(Set.of(invitee.getUserId(), bystander.getUserId()));
+
+        String body = objectMapper.writeValueAsString(new PatchEventDTO(
+                eventId, "Team Meeting", "desc", START, END, "00FF00", EventType.PRIVATE,
+                Set.of(creator.getUserId(), bystander.getUserId())));
+        mockMvc.perform(patch("/event/patch").contentType(APPLICATION_JSON).content(body).with(as(asCreator())))
+                .andExpect(status().isOk());
+
+        // @SQLDelete deve colpire la riga (event, invitee) e nessun'altra
+        assertThat(isActive(eventId, invitee)).isFalse();
+        assertThat(isActive(eventId, creator)).isTrue();
+        assertThat(isActive(eventId, bystander)).isTrue();
+    }
+
+    @Test
     void respond_byUserOfAnotherCompany_isForbidden() throws Exception {
         UUID eventId = createPrivateEvent(Set.of(invitee.getUserId()));
 
@@ -198,6 +214,11 @@ class EventInvitationIntegrationTest extends AbstractIntegrationTest {
     private String statusOf(UUID eventId, User user) {
         return jdbc.queryForObject(
                 "SELECT status FROM event_users WHERE event_id = ? AND user_id = ?", String.class, eventId, user.getUserId());
+    }
+
+    private boolean isActive(UUID eventId, User user) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+                "SELECT active FROM event_users WHERE event_id = ? AND user_id = ?", Boolean.class, eventId, user.getUserId()));
     }
 
     private Company newCompany(String name) {

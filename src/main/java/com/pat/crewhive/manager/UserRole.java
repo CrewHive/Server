@@ -17,7 +17,9 @@ import org.hibernate.annotations.SQLRestriction;
         @Index(name = "idx_userrole_deleted_by", columnList = "deleted_by")
 })
 @SQLRestriction("active = true")
-@SQLDelete(sql = "UPDATE user_role SET active = false, deleted_at = now() WHERE user_id = ? AND role_id = ?")
+// Hibernate lega i parametri di un @EmbeddedId in ordine alfabetico degli attributi (roleId, userId):
+// i "?" devono seguire lo stesso ordine.
+@SQLDelete(sql = "UPDATE user_role SET active = false, deleted_at = now() WHERE role_id = ? AND user_id = ?")
 public class UserRole extends SoftDeletableEntity {
 
     @EmbeddedId

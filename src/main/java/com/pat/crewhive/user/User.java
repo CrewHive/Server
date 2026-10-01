@@ -23,7 +23,8 @@ import java.util.*;
         @Index(name = "idx_user_deleted_by", columnList = "deleted_by")
 })
 @SQLRestriction("active = true")
-@SQLDelete(sql = "UPDATE users SET active = false, deleted_at = now() WHERE user_id = ?")
+// User ha @Version: Hibernate lega id e version, la SQL deve avere entrambi i "?".
+@SQLDelete(sql = "UPDATE users SET active = false, deleted_at = now() WHERE user_id = ? AND version = ?")
 public class User extends SoftDeletableEntity {
 
     @Id

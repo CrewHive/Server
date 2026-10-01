@@ -63,8 +63,12 @@ class JwtAuthenticationFilterTest {
     private MockFilterChain chain;
 
     private Authentication runFilterWithFreshToken() throws Exception {
+        return runFilterWithFreshToken(COMPANY_ID);
+    }
+
+    private Authentication runFilterWithFreshToken(UUID companyId) throws Exception {
         String token = jwtService.generateToken(
-                USER_ID, "mario.rossi@example.com", "Mario", "Rossi", Set.of("ROLE_USER"), COMPANY_ID);
+                USER_ID, "mario.rossi@example.com", "Mario", "Rossi", Set.of("ROLE_USER"), companyId);
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/user/me");
         request.addHeader("Authorization", "Bearer " + token);
@@ -113,5 +117,16 @@ class JwtAuthenticationFilterTest {
         assertThat(response.getHeader("Retry-After")).isNotNull();
         assertThat(response.getContentAsString()).contains("AUTH_503_UNAVAILABLE");
         assertThat(chain.getRequest()).isNull();
+    }
+
+    @Test
+    void validToken_ofUserWithoutCompany_authenticatesWithNullCompanyId() throws Exception {
+        when(tokenBlackListService.isRevoked(any())).thenReturn(false);
+        when(tokenBlackListService.isRevokedForUser(eq(USER_ID), any(Date.class))).thenReturn(false);
+
+        Authentication auth = runFilterWithFreshToken(null);
+
+        assertThat(auth).isNotNull();
+        assertThat(((CustomUserDetails) auth.getPrincipal()).getCompanyId()).isNull();
     }
 }

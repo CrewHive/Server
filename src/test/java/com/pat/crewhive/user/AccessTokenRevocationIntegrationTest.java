@@ -15,6 +15,7 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -68,18 +69,17 @@ class AccessTokenRevocationIntegrationTest extends AbstractIntegrationTest {
         jdbc.execute("DELETE FROM company");
     }
 
-    @Test
-    void accessToken_isRejected_afterPasswordChange() throws Exception {
-        // Un utente senza company non riesce ad autenticarsi con il proprio token (il claim companyId
-        // vale la stringa "null"): lo si inserisce in una company, con il solo ruolo base.
-        jdbc.update("INSERT INTO company (company_id, name, company_type, active) VALUES (gen_random_uuid(), 'Acme Srl', 'OTHER', true)");
-        jdbc.update("UPDATE users SET company_id = (SELECT company_id FROM company WHERE name = 'Acme Srl') WHERE email = ?", EMAIL);
-
+    private String loginBearer() throws Exception {
         String loginBody = mockMvc.perform(post("/api/auth/login").contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("email", EMAIL, "password", PASSWORD))))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        String bearer = "Bearer " + JsonPath.read(loginBody, "$.accessToken");
+        return "Bearer " + JsonPath.read(loginBody, "$.accessToken");
+    }
+
+    @Test
+    void accessToken_isRejected_afterPasswordChange() throws Exception {
+        String bearer = loginBearer();
 
         mockMvc.perform(get("/api/user/me").header("Authorization", bearer)).andExpect(status().isOk());
 
@@ -91,6 +91,21 @@ class AccessTokenRevocationIntegrationTest extends AbstractIntegrationTest {
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "oldPassword", PASSWORD, "newPassword", "N3w!Str0ngPassw0rd"))))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(get("/api/user/me").header("Authorization", bearer))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void accessToken_isRejected_afterDeleteAccount() throws Exception {
+        String bearer = loginBearer();
+
+        mockMvc.perform(get("/api/user/me").header("Authorization", bearer)).andExpect(status().isOk());
+
+        Thread.sleep(1100);
+
+        mockMvc.perform(delete("/api/user/delete-account").header("Authorization", bearer))
                 .andExpect(status().is2xxSuccessful());
 
         mockMvc.perform(get("/api/user/me").header("Authorization", bearer))

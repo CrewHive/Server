@@ -18,7 +18,9 @@ import org.hibernate.annotations.SQLRestriction;
         @UniqueConstraint(name = "uc_eventusers_event_id", columnNames = {"event_id", "user_id"})
 })
 @SQLRestriction("active = true")
-@SQLDelete(sql = "UPDATE event_users SET active = false, deleted_at = now() WHERE user_id = ? AND event_id = ?")
+// Hibernate lega i parametri di un @EmbeddedId in ordine alfabetico degli attributi (eventId, userId):
+// i "?" devono seguire lo stesso ordine.
+@SQLDelete(sql = "UPDATE event_users SET active = false, deleted_at = now() WHERE event_id = ? AND user_id = ?")
 public class EventUsers extends SoftDeletableEntity {
 
     @EmbeddedId
