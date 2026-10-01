@@ -5,6 +5,7 @@ import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.manager.RoleAssignmentService;
 import com.pat.crewhive.security.JwtService;
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.UUID;
@@ -44,6 +46,8 @@ class UserServiceTest {
     private RefreshTokenService refreshTokenService;
     @Mock
     private RoleAssignmentService roleAssignmentService;
+    @Mock
+    private TokenBlackListService tokenBlackListService;
 
     private UserService userService;
 
@@ -54,7 +58,7 @@ class UserServiceTest {
     void setUp() {
         userService = new UserService(
                 userRepository, shiftUserRepository, passwordUtil, stringUtils, jwtService, refreshTokenService,
-                roleAssignmentService
+                roleAssignmentService, tokenBlackListService
         );
     }
 
@@ -98,6 +102,10 @@ class UserServiceTest {
         verify(refreshTokenService, never()).deleteTokenByUser(any());
         // the user must be brought back down to the base role once they leave the company
         verify(roleAssignmentService).resetToBaseRole(user);
+        // old access tokens (with the old roles/company) are revoked BEFORE the new one is issued
+        org.mockito.InOrder order = inOrder(tokenBlackListService, jwtService);
+        order.verify(tokenBlackListService).revokeAllForUser(USER_ID);
+        order.verify(jwtService).generateToken(eq(USER_ID), anyString(), anyString(), anyString(), any(), isNull());
     }
 
     @Test
@@ -130,7 +138,7 @@ class UserServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User has no company");
 
-        verifyNoInteractions(refreshTokenService, jwtService, shiftUserRepository);
+        verifyNoInteractions(refreshTokenService, jwtService, shiftUserRepository, tokenBlackListService);
     }
 
     // ---------------------------------------------------------------------
@@ -151,6 +159,7 @@ class UserServiceTest {
         assertThat(user.getDeletedAt()).isNotNull();
         verify(refreshTokenService).deleteTokenByUser(user);
         verify(roleAssignmentService).resetToBaseRole(user);
+        verify(tokenBlackListService).revokeAllForUser(USER_ID);
 
         org.mockito.InOrder order = org.mockito.Mockito.inOrder(userRepository);
         order.verify(userRepository).save(user);
@@ -211,5 +220,54 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.getUsersInCompany(ids, COMPANY_ID))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ---------------------------------------------------------------------
+    // updatePassword()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void updatePassword_revokesAllAccessTokensOfTheUser() {
+        User user = buildUser(USER_ID, null);
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(java.util.Optional.of(user));
+        when(passwordUtil.isStrong("NewStr0ng!Passw0rd")).thenReturn(true);
+        when(passwordUtil.NotMatches("old", "encoded-pwd")).thenReturn(false);
+        when(passwordUtil.encodePassword("NewStr0ng!Passw0rd")).thenReturn("new-encoded");
+
+        userService.updatePassword("NewStr0ng!Passw0rd", "old", "mario.rossi@example.com");
+
+        assertThat(user.getPassword()).isEqualTo("new-encoded");
+        verify(tokenBlackListService).revokeAllForUser(USER_ID);
+    }
+
+    @Test
+    void updatePassword_doesNotRevokeAnything_whenOldPasswordDoesNotMatch() {
+        User user = buildUser(USER_ID, null);
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(java.util.Optional.of(user));
+        when(passwordUtil.isStrong(anyString())).thenReturn(true);
+        when(passwordUtil.NotMatches("wrong", "encoded-pwd")).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.updatePassword("NewStr0ng!Passw0rd", "wrong", "mario.rossi@example.com"))
+                .isInstanceOf(BadCredentialsException.class);
+
+        verifyNoInteractions(tokenBlackListService);
+    }
+
+    @Test
+    void updatePassword_doesNotRevokeAnything_whenNewPasswordIsWeak() {
+        User user = buildUser(USER_ID, null);
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(java.util.Optional.of(user));
+        when(passwordUtil.isStrong("weak")).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.updatePassword("weak", "old", "mario.rossi@example.com"))
+                .isInstanceOf(BadCredentialsException.class);
+
+        verifyNoInteractions(tokenBlackListService);
     }
 }

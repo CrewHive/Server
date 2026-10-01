@@ -5,6 +5,7 @@ import com.pat.crewhive.company.Company;
 import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.user.UserService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -40,12 +41,14 @@ class RoleServiceTest {
     private StringUtils stringUtils;
     @Mock
     private RoleAssignmentService roleAssignmentService;
+    @Mock
+    private TokenBlackListService tokenBlackListService;
 
     private RoleService roleService;
 
     @BeforeEach
     void setUp() {
-        roleService = new RoleService(roleRepository, userService, companyService, stringUtils, roleAssignmentService);
+        roleService = new RoleService(roleRepository, userService, companyService, stringUtils, roleAssignmentService, tokenBlackListService);
     }
 
     private Company company(UUID companyId) {
@@ -78,6 +81,7 @@ class RoleServiceTest {
         roleService.updateUserRole(target.getUserId(), "cashier", company.getCompanyId());
 
         assertThat(target.getRoles()).anyMatch(ur -> ur.getRole() == role);
+        verify(tokenBlackListService).revokeAllForUser(target.getUserId());
     }
 
     @Test
@@ -97,6 +101,7 @@ class RoleServiceTest {
 
         assertThat(foreign.getRoles()).noneMatch(ur -> ur.getRole() == role);
         assertThat(companyless.getRoles()).noneMatch(ur -> ur.getRole() == role);
+        verifyNoInteractions(tokenBlackListService);
     }
 
     @Test

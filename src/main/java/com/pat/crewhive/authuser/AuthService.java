@@ -266,6 +266,7 @@ public class AuthService {
 
         refreshTokenService.revokeFamily(rt);
         tokenBlackListService.revoke(jti, tokenExpiration);
+        tokenBlackListService.revokeAllForUser(owner.getUserId());
 
         log.info("User {} logged out successfully", request.userId());
     }

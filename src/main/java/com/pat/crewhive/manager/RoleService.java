@@ -2,6 +2,7 @@ package com.pat.crewhive.manager;
 
 import com.pat.crewhive.common.audit.SoftDeleteSupport;
 import com.pat.crewhive.company.Company;
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.company.CompanyService;
@@ -28,17 +29,20 @@ public class RoleService {
     private final CompanyService companyService;
     private final StringUtils stringUtils;
     private final RoleAssignmentService roleAssignmentService;
+    private final TokenBlackListService tokenBlackListService;
 
     public RoleService(RoleRepository roleRepository,
                        UserService userService,
                        CompanyService companyService,
                        StringUtils stringUtils,
-                       RoleAssignmentService roleAssignmentService) {
+                       RoleAssignmentService roleAssignmentService,
+                       TokenBlackListService tokenBlackListService) {
         this.roleRepository = roleRepository;
         this.userService = userService;
         this.companyService = companyService;
         this.stringUtils = stringUtils;
         this.roleAssignmentService = roleAssignmentService;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
     /**
@@ -100,6 +104,7 @@ public class RoleService {
         }
 
         targetUser.addRole(role);
+        tokenBlackListService.revokeAllForUser(targetId);
     }
 
 

@@ -91,6 +91,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             UUID userId = UUID.fromString(sub);
+
+            if (tokenBlackListService.isRevokedForUser(userId, claims.getIssuedAt())) {
+                log.warn("Token issued before the user's tokens were revoked: userId={}, jti={}", userId, jti);
+                SecurityContextHolder.clearContext();
+                chain.doFilter(request, response);
+                return;
+            }
+
             String email = claims.get("email").toString();
             String firstName = claims.get("firstName", String.class);
             String lastName = claims.get("lastName", String.class);

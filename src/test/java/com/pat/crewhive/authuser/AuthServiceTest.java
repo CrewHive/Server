@@ -449,6 +449,7 @@ class AuthServiceTest {
 
         verify(refreshTokenService).revokeFamily(rt);
         verify(tokenBlackListService).revoke("jti-1", exp);
+        verify(tokenBlackListService).revokeAllForUser(USER_ID);
     }
 
     @Test

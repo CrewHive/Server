@@ -20,7 +20,7 @@ public class JwtService {
 
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
-    private static final long ACCESS_TOKEN_TTL_MILLIS = 1000 * 60 * 15; // 15 minuti
+    public static final long ACCESS_TOKEN_TTL_MILLIS = 1000 * 60 * 15; // 15 minuti
     private static final long CLOCK_SKEW_SECONDS = 30; // tolleranza di sincronizzazione oraria
 
     private final PrivateKey privateKey;

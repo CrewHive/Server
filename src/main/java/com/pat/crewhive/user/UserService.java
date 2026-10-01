@@ -8,6 +8,7 @@ import com.pat.crewhive.company.Company;
 import com.pat.crewhive.shiftprogrammed.ShiftUserRepository;
 import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.security.JwtService;
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
@@ -35,6 +36,7 @@ public class UserService {
     private final StringUtils stringUtils;
     private final JwtService jwtService;
     private final RoleAssignmentService roleAssignmentService;
+    private final TokenBlackListService tokenBlackListService;
 
     public UserService(UserRepository userRepository,
                        ShiftUserRepository shiftUserRepository,
@@ -42,7 +44,8 @@ public class UserService {
                        StringUtils stringUtils,
                        JwtService jwtService,
                        RefreshTokenService refreshTokenService,
-                       RoleAssignmentService roleAssignmentService) {
+                       RoleAssignmentService roleAssignmentService,
+                       TokenBlackListService tokenBlackListService) {
         this.userRepository = userRepository;
         this.shiftUserRepository = shiftUserRepository;
         this.passwordUtil = passwordUtil;
@@ -50,6 +53,7 @@ public class UserService {
         this.stringUtils = stringUtils;
         this.jwtService = jwtService;
         this.roleAssignmentService = roleAssignmentService;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
 
@@ -240,6 +244,7 @@ public class UserService {
         user.setPassword(passwordUtil.encodePassword(newPassword));
 
         userRepository.save(user);
+        tokenBlackListService.revokeAllForUser(user.getUserId());
         log.info("Updated password for userId={}", user.getUserId());
     }
 
@@ -294,6 +299,9 @@ public class UserService {
 
         updateUser(user);
 
+        // Prima di generateToken: il nuovo token (iat == cutoff) non viene scartato, i vecchi si'.
+        tokenBlackListService.revokeAllForUser(userId);
+
         return new AuthResponseDTO(
                 jwtService.generateToken(
                         user.getUserId(),
@@ -324,6 +332,7 @@ public class UserService {
         roleAssignmentService.resetToBaseRole(user);
 
         refreshTokenService.deleteTokenByUser(user);
+        tokenBlackListService.revokeAllForUser(userId);
 
         SoftDeleteSupport.softDelete(userRepository, user, user);
 
