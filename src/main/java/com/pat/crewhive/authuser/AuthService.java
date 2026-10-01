@@ -87,9 +87,9 @@ public class AuthService {
             passwordUtil.burnMatch(request.password());
 
             if (userRepository.existsInactiveByEmail(normalizedEmail)) {
-                log.error("Login attempt for deactivated account: {}", normalizedEmail);
+                log.error("Login attempt for deactivated account");
             } else {
-                log.error("Login attempt for unknown account: {}", normalizedEmail);
+                log.error("Login attempt for unknown account");
             }
             throw new BadCredentialsException("Invalid credentials");
         }
@@ -97,12 +97,12 @@ public class AuthService {
         User user = found.get();
 
         if (passwordUtil.NotMatches(request.password(), user.getPassword())) {
-            log.error("Invalid password for user: {}", normalizedEmail);
+            log.error("Invalid password for userId={}", user.getUserId());
 
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        log.info("User {} authenticated successfully", normalizedEmail);
+        log.info("User authenticated successfully: userId={}", user.getUserId());
 
         UUID company = user.getCompany() == null ? null : user.getCompany().getCompanyId();
 
@@ -132,13 +132,13 @@ public class AuthService {
         String normalizedEmail = stringUtils.normalizeString(request.email());
         if (!emailUtil.isValidEmail(normalizedEmail)) {
 
-            log.error("Invalid email format: {}", normalizedEmail);
+            log.error("Registration with invalid email format");
             throw new BadCredentialsException("Invalid email format");
         }
 
         if (!passwordUtil.isStrong(request.password())) {
 
-            log.error("Weak password provided for user: {}", normalizedEmail);
+            log.error("Registration with weak password");
             throw new BadCredentialsException("Weak password provided");
         }
 
@@ -147,7 +147,7 @@ public class AuthService {
 
         if (emailTaken(normalizedEmail)) {
 
-            log.info("Registration requested for an already registered email: {}", normalizedEmail);
+            log.info("Registration requested for an already registered email");
             mailService.sendAccountAlreadyExists(normalizedEmail);
             return;
         }
@@ -156,7 +156,7 @@ public class AuthService {
                 normalizedEmail, request.firstName(), request.lastName(), encodedPassword);
         mailService.sendVerification(normalizedEmail, token);
 
-        log.info("Registration pending confirmation: {}", normalizedEmail);
+        log.info("Registration pending confirmation");
     }
 
     /**
@@ -173,7 +173,7 @@ public class AuthService {
                 .orElseThrow(() -> new InvalidTokenException("Invalid verification token"));
 
         if (emailTaken(pending.email())) {
-            log.error("Verification for an email registered in the meantime: {}", pending.email());
+            log.error("Verification for an email registered in the meantime");
             throw new InvalidTokenException("Invalid verification token");
         }
 
@@ -184,7 +184,7 @@ public class AuthService {
             userRepository.saveAndFlush(newUser);
         } catch (DataIntegrityViolationException e) {
             // Race con un'altra conferma per la stessa email: il vincolo unique ha vinto l'altra.
-            log.error("Concurrent verification for the same email: {}", pending.email());
+            log.error("Concurrent verification for the same email");
             throw new InvalidTokenException("Invalid verification token");
         }
 

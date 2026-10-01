@@ -35,7 +35,7 @@ public class UserController implements UserControllerInterface {
         UUID userId = cud.getUserId();
         UserWithTimeParamsDTO dto = userService.getUserWithTimeParamsByUsername(userId);
 
-        log.info("User details retrieved for user: {}", cud.getEmail());
+        log.info("User details retrieved for userId={}", cud.getUserId());
 
         return ResponseEntity.ok(dto);
     }
@@ -56,7 +56,7 @@ public class UserController implements UserControllerInterface {
     public ResponseEntity<?> updatePassword(@AuthenticationPrincipal CustomUserDetails cud,
                                             @RequestBody @Valid UpdatePasswordDTO updatePasswordDTO) {
 
-        log.info("Updating password for user: {}", cud.getEmail());
+        log.info("Updating password for userId={}", cud.getUserId());
 
         userService.updatePassword(updatePasswordDTO.newPassword(), updatePasswordDTO.oldPassword(), cud.getEmail());
 
@@ -67,7 +67,7 @@ public class UserController implements UserControllerInterface {
     @DeleteMapping(path = "/leave-company", produces = "application/json")
     public ResponseEntity<AuthResponseDTO> leaveCompany(@AuthenticationPrincipal CustomUserDetails cud) {
 
-        log.info("User {} is leaving their company", cud.getEmail());
+        log.info("User userId={} is leaving their company", cud.getUserId());
 
         AuthResponseDTO dto = userService.leaveCompany(cud.getUserId());
 
@@ -78,7 +78,7 @@ public class UserController implements UserControllerInterface {
     @DeleteMapping(path = "/delete-account", produces = "application/json")
     public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal CustomUserDetails cud) {
 
-        log.info("Deleting account for user: {}", cud.getEmail());
+        log.info("Deleting account for userId={}", cud.getUserId());
 
         userService.deleteAccount(cud.getUserId());
 

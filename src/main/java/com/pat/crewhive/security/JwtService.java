@@ -68,7 +68,7 @@ public class JwtService {
                 .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
 
-        log.info("Generated JWT token for user with mail: {}", email);
+        log.info("Generated JWT token for userId={}", userId);
         return jwt;
     }
 
@@ -90,7 +90,7 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
 
-            log.info("Token is valid. Claims: {}", claims);
+            log.debug("Token valid: jti={}", claims.getId());
             return claims;
 
         } catch (ExpiredJwtException e) {

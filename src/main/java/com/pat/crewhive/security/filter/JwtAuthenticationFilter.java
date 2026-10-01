@@ -76,7 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jti = claims.getId();
 
             if (tokenBlackListService.isRevoked(jti)) {
-                log.warn("token has been revoked {}", claims.getSubject());
+                log.warn("Token has been revoked: jti={}", jti);
                 SecurityContextHolder.clearContext();
                 chain.doFilter(request, response);
                 return;

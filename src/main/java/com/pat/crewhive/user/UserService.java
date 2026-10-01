@@ -61,7 +61,7 @@ public class UserService {
     @Transactional
     public void updateUser(User user) {
 
-        log.info("User {} updated successfully", user.getEmail());
+        log.info("User updated successfully: userId={}", user.getUserId());
 
         userRepository.save(user);
     }
@@ -173,7 +173,7 @@ public class UserService {
 
         User user = getUserById(userId);
 
-        log.info("User details retrieved for user: {}", user.getEmail());
+        log.info("User details retrieved for userId={}", user.getUserId());
 
         String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 
@@ -225,14 +225,14 @@ public class UserService {
 
         if(!passwordUtil.isStrong(newPassword)) {
 
-            log.info("New password is not strong enough for user: {}", email);
+            log.info("New password is not strong enough for userId={}", user.getUserId());
 
             throw new BadCredentialsException("Invalid password");
         }
 
         if(passwordUtil.NotMatches(oldPassword, user.getPassword())) {
 
-            log.info("Old password does not match for user: {}", email);
+            log.info("Old password does not match for userId={}", user.getUserId());
 
             throw new BadCredentialsException("Old password does not match");
         }
@@ -240,7 +240,7 @@ public class UserService {
         user.setPassword(passwordUtil.encodePassword(newPassword));
 
         userRepository.save(user);
-        log.info("Updated password for user: {}", email);
+        log.info("Updated password for userId={}", user.getUserId());
     }
 
 
@@ -268,7 +268,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        log.info("Updated time parameters for user: {}", user.getEmail());
+        log.info("Updated time parameters for userId={}", user.getUserId());
     }
 
 

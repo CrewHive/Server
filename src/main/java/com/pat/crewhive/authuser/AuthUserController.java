@@ -64,7 +64,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         AuthResponseDTO response = authService.login(request);
 
-        log.info("Login ok for user: {}", request.email());
+        log.info("Login ok");
 
         return ResponseEntity.ok(response);
     }
