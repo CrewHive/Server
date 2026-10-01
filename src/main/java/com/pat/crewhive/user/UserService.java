@@ -8,6 +8,8 @@ import com.pat.crewhive.company.Company;
 import com.pat.crewhive.shiftprogrammed.ShiftUserRepository;
 import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.security.JwtService;
+import com.pat.crewhive.security.TokenBlackListService;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
@@ -35,6 +37,7 @@ public class UserService {
     private final StringUtils stringUtils;
     private final JwtService jwtService;
     private final RoleAssignmentService roleAssignmentService;
+    private final TokenBlackListService tokenBlackListService;
 
     public UserService(UserRepository userRepository,
                        ShiftUserRepository shiftUserRepository,
@@ -42,7 +45,8 @@ public class UserService {
                        StringUtils stringUtils,
                        JwtService jwtService,
                        RefreshTokenService refreshTokenService,
-                       RoleAssignmentService roleAssignmentService) {
+                       RoleAssignmentService roleAssignmentService,
+                       TokenBlackListService tokenBlackListService) {
         this.userRepository = userRepository;
         this.shiftUserRepository = shiftUserRepository;
         this.passwordUtil = passwordUtil;
@@ -50,6 +54,7 @@ public class UserService {
         this.stringUtils = stringUtils;
         this.jwtService = jwtService;
         this.roleAssignmentService = roleAssignmentService;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
 
@@ -61,7 +66,7 @@ public class UserService {
     @Transactional
     public void updateUser(User user) {
 
-        log.info("User {} updated successfully", user.getEmail());
+        log.info("User updated successfully: userId={}", user.getUserId());
 
         userRepository.save(user);
     }
@@ -173,7 +178,7 @@ public class UserService {
 
         User user = getUserById(userId);
 
-        log.info("User details retrieved for user: {}", user.getEmail());
+        log.info("User details retrieved for userId={}", user.getUserId());
 
         String companyName = (user.getCompany() != null) ? user.getCompany().getName() : null;
 
@@ -225,14 +230,14 @@ public class UserService {
 
         if(!passwordUtil.isStrong(newPassword)) {
 
-            log.info("New password is not strong enough for user: {}", email);
+            log.info("New password is not strong enough for userId={}", user.getUserId());
 
-            throw new BadCredentialsException("Invalid password");
+            throw new InvalidRequestException("New password is not strong enough");
         }
 
         if(passwordUtil.NotMatches(oldPassword, user.getPassword())) {
 
-            log.info("Old password does not match for user: {}", email);
+            log.info("Old password does not match for userId={}", user.getUserId());
 
             throw new BadCredentialsException("Old password does not match");
         }
@@ -240,7 +245,8 @@ public class UserService {
         user.setPassword(passwordUtil.encodePassword(newPassword));
 
         userRepository.save(user);
-        log.info("Updated password for user: {}", email);
+        tokenBlackListService.revokeAllForUser(user.getUserId());
+        log.info("Updated password for userId={}", user.getUserId());
     }
 
 
@@ -268,7 +274,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        log.info("Updated time parameters for user: {}", user.getEmail());
+        log.info("Updated time parameters for userId={}", user.getUserId());
     }
 
 
@@ -276,7 +282,7 @@ public class UserService {
      * Allows a user to leave their current company.
      *
      * @param userId the ID of the user who wants to leave the company
-     * @throws ResourceAlreadyExistsException if the user is not part of any company
+     * @throws ResourceNotFoundException if the user is not part of any company
      */
     @Transactional
     public AuthResponseDTO leaveCompany(UUID userId) {
@@ -285,14 +291,21 @@ public class UserService {
 
         if (user.getCompany() == null) throw new ResourceNotFoundException("User has no company");
 
+        // deleteByUserId e' una bulk update con clearAutomatically: svuota il persistence context e
+        // stacca ogni entity gia' caricata. Va eseguita prima di modificare l'utente, che poi si
+        // ricarica: altrimenti updateUser salverebbe un'entity staccata (OptimisticLockingFailure).
+        shiftUserRepository.deleteByUserId(userId, OffsetDateTime.now());
+        user = getUserById(userId);
+
         Company c = user.getCompany();
         c.getUsers().remove(user);
         user.setCompany(null);
         roleAssignmentService.resetToBaseRole(user);
 
-        shiftUserRepository.deleteByUserId(userId, OffsetDateTime.now());
-
         updateUser(user);
+
+        // Prima di generateToken: il nuovo token (iat == cutoff) non viene scartato, i vecchi si'.
+        tokenBlackListService.revokeAllForUser(userId);
 
         return new AuthResponseDTO(
                 jwtService.generateToken(
@@ -324,6 +337,7 @@ public class UserService {
         roleAssignmentService.resetToBaseRole(user);
 
         refreshTokenService.deleteTokenByUser(user);
+        tokenBlackListService.revokeAllForUser(userId);
 
         SoftDeleteSupport.softDelete(userRepository, user, user);
 

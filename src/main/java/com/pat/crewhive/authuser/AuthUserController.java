@@ -42,7 +42,18 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         authService.register(rDTO);
 
-        log.info("User {} registered successfully", rDTO.email());
+        log.info("Registration request accepted");
+
+        return ResponseEntity.accepted().build();
+    }
+
+    @Override
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestBody @Valid VerifyEmailDTO request) {
+
+        authService.verifyEmail(request.token());
+
+        log.info("Email verified");
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -53,7 +64,7 @@ public class AuthUserController implements AuthUserControllerInterface {
 
         AuthResponseDTO response = authService.login(request);
 
-        log.info("Login ok for user: {}", request.email());
+        log.info("Login ok");
 
         return ResponseEntity.ok(response);
     }

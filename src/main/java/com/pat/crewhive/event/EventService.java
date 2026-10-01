@@ -1,6 +1,7 @@
 package com.pat.crewhive.event;
 
 import com.pat.crewhive.common.audit.SoftDeleteSupport;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.user.UserService;
@@ -81,7 +82,7 @@ public class EventService {
         String normalizedEventName = stringUtils.normalizeString(createEventDTO.name());
 
         if (createEventDTO.start().isAfter(createEventDTO.end())) {
-            throw new IllegalArgumentException("L'inizio deve essere prima della fine");
+            throw new InvalidRequestException("L'inizio deve essere prima della fine");
         }
 
         if (!roles.contains("ROLE_MANAGER") && createEventDTO.eventType() == PUBLIC) {
@@ -310,7 +311,7 @@ public class EventService {
                 });
 
         if (!accepted && event.getCreator().getUserId().equals(callerId)) {
-            throw new IllegalArgumentException("Il creatore non può rifiutare il proprio evento");
+            throw new InvalidRequestException("Il creatore non può rifiutare il proprio evento");
         }
 
         EventParticipationStatus status = accepted ? EventParticipationStatus.ACCEPTED : EventParticipationStatus.DECLINED;
@@ -338,7 +339,7 @@ public class EventService {
         log.info("Patching event with ID: {}", dto.eventId());
 
         if (dto.start().isAfter(dto.end())) {
-            throw new IllegalArgumentException("L'inizio deve essere prima della fine");
+            throw new InvalidRequestException("L'inizio deve essere prima della fine");
         }
 
         Event event = eventRepository.findByIdWithParticipants(dto.eventId())

@@ -1,11 +1,14 @@
 package com.pat.crewhive.manager;
 
 import com.pat.crewhive.common.audit.SoftDeleteSupport;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.company.Company;
+import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceConflictException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.StringUtils;
 import org.slf4j.Logger;
@@ -28,17 +31,20 @@ public class RoleService {
     private final CompanyService companyService;
     private final StringUtils stringUtils;
     private final RoleAssignmentService roleAssignmentService;
+    private final TokenBlackListService tokenBlackListService;
 
     public RoleService(RoleRepository roleRepository,
                        UserService userService,
                        CompanyService companyService,
                        StringUtils stringUtils,
-                       RoleAssignmentService roleAssignmentService) {
+                       RoleAssignmentService roleAssignmentService,
+                       TokenBlackListService tokenBlackListService) {
         this.roleRepository = roleRepository;
         this.userService = userService;
         this.companyService = companyService;
         this.stringUtils = stringUtils;
         this.roleAssignmentService = roleAssignmentService;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
     /**
@@ -56,7 +62,7 @@ public class RoleService {
         if (RESERVED_ROLES.contains(normalizedRole)) {
 
             log.warn("createRole: attempt to create reserved role {} in company {}", normalizedRole, companyId);
-            throw new IllegalArgumentException("Role name is reserved");
+            throw new InvalidRequestException("Role name is reserved");
         }
 
         Company company = companyService.getCompanyById(companyId);
@@ -100,6 +106,7 @@ public class RoleService {
         }
 
         targetUser.addRole(role);
+        tokenBlackListService.revokeAllForUser(targetId);
     }
 
 
@@ -109,7 +116,7 @@ public class RoleService {
      * @param roleName the name of the role to be deleted
      * @param companyId the ID of the company to which the role belongs
      * @throws ResourceNotFoundException if the role/company is not found
-     * @throws IllegalStateException if the role is assigned to users
+     * @throws ResourceConflictException if the role is assigned to users
      */
     @Transactional
     public void deleteRole(String roleName, UUID companyId, UUID actorId) {
@@ -124,7 +131,7 @@ public class RoleService {
         if (role.getUsers() != null && !role.getUsers().isEmpty()) {
 
             log.error("Cannot delete role {} because it is assigned to users", roleName);
-            throw new IllegalStateException("Cannot delete role because it is assigned to users");
+            throw new ResourceConflictException("Cannot delete role because it is assigned to users");
         }
 
         User actor = userService.getUserById(actorId);

@@ -22,6 +22,8 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
+import tools.jackson.databind.ObjectMapper;
+
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.POST;
 
@@ -33,15 +35,18 @@ public class SecurityConfig {
     private final TokenBlackListService tokenBlackListService;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
+    private final ObjectMapper objectMapper;
 
     public SecurityConfig(JwtService jwtService,
                           RestAuthenticationEntryPoint restAuthenticationEntryPoint,
                           RestAccessDeniedHandler restAccessDeniedHandler,
-                          TokenBlackListService tokenBlackListService) {
+                          TokenBlackListService tokenBlackListService,
+                          ObjectMapper objectMapper) {
         this.jwtService = jwtService;
         this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
         this.restAccessDeniedHandler = restAccessDeniedHandler;
         this.tokenBlackListService = tokenBlackListService;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -65,6 +70,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(POST, "/api/auth/login").permitAll()
                         .requestMatchers(POST, "/api/auth/register").permitAll()
+                        .requestMatchers(POST, "/api/auth/verify-email").permitAll()
                         .requestMatchers(POST, "/api/auth/rotate").permitAll()
                         .requestMatchers("/docs", "/docs/**").hasRole("DEV")
                         .anyRequest().authenticated()
@@ -100,7 +106,7 @@ public class SecurityConfig {
 
         // JWT filter
         http.addFilterBefore(
-                new JwtAuthenticationFilter(jwtService, tokenBlackListService),
+                new JwtAuthenticationFilter(jwtService, tokenBlackListService, objectMapper),
                 UsernamePasswordAuthenticationFilter.class
         );
 

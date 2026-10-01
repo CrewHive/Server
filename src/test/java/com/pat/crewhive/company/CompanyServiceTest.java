@@ -7,6 +7,7 @@ import com.pat.crewhive.manager.RoleRepository;
 import com.pat.crewhive.manager.UserRole;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceConflictException;
 import com.pat.crewhive.shifttemplate.ShiftTemplateRepository;
 import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.user.User;
@@ -335,5 +336,202 @@ class CompanyServiceTest {
         order.verify(roleRepository).delete(role);
         order.verify(companyRepository).save(company);
         order.verify(companyRepository).delete(company);
+    }
+
+    // ---------------------------------------------------------------------
+    // getCompanyById() / getCompanyByUserId() / getAllUsersInCompany()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void getCompanyById_delegatesToCompanyAccessService() {
+        UUID companyId = UUID.randomUUID();
+        Company company = companyWithId(companyId);
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(company);
+
+        assertThat(companyService.getCompanyById(companyId)).isSameAs(company);
+    }
+
+    @Test
+    void getCompanyByUserId_returnsTheCompanyOfTheUser() {
+        UUID userId = UUID.randomUUID();
+        Company company = companyWithId(UUID.randomUUID());
+        when(userService.getUserById(userId)).thenReturn(userIn(userId, company));
+
+        assertThat(companyService.getCompanyByUserId(userId)).isSameAs(company);
+    }
+
+    @Test
+    void getCompanyByUserId_userWithoutCompany_returnsNull() {
+        UUID userId = UUID.randomUUID();
+        when(userService.getUserById(userId)).thenReturn(userIn(userId, null));
+
+        assertThat(companyService.getCompanyByUserId(userId)).isNull();
+    }
+
+    @Test
+    void getAllUsersInCompany_managerOfTheCompany_returnsMappedUsers() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        Company company = companyWithId(companyId);
+        User u1 = userIn(UUID.randomUUID(), company);
+        u1.setWorkableHoursPerWeek(40);
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(company);
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(userService.getAllUsersInCompany(companyId)).thenReturn(List.of(u1));
+
+        List<UserIdAndNameAndHoursDTO> result = companyService.getAllUsersInCompany(managerId, companyId);
+
+        assertThat(result).containsExactly(new UserIdAndNameAndHoursDTO(u1.getUserId(), "Luigi", "Verdi", 40));
+    }
+
+    @Test
+    void getAllUsersInCompany_managerOfAnotherCompany_throwsAuthorizationDeniedAndListsNothing() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(companyWithId(companyId));
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.getAllUsersInCompany(managerId, companyId))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        verify(userService, never()).getAllUsersInCompany(any());
+    }
+
+    // ---------------------------------------------------------------------
+    // setCompany(): rami restanti
+    // ---------------------------------------------------------------------
+
+    @Test
+    void setCompany_managerNotInCompany_throwsAuthorizationDenied() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.setCompany(new SetCompanyDTO("Own", UUID.randomUUID()), companyId, managerId))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        verifyNoInteractions(companyRepository);
+    }
+
+    @Test
+    void setCompany_unknownCompanyName_throwsResourceNotFound() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(stringUtils.normalizeString("Nope")).thenReturn("nope");
+        when(companyRepository.findByName("nope")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> companyService.setCompany(new SetCompanyDTO("Nope", UUID.randomUUID()), companyId, managerId))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void setCompany_userAlreadyInACompany_doesNothing() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        Company own = companyWithId(companyId);
+        User target = userIn(UUID.randomUUID(), companyWithId(UUID.randomUUID()));
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(stringUtils.normalizeString("Own")).thenReturn("own");
+        when(companyRepository.findByName("own")).thenReturn(Optional.of(own));
+        when(userService.getUserById(target.getUserId())).thenReturn(target);
+
+        companyService.setCompany(new SetCompanyDTO("Own", target.getUserId()), companyId, managerId);
+
+        assertThat(target.getCompany()).isNotSameAs(own);
+        verify(userService, never()).updateUser(any());
+    }
+
+    // ---------------------------------------------------------------------
+    // deleteCompany(): guardie
+    // ---------------------------------------------------------------------
+
+    @Test
+    void deleteCompany_managerNotInCompany_throwsAuthorizationDeniedAndDeletesNothing() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(companyWithId(companyId));
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.deleteCompany(companyId, managerId))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        verify(companyAccessService, never()).removeCompanyFromUsers(any());
+        verify(companyRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteCompany_withShiftTemplates_throwsResourceConflictAndDeletesNothing() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(companyWithId(companyId));
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(shiftTemplateRepository.existsByCompanyCompanyId(companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.deleteCompany(companyId, managerId))
+                .isInstanceOf(ResourceConflictException.class);
+
+        verify(companyAccessService, never()).removeCompanyFromUsers(any());
+        verify(companyRepository, never()).delete(any());
+    }
+
+    // ---------------------------------------------------------------------
+    // removeUserFromCompany()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void removeUserFromCompany_managerRemovingThemselves_throwsAuthorizationDenied() {
+        UUID managerId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> companyService.removeUserFromCompany(managerId, managerId, UUID.randomUUID()))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        verify(userService, never()).leaveCompany(any());
+    }
+
+    @Test
+    void removeUserFromCompany_managerOfAnotherCompany_throwsAuthorizationDenied() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(companyWithId(companyId));
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.removeUserFromCompany(UUID.randomUUID(), managerId, companyId))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        verify(userService, never()).leaveCompany(any());
+    }
+
+    @Test
+    void removeUserFromCompany_targetInAnotherCompanyOrNone_throwsResourceNotFound() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        User foreign = userIn(UUID.randomUUID(), companyWithId(UUID.randomUUID()));
+        User companyless = userIn(UUID.randomUUID(), null);
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(companyWithId(companyId));
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(userService.getUserById(foreign.getUserId())).thenReturn(foreign);
+        when(userService.getUserById(companyless.getUserId())).thenReturn(companyless);
+
+        assertThatThrownBy(() -> companyService.removeUserFromCompany(foreign.getUserId(), managerId, companyId))
+                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> companyService.removeUserFromCompany(companyless.getUserId(), managerId, companyId))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(userService, never()).leaveCompany(any());
+    }
+
+    @Test
+    void removeUserFromCompany_targetInCompany_makesTheTargetLeave() {
+        UUID companyId = UUID.randomUUID();
+        UUID managerId = UUID.randomUUID();
+        User target = userIn(UUID.randomUUID(), companyWithId(companyId));
+        when(companyAccessService.getCompanyById(companyId)).thenReturn(companyWithId(companyId));
+        when(companyAccessService.isNotPartOfCompany(managerId, companyId)).thenReturn(false);
+        when(userService.getUserById(target.getUserId())).thenReturn(target);
+
+        companyService.removeUserFromCompany(target.getUserId(), managerId, companyId);
+
+        verify(userService).leaveCompany(target.getUserId());
     }
 }

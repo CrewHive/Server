@@ -7,8 +7,6 @@ import com.pat.crewhive.manager.UserRole;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
-import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
-import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.user.LogoutDTO;
@@ -20,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -59,8 +58,12 @@ class AuthServiceTest {
     private StringUtils stringUtils;
     @Mock
     private TokenBlackListService tokenBlackListService;
+    @Mock
+    private PendingRegistrationService pendingRegistrationService;
+    @Mock
+    private MailService mailService;
 
-    // Built by hand instead of @InjectMocks: with 8 collaborators the automatic
+    // Built by hand instead of @InjectMocks: with 10 collaborators the automatic
     // field/constructor injection Mockito does is harder to follow than just calling
     // the real constructor, and this guarantees the wiring matches production exactly.
     //
@@ -76,7 +79,8 @@ class AuthServiceTest {
     void setUp() {
         authService = new AuthService(
                 jwtService, refreshTokenService, userRepository,
-                roleService, passwordUtil, emailUtil, stringUtils, tokenBlackListService
+                roleService, passwordUtil, emailUtil, stringUtils, tokenBlackListService,
+                pendingRegistrationService, mailService
         );
     }
 
@@ -177,7 +181,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_throwsAccountDisabled_whenUserIsDeactivated() {
+    void login_throwsInvalidCredentials_whenUserIsDeactivated() {
         AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "P@ssw0rd!");
 
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
@@ -186,23 +190,41 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Account disabled");
+                .hasMessage("Invalid credentials");
 
+        verify(passwordUtil).burnMatch("P@ssw0rd!");
         verifyNoInteractions(refreshTokenService, jwtService);
     }
 
     @Test
-    void login_throwsUserNotFound_whenEmailDoesNotExistAtAll() {
+    void login_throwsInvalidCredentials_whenEmailDoesNotExistAtAll() {
         AuthRequestDTO request = new AuthRequestDTO("nobody@example.com", "P@ssw0rd!");
 
         when(stringUtils.normalizeString(anyString())).thenReturn("nobody@example.com");
         when(userRepository.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
         when(userRepository.existsInactiveByEmail("nobody@example.com")).thenReturn(false);
 
+        // same exception and message as the wrong-password case: the caller can't tell them apart
         assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Invalid credentials");
 
+        verify(passwordUtil).burnMatch("P@ssw0rd!");
         verifyNoInteractions(refreshTokenService, jwtService);
+    }
+
+    @Test
+    void login_doesNotBurnMatch_whenUserExists() {
+        AuthRequestDTO request = new AuthRequestDTO("mario.rossi@example.com", "wrong-password");
+        User user = buildUser(USER_ID, "mario.rossi@example.com", "encoded-pwd", null);
+
+        when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(passwordUtil.NotMatches("wrong-password", "encoded-pwd")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.login(request)).isInstanceOf(BadCredentialsException.class);
+
+        verify(passwordUtil, never()).burnMatch(anyString());
     }
 
     // ---------------------------------------------------------------------
@@ -210,27 +232,59 @@ class AuthServiceTest {
     // ---------------------------------------------------------------------
 
     @Test
-    void register_savesNewUser_withEncodedPasswordAndDefaultRole() {
+    void register_storesPendingRegistrationAndSendsVerificationMail_whenEmailIsNew() {
         RegistrationDTO request = new RegistrationDTO("New.User@Example.com", "New", "User", "StrongP@ss1");
-        Role globalUserRole = new Role("ROLE_USER", null);
 
         when(stringUtils.normalizeString("New.User@Example.com")).thenReturn("new.user@example.com");
         when(emailUtil.isValidEmail("new.user@example.com")).thenReturn(true);
-        when(userRepository.existsByEmail("new.user@example.com")).thenReturn(false);
         when(passwordUtil.isStrong("StrongP@ss1")).thenReturn(true);
         when(passwordUtil.encodePassword("StrongP@ss1")).thenReturn("encoded-pwd");
-        when(roleService.getOrCreateGlobalRoleUser()).thenReturn(globalUserRole);
+        when(userRepository.existsByEmail("new.user@example.com")).thenReturn(false);
+        when(userRepository.existsInactiveByEmail("new.user@example.com")).thenReturn(false);
+        when(pendingRegistrationService.create("new.user@example.com", "New", "User", "encoded-pwd"))
+                .thenReturn("raw-token");
 
         authService.register(request);
 
-        ArgumentCaptor<User> savedUserCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(savedUserCaptor.capture());
+        verify(mailService).sendVerification("new.user@example.com", "raw-token");
+        verify(mailService, never()).sendAccountAlreadyExists(anyString());
+        // the user is created only on confirmation
+        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
 
-        User savedUser = savedUserCaptor.getValue();
-        assertThat(savedUser.getEmail()).isEqualTo("new.user@example.com");
-        assertThat(savedUser.getPassword()).isEqualTo("encoded-pwd");
-        assertThat(savedUser.getRoles()).isNotNull();
-        assertThat(savedUser.getRoles().stream().filter(r -> r.getRole().equals(globalUserRole)).toList().getFirst().getRole()).isEqualTo(globalUserRole);
+    @Test
+    void register_sendsAccountExistsMailAndHashesPassword_whenEmailIsTaken() {
+        RegistrationDTO request = new RegistrationDTO("taken@example.com", "New", "User", "StrongP@ss1");
+
+        when(stringUtils.normalizeString("taken@example.com")).thenReturn("taken@example.com");
+        when(emailUtil.isValidEmail("taken@example.com")).thenReturn(true);
+        when(passwordUtil.isStrong("StrongP@ss1")).thenReturn(true);
+        when(userRepository.existsByEmail("taken@example.com")).thenReturn(true);
+
+        authService.register(request); // no exception: same outcome as a new email
+
+        // bcrypt is paid in this branch too, so timing doesn't tell the two cases apart
+        verify(passwordUtil).encodePassword("StrongP@ss1");
+        verify(mailService).sendAccountAlreadyExists("taken@example.com");
+        verify(mailService, never()).sendVerification(anyString(), anyString());
+        verifyNoInteractions(pendingRegistrationService);
+    }
+
+    @Test
+    void register_treatsDeactivatedAccountAsTaken() {
+        RegistrationDTO request = new RegistrationDTO("gone@example.com", "New", "User", "StrongP@ss1");
+
+        when(stringUtils.normalizeString("gone@example.com")).thenReturn("gone@example.com");
+        when(emailUtil.isValidEmail("gone@example.com")).thenReturn(true);
+        when(passwordUtil.isStrong("StrongP@ss1")).thenReturn(true);
+        when(userRepository.existsByEmail("gone@example.com")).thenReturn(false);
+        when(userRepository.existsInactiveByEmail("gone@example.com")).thenReturn(true);
+
+        authService.register(request);
+
+        verify(mailService).sendAccountAlreadyExists("gone@example.com");
+        verifyNoInteractions(pendingRegistrationService);
     }
 
     @Test
@@ -244,23 +298,7 @@ class AuthServiceTest {
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid email format");
 
-        verifyNoInteractions(userRepository, passwordUtil, roleService);
-    }
-
-    @Test
-    void register_throwsResourceAlreadyExistsException_whenEmailIsTaken() {
-        RegistrationDTO request = new RegistrationDTO("taken@example.com", "New", "User", "StrongP@ss1");
-
-        when(stringUtils.normalizeString("taken@example.com")).thenReturn("taken@example.com");
-        when(emailUtil.isValidEmail("taken@example.com")).thenReturn(true);
-        when(userRepository.existsByEmail("taken@example.com")).thenReturn(true);
-
-        assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(ResourceAlreadyExistsException.class)
-                .hasMessage("Email already registered");
-
-        verify(passwordUtil, never()).isStrong(anyString());
-        verify(userRepository, never()).save(any());
+        verifyNoInteractions(userRepository, passwordUtil, roleService, pendingRegistrationService, mailService);
     }
 
     @Test
@@ -269,14 +307,74 @@ class AuthServiceTest {
 
         when(stringUtils.normalizeString("new.user@example.com")).thenReturn("new.user@example.com");
         when(emailUtil.isValidEmail("new.user@example.com")).thenReturn(true);
-        when(userRepository.existsByEmail("new.user@example.com")).thenReturn(false);
         when(passwordUtil.isStrong("weak")).thenReturn(false);
 
         assertThatThrownBy(() -> authService.register(request))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Weak password provided");
 
-        verify(userRepository, never()).save(any());
+        verifyNoInteractions(userRepository, pendingRegistrationService, mailService);
+    }
+
+    // ---------------------------------------------------------------------
+    // verifyEmail()
+    // ---------------------------------------------------------------------
+
+    private static PendingRegistrationService.PendingRegistration pending() {
+        return new PendingRegistrationService.PendingRegistration("new.user@example.com", "New", "User", "encoded-pwd");
+    }
+
+    @Test
+    void verifyEmail_createsUserWithEncodedPasswordAndDefaultRole() {
+        Role globalUserRole = new Role("ROLE_USER", null);
+
+        when(pendingRegistrationService.consume("raw-token")).thenReturn(Optional.of(pending()));
+        when(userRepository.existsByEmail("new.user@example.com")).thenReturn(false);
+        when(userRepository.existsInactiveByEmail("new.user@example.com")).thenReturn(false);
+        when(roleService.getOrCreateGlobalRoleUser()).thenReturn(globalUserRole);
+
+        authService.verifyEmail("raw-token");
+
+        ArgumentCaptor<User> savedUserCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).saveAndFlush(savedUserCaptor.capture());
+
+        User savedUser = savedUserCaptor.getValue();
+        assertThat(savedUser.getEmail()).isEqualTo("new.user@example.com");
+        assertThat(savedUser.getPassword()).isEqualTo("encoded-pwd");
+        assertThat(savedUser.getRoles().stream().filter(r -> r.getRole().equals(globalUserRole)).toList().getFirst().getRole()).isEqualTo(globalUserRole);
+    }
+
+    @Test
+    void verifyEmail_throwsInvalidToken_whenTokenIsUnknownExpiredOrUsed() {
+        when(pendingRegistrationService.consume("bad-token")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.verifyEmail("bad-token"))
+                .isInstanceOf(InvalidTokenException.class);
+
+        verifyNoInteractions(userRepository, roleService);
+    }
+
+    @Test
+    void verifyEmail_throwsInvalidToken_whenEmailWasRegisteredInTheMeantime() {
+        when(pendingRegistrationService.consume("raw-token")).thenReturn(Optional.of(pending()));
+        when(userRepository.existsByEmail("new.user@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.verifyEmail("raw-token"))
+                .isInstanceOf(InvalidTokenException.class);
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void verifyEmail_throwsInvalidToken_whenUniqueConstraintLosesTheRace() {
+        when(pendingRegistrationService.consume("raw-token")).thenReturn(Optional.of(pending()));
+        when(userRepository.existsByEmail("new.user@example.com")).thenReturn(false);
+        when(userRepository.existsInactiveByEmail("new.user@example.com")).thenReturn(false);
+        when(roleService.getOrCreateGlobalRoleUser()).thenReturn(new Role("ROLE_USER", null));
+        when(userRepository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("duplicate"));
+
+        assertThatThrownBy(() -> authService.verifyEmail("raw-token"))
+                .isInstanceOf(InvalidTokenException.class);
     }
 
     // ---------------------------------------------------------------------
@@ -351,6 +449,7 @@ class AuthServiceTest {
 
         verify(refreshTokenService).revokeFamily(rt);
         verify(tokenBlackListService).revoke("jti-1", exp);
+        verify(tokenBlackListService).revokeAllForUser(USER_ID);
     }
 
     @Test

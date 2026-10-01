@@ -39,9 +39,11 @@ public interface AuthUserControllerInterface {
 
 
     @Operation(summary = "Register a new user",
-            description = "Registers a new user with the provided registration details.")
+            description = "Starts the registration. The response is always 202, whether the email is new or already "
+                    + "registered: in both cases an email is sent. The user is created when the link in the email "
+                    + "is confirmed via /verify-email.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "202", description = "Request accepted - an email has been sent"),
 
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
                     content = @Content(mediaType = "application/problem+json",
@@ -51,7 +53,23 @@ public interface AuthUserControllerInterface {
             content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
-            @ApiResponse(responseCode = "409", description = "Conflict - Username or email already exists",
+            @ApiResponse(responseCode = "500", description = "Internal Server Error - An unexpected error occurred",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO);
+
+
+    @Operation(summary = "Confirm the registration",
+            description = "Creates the user from the single-use token received by email (valid 24 hours).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "User created"),
+
+            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request data",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ApiError.class))),
+
+            @ApiResponse(responseCode = "401", description = "Token invalid, expired or already used",
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class))),
 
@@ -59,7 +77,7 @@ public interface AuthUserControllerInterface {
                     content = @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = ApiError.class)))
     })
-    ResponseEntity<?> register(@Valid @RequestBody RegistrationDTO rDTO);
+    ResponseEntity<?> verifyEmail(@Valid @RequestBody VerifyEmailDTO request);
 
 
     @Operation(summary = "User login",

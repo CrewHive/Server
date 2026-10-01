@@ -1,7 +1,8 @@
 package com.pat.crewhive.company;
 
 import com.pat.crewhive.manager.RoleAssignmentService;
-import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.TokenBlackListService;
+import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import org.slf4j.Logger;
@@ -27,13 +28,16 @@ public class CompanyAccessService {
     private final CompanyRepository companyRepository;
     private final UserService userService;
     private final RoleAssignmentService roleAssignmentService;
+    private final TokenBlackListService tokenBlackListService;
 
     public CompanyAccessService(CompanyRepository companyRepository,
                                 UserService userService,
-                                RoleAssignmentService roleAssignmentService) {
+                                RoleAssignmentService roleAssignmentService,
+                                TokenBlackListService tokenBlackListService) {
         this.companyRepository = companyRepository;
         this.userService = userService;
         this.roleAssignmentService = roleAssignmentService;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
     /**
@@ -41,13 +45,13 @@ public class CompanyAccessService {
      *
      * @param companyId The ID of the company to retrieve.
      * @return The Company object if found.
-     * @throws ResourceAlreadyExistsException if the company does not exist.
+     * @throws ResourceNotFoundException if the company does not exist.
      */
     @Transactional(readOnly = true)
     public Company getCompanyById(UUID companyId) {
 
         return companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceAlreadyExistsException("Company with ID " + companyId + " does not exist."));
+                .orElseThrow(() -> new ResourceNotFoundException("Company with ID " + companyId + " does not exist."));
     }
 
     /**
@@ -82,6 +86,7 @@ public class CompanyAccessService {
             user.setCompany(null);
             roleAssignmentService.resetToBaseRole(user);
             userService.updateUser(user);
+            tokenBlackListService.revokeAllForUser(user.getUserId());
         }
 
         log.info("Removed company {} from all associated users", companyId);

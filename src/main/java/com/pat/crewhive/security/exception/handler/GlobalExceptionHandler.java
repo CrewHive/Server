@@ -1,8 +1,10 @@
 package com.pat.crewhive.security.exception.handler;
 
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceConflictException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -95,6 +98,13 @@ public class GlobalExceptionHandler {
         return base(HttpStatus.CONFLICT, "Resource already exists", "A resource with the same identifier already exists", "RES_409");
     }
 
+    // 409 - Stato della risorsa incompatibile con la richiesta
+    @ExceptionHandler(ResourceConflictException.class)
+    public ProblemDetail handleResourceConflictException(ResourceConflictException ex) {
+        log.info("Resource conflict: {}", ex.getMessage());
+        return base(HttpStatus.CONFLICT, "Conflict", "The request conflicts with the current state of the resource", "RES_409_CONFLICT");
+    }
+
     // 409 - Violazione integrità dati
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail onDataIntegrity(DataIntegrityViolationException ex) {
@@ -123,11 +133,25 @@ public class GlobalExceptionHandler {
         return base(HttpStatus.UNAUTHORIZED, "Unauthorized", "JWT authentication failed", "AUTH_401_JWT");
     }
 
-    // 400 - Argomenti non validi
+    // 400 - Parametro di path/query non convertibile (UUID o enum malformato)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        log.warn("Type mismatch on parameter {}: {}", ex.getName(), ex.getMessage());
+        return base(HttpStatus.BAD_REQUEST, "Bad request", "Invalid value for parameter '" + ex.getName() + "'", "REQ_400_TYPE");
+    }
+
+    // 400 - Richiesta non valida (il messaggio e' scritto per il client)
+    @ExceptionHandler(InvalidRequestException.class)
+    public ProblemDetail handleInvalidRequestException(InvalidRequestException ex) {
+        log.warn("Invalid request: {}", ex.getMessage());
+        return base(HttpStatus.BAD_REQUEST, "Bad request", ex.getMessage(), "REQ_400");
+    }
+
+    // 400 - Argomenti non validi (anche da librerie): il messaggio puo' contenere dettagli interni, non va al client
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
         log.error("Illegal argument: {}", ex.getMessage(), ex);
-        return base(HttpStatus.BAD_REQUEST, "Bad request", ex.getMessage(), "GEN_400_ILLARG");
+        return base(HttpStatus.BAD_REQUEST, "Bad request", "Invalid request", "GEN_400_ILLARG");
     }
 
     // 500 - Stati illegali

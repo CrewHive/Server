@@ -12,7 +12,7 @@ public record UserDTO(
 
         @NotBlank(message = "Email cannot be blank")
         @NoHtml
-        @Size(min = 1, max = 6)
+        @Size(min = 5, max = 64)
         String email,
 
         @NotBlank(message = "First name cannot be blank")

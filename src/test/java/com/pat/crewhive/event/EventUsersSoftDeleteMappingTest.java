@@ -34,7 +34,7 @@ class EventUsersSoftDeleteMappingTest {
 
         assertThat(sqlDelete).isNotNull();
         assertThat(sqlDelete.sql())
-                .isEqualTo("UPDATE event_users SET active = false, deleted_at = now() WHERE user_id = ? AND event_id = ?");
+                .isEqualTo("UPDATE event_users SET active = false, deleted_at = now() WHERE event_id = ? AND user_id = ?");
     }
 
     @Test

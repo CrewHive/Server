@@ -67,7 +67,7 @@ public class ManagerController implements ManagerControllerInterface {
 
         userService.updateUserTimeParams(dto, companyId);
 
-        log.info("Updated user time params for user: {}", cud.getEmail());
+        log.info("Updated user time params for userId={}", cud.getUserId());
 
         return ResponseEntity.ok().build();
     }

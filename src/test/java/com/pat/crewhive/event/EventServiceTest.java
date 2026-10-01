@@ -4,6 +4,7 @@ import com.pat.crewhive.common.DateUtils;
 import com.pat.crewhive.common.Period;
 import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.company.Company;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
@@ -782,7 +783,7 @@ class EventServiceTest {
         when(eventRepository.findByIdWithParticipants(eventId)).thenReturn(Optional.of(event));
 
         assertThatThrownBy(() -> eventService.respondToInvitation(eventId, creator.getUserId(), COMPANY_A, false))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidRequestException.class);
 
         assertThat(statusOf(event, creator)).isEqualTo(EventParticipationStatus.ACCEPTED);
     }

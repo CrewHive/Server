@@ -6,7 +6,9 @@ import com.pat.crewhive.common.StringUtils;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.company.CompanyAccessService;
 import com.pat.crewhive.company.CompanyService;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -246,7 +248,7 @@ class ShiftProgrammedServiceTest {
     }
 
     @Test
-    void patchShift_requesterNotPartOfShiftCompany_throwsIllegalArgumentException() {
+    void patchShift_requesterNotPartOfShiftCompany_throwsAuthorizationDenied() {
         UUID shiftId = UUID.randomUUID();
         UUID requesterUserId = UUID.randomUUID();
 
@@ -269,11 +271,11 @@ class ShiftProgrammedServiceTest {
         when(companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())).thenReturn(true);
 
         assertThatThrownBy(() -> shiftProgrammedService.patchShift(requesterUserId, dto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(AuthorizationDeniedException.class);
     }
 
     @Test
-    void deleteShift_requesterNotPartOfShiftCompany_throwsIllegalArgumentException() {
+    void deleteShift_requesterNotPartOfShiftCompany_throwsAuthorizationDenied() {
         UUID shiftId = UUID.randomUUID();
         UUID requesterUserId = UUID.randomUUID();
 
@@ -285,7 +287,7 @@ class ShiftProgrammedServiceTest {
         when(companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())).thenReturn(true);
 
         assertThatThrownBy(() -> shiftProgrammedService.deleteShift(requesterUserId, shiftId))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(AuthorizationDeniedException.class);
 
         verify(userService, never()).getUserById(requesterUserId);
     }
@@ -321,5 +323,223 @@ class ShiftProgrammedServiceTest {
         verify(shiftProgrammedRepository).save(captor.capture());
         assertThat(captor.getValue().getUsers()).hasSize(2);
         assertThat(captor.getValue().getCompany()).isSameAs(company);
+    }
+
+    // ---------------------------------------------------------------------
+    // createShift(): rami di errore
+    // ---------------------------------------------------------------------
+
+    private static final OffsetDateTime T_START = OffsetDateTime.parse("2026-08-21T09:00:00Z");
+    private static final OffsetDateTime T_END = OffsetDateTime.parse("2026-08-21T17:00:00Z");
+
+    @Test
+    void createShift_startAfterEnd_throwsInvalidRequestAndSavesNothing() {
+        CreateShiftProgrammedDTO dto = new CreateShiftProgrammedDTO("Turno", null, T_END, T_START, "00FF00", Set.of());
+        when(stringUtils.normalizeString("Turno")).thenReturn("turno");
+
+        assertThatThrownBy(() -> shiftProgrammedService.createShift(UUID.randomUUID(), dto))
+                .isInstanceOf(InvalidRequestException.class);
+
+        verify(shiftProgrammedRepository, never()).save(any());
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void createShift_creatorWithoutCompany_throwsResourceNotFoundAndSavesNothing() {
+        User creator = buildUser(UUID.randomUUID(), "Anna", "Bianchi");
+        CreateShiftProgrammedDTO dto = new CreateShiftProgrammedDTO("Turno", null, T_START, T_END, "00FF00", Set.of());
+        when(stringUtils.normalizeString("Turno")).thenReturn("turno");
+        when(userService.getUserById(creator.getUserId())).thenReturn(creator);
+
+        assertThatThrownBy(() -> shiftProgrammedService.createShift(creator.getUserId(), dto))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(shiftProgrammedRepository, never()).save(any());
+    }
+
+    @Test
+    void createShift_normalizesNameAndStoresTheDtoFields() {
+        Company company = buildCompany();
+        User creator = buildUser(UUID.randomUUID(), "Anna", "Bianchi");
+        creator.setCompany(company);
+        CreateShiftProgrammedDTO dto = new CreateShiftProgrammedDTO("  Turno  ", "desc", T_START, T_END, "00FF00", Set.of());
+        when(stringUtils.normalizeString("  Turno  ")).thenReturn("turno");
+        when(userService.getUserById(creator.getUserId())).thenReturn(creator);
+        when(userService.getUsersInCompany(Set.of(), company.getCompanyId())).thenReturn(List.of());
+        when(shiftProgrammedRepository.save(any(ShiftProgrammed.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        shiftProgrammedService.createShift(creator.getUserId(), dto);
+
+        ArgumentCaptor<ShiftProgrammed> captor = ArgumentCaptor.forClass(ShiftProgrammed.class);
+        verify(shiftProgrammedRepository).save(captor.capture());
+        ShiftProgrammed saved = captor.getValue();
+        assertThat(saved.getShiftName()).isEqualTo("turno");
+        assertThat(saved.getDescription()).isEqualTo("desc");
+        assertThat(saved.getStart()).isEqualTo(T_START);
+        assertThat(saved.getEnd()).isEqualTo(T_END);
+        assertThat(saved.getColor()).isEqualTo("00FF00");
+    }
+
+    // ---------------------------------------------------------------------
+    // getShiftsByPeriodAndCompany(): accesso negato
+    // ---------------------------------------------------------------------
+
+    @Test
+    void getShiftsByPeriodAndCompany_requesterNotPartOfCompany_throwsAuthorizationDenied() {
+        UUID requesterId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+        when(companyAccessService.isNotPartOfCompany(requesterId, companyId)).thenReturn(true);
+
+        assertThatThrownBy(() -> shiftProgrammedService.getShiftsByPeriodAndCompany(Period.WEEK, requesterId, companyId))
+                .isInstanceOf(AuthorizationDeniedException.class);
+
+        verifyNoInteractions(shiftProgrammedRepository);
+    }
+
+    // ---------------------------------------------------------------------
+    // patchShift(): rami
+    // ---------------------------------------------------------------------
+
+    private ShiftProgrammed shiftOf(Company company, User... members) {
+        ShiftProgrammed shift = new ShiftProgrammed();
+        ReflectionTestUtils.setField(shift, "id", UUID.randomUUID());
+        shift.setShiftName("Turno mattina");
+        shift.setStart(T_START);
+        shift.setEnd(T_END);
+        shift.setColor("0000FF");
+        shift.setCompany(company);
+        for (User m : members) {
+            m.setCompany(company);
+            shift.addUser(m);
+        }
+        return shift;
+    }
+
+    private PatchShiftProgrammedDTO patchDto(ShiftProgrammed shift, Set<UUID> userIds) {
+        return new PatchShiftProgrammedDTO(shift.getShiftProgrammedId(), "Nuovo Nome", "nuova desc", T_START, T_END, "FF0000", userIds);
+    }
+
+    private void stubPatchPrerequisites(ShiftProgrammed shift, UUID requesterId) {
+        when(shiftProgrammedRepository.findByIdWithWorkers(shift.getShiftProgrammedId())).thenReturn(Optional.of(shift));
+        when(companyAccessService.isNotPartOfCompany(requesterId, shift.getCompany().getCompanyId())).thenReturn(false);
+        when(stringUtils.normalizeString("Nuovo Nome")).thenReturn("nuovo nome");
+    }
+
+    @Test
+    void patchShift_unknownShift_throwsResourceNotFound() {
+        UUID shiftId = UUID.randomUUID();
+        when(shiftProgrammedRepository.findByIdWithWorkers(shiftId)).thenReturn(Optional.empty());
+        PatchShiftProgrammedDTO dto = new PatchShiftProgrammedDTO(shiftId, "x", null, T_START, T_END, "00FF00", null);
+
+        assertThatThrownBy(() -> shiftProgrammedService.patchShift(UUID.randomUUID(), dto))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void patchShift_startAfterEnd_throwsInvalidRequest() {
+        UUID requesterId = UUID.randomUUID();
+        ShiftProgrammed shift = shiftOf(buildCompany());
+        stubPatchPrerequisites(shift, requesterId);
+        PatchShiftProgrammedDTO dto = new PatchShiftProgrammedDTO(
+                shift.getShiftProgrammedId(), "Nuovo Nome", null, T_END, T_START, "FF0000", null);
+
+        assertThatThrownBy(() -> shiftProgrammedService.patchShift(requesterId, dto))
+                .isInstanceOf(InvalidRequestException.class);
+
+        assertThat(shift.getStart()).isEqualTo(T_START);
+    }
+
+    @Test
+    void patchShift_updatesScalarFields_andLeavesParticipantsUntouched_whenUserIdIsNull() {
+        UUID requesterId = UUID.randomUUID();
+        User member = buildUser(UUID.randomUUID(), "Mario", "Rossi");
+        ShiftProgrammed shift = shiftOf(buildCompany(), member);
+        stubPatchPrerequisites(shift, requesterId);
+
+        UUID result = shiftProgrammedService.patchShift(requesterId, patchDto(shift, null));
+
+        assertThat(result).isEqualTo(shift.getShiftProgrammedId());
+        assertThat(shift.getShiftName()).isEqualTo("nuovo nome");
+        assertThat(shift.getDescription()).isEqualTo("nuova desc");
+        assertThat(shift.getColor()).isEqualTo("FF0000");
+        assertThat(shift.getUsers()).hasSize(1);
+        verify(userService, never()).getUsersByIds(any());
+    }
+
+    @Test
+    void patchShift_removesParticipantsNoLongerListed() {
+        UUID requesterId = UUID.randomUUID();
+        User kept = buildUser(UUID.randomUUID(), "Mario", "Rossi");
+        User dropped = buildUser(UUID.randomUUID(), "Luigi", "Verdi");
+        ShiftProgrammed shift = shiftOf(buildCompany(), kept, dropped);
+        stubPatchPrerequisites(shift, requesterId);
+        when(userService.getUsersByIds(Set.of(dropped.getUserId()))).thenReturn(List.of(dropped));
+
+        shiftProgrammedService.patchShift(requesterId, patchDto(shift, Set.of(kept.getUserId())));
+
+        assertThat(shift.getUsers()).extracting(su -> su.getUser().getUserId()).containsExactly(kept.getUserId());
+    }
+
+    @Test
+    void patchShift_addsNewParticipantsWithNewLink_whenNoSoftDeletedOneExists() {
+        UUID requesterId = UUID.randomUUID();
+        User existing = buildUser(UUID.randomUUID(), "Mario", "Rossi");
+        User added = buildUser(UUID.randomUUID(), "Luigi", "Verdi");
+        Company company = buildCompany();
+        ShiftProgrammed shift = shiftOf(company, existing);
+        added.setCompany(company);
+        stubPatchPrerequisites(shift, requesterId);
+        when(userService.getUsersInCompany(Set.of(added.getUserId()), company.getCompanyId())).thenReturn(List.of(added));
+        when(shiftUserRepository.findByIdIncludingDeleted(shift.getShiftProgrammedId(), added.getUserId()))
+                .thenReturn(Optional.empty());
+
+        shiftProgrammedService.patchShift(requesterId, patchDto(shift, Set.of(existing.getUserId(), added.getUserId())));
+
+        assertThat(shift.getUsers()).extracting(su -> su.getUser().getUserId())
+                .containsExactlyInAnyOrder(existing.getUserId(), added.getUserId());
+    }
+
+    @Test
+    void patchShift_emptyUserSet_removesEveryParticipant() {
+        UUID requesterId = UUID.randomUUID();
+        User m1 = buildUser(UUID.randomUUID(), "Mario", "Rossi");
+        User m2 = buildUser(UUID.randomUUID(), "Luigi", "Verdi");
+        ShiftProgrammed shift = shiftOf(buildCompany(), m1, m2);
+        stubPatchPrerequisites(shift, requesterId);
+        when(userService.getUsersByIds(Set.of(m1.getUserId(), m2.getUserId()))).thenReturn(List.of(m1, m2));
+
+        shiftProgrammedService.patchShift(requesterId, patchDto(shift, Set.of()));
+
+        assertThat(shift.getUsers()).isEmpty();
+    }
+
+    // ---------------------------------------------------------------------
+    // deleteShift()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void deleteShift_unknownShift_throwsResourceNotFound() {
+        UUID shiftId = UUID.randomUUID();
+        when(shiftProgrammedRepository.findById(shiftId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> shiftProgrammedService.deleteShift(UUID.randomUUID(), shiftId))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void deleteShift_softDeletesTheShiftWithTheRequesterAsActor() {
+        UUID requesterId = UUID.randomUUID();
+        User requester = buildUser(requesterId, "Anna", "Bianchi");
+        ShiftProgrammed shift = shiftOf(buildCompany());
+        when(shiftProgrammedRepository.findById(shift.getShiftProgrammedId())).thenReturn(Optional.of(shift));
+        when(companyAccessService.isNotPartOfCompany(requesterId, shift.getCompany().getCompanyId())).thenReturn(false);
+        when(userService.getUserById(requesterId)).thenReturn(requester);
+        when(shiftProgrammedRepository.save(shift)).thenReturn(shift);
+
+        shiftProgrammedService.deleteShift(requesterId, shift.getShiftProgrammedId());
+
+        assertThat(shift.isActive()).isFalse();
+        assertThat(shift.getDeletedBy()).isSameAs(requester);
+        verify(shiftProgrammedRepository).delete(shift);
     }
 }

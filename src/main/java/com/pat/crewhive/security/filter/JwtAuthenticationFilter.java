@@ -11,12 +11,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.jspecify.annotations.NonNull;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
+import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
@@ -29,11 +37,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final TokenBlackListService tokenBlackListService;
+    private final ObjectMapper objectMapper;
 
     public JwtAuthenticationFilter(JwtService jwtService,
-                                   TokenBlackListService tokenBlackListService) {
+                                   TokenBlackListService tokenBlackListService,
+                                   ObjectMapper objectMapper) {
         this.jwtService = jwtService;
         this.tokenBlackListService = tokenBlackListService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -76,7 +87,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jti = claims.getId();
 
             if (tokenBlackListService.isRevoked(jti)) {
-                log.warn("token has been revoked {}", claims.getSubject());
+                log.warn("Token has been revoked: jti={}", jti);
                 SecurityContextHolder.clearContext();
                 chain.doFilter(request, response);
                 return;
@@ -91,6 +102,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             UUID userId = UUID.fromString(sub);
+
+            if (tokenBlackListService.isRevokedForUser(userId, claims.getIssuedAt())) {
+                log.warn("Token issued before the user's tokens were revoked: userId={}, jti={}", userId, jti);
+                SecurityContextHolder.clearContext();
+                chain.doFilter(request, response);
+                return;
+            }
+
             String email = claims.get("email").toString();
             String firstName = claims.get("firstName", String.class);
             String lastName = claims.get("lastName", String.class);
@@ -114,11 +133,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (io.jsonwebtoken.JwtException e) {
             SecurityContextHolder.clearContext();
             log.warn("JWT validation error: {}", e.getMessage());
+        } catch (DataAccessException e) {
+            // Redis (blacklist) non raggiungibile: restiamo fail-closed, ma rispondiamo 503 e non 401,
+            // cosi' il client non scarta un token che non e' invalido.
+            SecurityContextHolder.clearContext();
+            log.error("Token revocation store unavailable, request rejected", e);
+            writeServiceUnavailable(request, response);
+            return;
         } catch (RuntimeException e) {
             SecurityContextHolder.clearContext();
             log.error("Internal auth error: {}", e.getMessage());
         }
 
         chain.doFilter(request, response);
+    }
+
+    private void writeServiceUnavailable(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, "Service temporarily unavailable");
+        pd.setTitle("Service Unavailable");
+        pd.setType(URI.create("about:blank"));
+        pd.setProperty("timestamp", OffsetDateTime.now().toString());
+        pd.setProperty("path", request.getRequestURI());
+        pd.setProperty("errorCode", "AUTH_503_UNAVAILABLE");
+
+        response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.setHeader(HttpHeaders.RETRY_AFTER, "5");
+        response.setContentType("application/json; charset=UTF-8");
+        objectMapper.writeValue(response.getWriter(), pd);
     }
 }
