@@ -68,4 +68,38 @@ class TokenBlackListServiceIntegrationTest extends AbstractIntegrationTest {
         Long ttlSeconds = redisTemplate.getExpire("revoked-user:" + userId, TimeUnit.SECONDS);
         assertThat(ttlSeconds).isPositive().isLessThanOrEqualTo(JwtService.ACCESS_TOKEN_TTL_MILLIS / 1000);
     }
+
+    // ---- blacklist per jti ----
+
+    @Test
+    void revoke_makesTheJtiRevokedUntilItsExpiration() {
+        String jti = UUID.randomUUID().toString();
+
+        assertThat(tokenBlackListService.isRevoked(jti)).isFalse();
+
+        tokenBlackListService.revoke(jti, Date.from(Instant.now().plusSeconds(60)));
+
+        assertThat(tokenBlackListService.isRevoked(jti)).isTrue();
+        Long ttl = redisTemplate.getExpire("revoked-jti:" + jti, TimeUnit.SECONDS);
+        assertThat(ttl).isPositive().isLessThanOrEqualTo(60);
+    }
+
+    @Test
+    void revoke_ofAnAlreadyExpiredToken_storesNothing() {
+        String jti = UUID.randomUUID().toString();
+
+        tokenBlackListService.revoke(jti, Date.from(Instant.now().minusSeconds(5)));
+
+        assertThat(tokenBlackListService.isRevoked(jti)).isFalse();
+    }
+
+    @Test
+    void revoke_doesNotAffectOtherJtis() {
+        String revoked = UUID.randomUUID().toString();
+        String other = UUID.randomUUID().toString();
+
+        tokenBlackListService.revoke(revoked, Date.from(Instant.now().plusSeconds(60)));
+
+        assertThat(tokenBlackListService.isRevoked(other)).isFalse();
+    }
 }

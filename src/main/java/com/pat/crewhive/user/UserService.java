@@ -9,6 +9,7 @@ import com.pat.crewhive.shiftprogrammed.ShiftUserRepository;
 import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.TokenBlackListService;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
@@ -231,7 +232,7 @@ public class UserService {
 
             log.info("New password is not strong enough for userId={}", user.getUserId());
 
-            throw new BadCredentialsException("Invalid password");
+            throw new InvalidRequestException("New password is not strong enough");
         }
 
         if(passwordUtil.NotMatches(oldPassword, user.getPassword())) {
@@ -281,7 +282,7 @@ public class UserService {
      * Allows a user to leave their current company.
      *
      * @param userId the ID of the user who wants to leave the company
-     * @throws ResourceAlreadyExistsException if the user is not part of any company
+     * @throws ResourceNotFoundException if the user is not part of any company
      */
     @Transactional
     public AuthResponseDTO leaveCompany(UUID userId) {
@@ -290,12 +291,16 @@ public class UserService {
 
         if (user.getCompany() == null) throw new ResourceNotFoundException("User has no company");
 
+        // deleteByUserId e' una bulk update con clearAutomatically: svuota il persistence context e
+        // stacca ogni entity gia' caricata. Va eseguita prima di modificare l'utente, che poi si
+        // ricarica: altrimenti updateUser salverebbe un'entity staccata (OptimisticLockingFailure).
+        shiftUserRepository.deleteByUserId(userId, OffsetDateTime.now());
+        user = getUserById(userId);
+
         Company c = user.getCompany();
         c.getUsers().remove(user);
         user.setCompany(null);
         roleAssignmentService.resetToBaseRole(user);
-
-        shiftUserRepository.deleteByUserId(userId, OffsetDateTime.now());
 
         updateUser(user);
 

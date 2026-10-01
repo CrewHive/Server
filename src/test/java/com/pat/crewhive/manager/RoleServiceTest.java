@@ -7,6 +7,8 @@ import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.security.exception.custom.InvalidRequestException;
+import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceConflictException;
 import com.pat.crewhive.user.UserService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -164,5 +166,82 @@ class RoleServiceTest {
         assertThat(validator.validate(new UpdateUserRoleDTO(" ", null)))
                 .extracting(v -> v.getPropertyPath().toString())
                 .contains("newRole", "userId");
+    }
+
+    // ---------------------------------------------------------------------
+    // createRole()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void createRole_newRole_isSavedScopedToTheCompany() {
+        Company company = company(UUID.randomUUID());
+        when(stringUtils.normalizeRole("cashier")).thenReturn("ROLE_CASHIER");
+        when(companyService.getCompanyById(company.getCompanyId())).thenReturn(company);
+        when(roleRepository.existsByRoleNameIgnoreCaseAndCompany("ROLE_CASHIER", company)).thenReturn(false);
+
+        roleService.createRole("cashier", company.getCompanyId());
+
+        org.mockito.ArgumentCaptor<Role> captor = org.mockito.ArgumentCaptor.forClass(Role.class);
+        verify(roleRepository).save(captor.capture());
+        assertThat(captor.getValue().getRoleName()).isEqualTo("ROLE_CASHIER");
+        assertThat(captor.getValue().getCompany()).isSameAs(company);
+    }
+
+    @Test
+    void createRole_duplicateInTheSameCompany_throwsResourceAlreadyExistsAndSavesNothing() {
+        Company company = company(UUID.randomUUID());
+        when(stringUtils.normalizeRole("cashier")).thenReturn("ROLE_CASHIER");
+        when(companyService.getCompanyById(company.getCompanyId())).thenReturn(company);
+        when(roleRepository.existsByRoleNameIgnoreCaseAndCompany("ROLE_CASHIER", company)).thenReturn(true);
+
+        assertThatThrownBy(() -> roleService.createRole("cashier", company.getCompanyId()))
+                .isInstanceOf(ResourceAlreadyExistsException.class);
+
+        verify(roleRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------------
+    // deleteRole()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void deleteRole_unknownRole_throwsResourceNotFound() {
+        Company company = company(UUID.randomUUID());
+        when(stringUtils.normalizeRole("cashier")).thenReturn("ROLE_CASHIER");
+        when(companyService.getCompanyById(company.getCompanyId())).thenReturn(company);
+        when(roleRepository.findByRoleNameIgnoreCaseAndCompany("ROLE_CASHIER", company)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> roleService.deleteRole("cashier", company.getCompanyId(), UUID.randomUUID()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void deleteRole_assignedToUsers_throwsResourceConflictAndDeletesNothing() {
+        Company company = company(UUID.randomUUID());
+        Role role = new Role("ROLE_CASHIER", company);
+        user(company).addRole(role);
+        stubRole(company, role);
+        when(companyService.getCompanyById(company.getCompanyId())).thenReturn(company);
+
+        assertThatThrownBy(() -> roleService.deleteRole("cashier", company.getCompanyId(), UUID.randomUUID()))
+                .isInstanceOf(ResourceConflictException.class);
+
+        verify(roleRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteRole_unassignedRole_isSoftDeletedWithTheActor() {
+        Company company = company(UUID.randomUUID());
+        Role role = new Role("ROLE_CASHIER", company);
+        User actor = user(company);
+        stubRole(company, role);
+        when(userService.getUserById(actor.getUserId())).thenReturn(actor);
+        when(roleRepository.save(role)).thenReturn(role);
+
+        roleService.deleteRole("cashier", company.getCompanyId(), actor.getUserId());
+
+        assertThat(role.isActive()).isFalse();
+        assertThat(role.getDeletedBy()).isSameAs(actor);
+        verify(roleRepository).delete(role);
     }
 }

@@ -10,6 +10,7 @@ import com.pat.crewhive.user.UserService;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
+import com.pat.crewhive.security.exception.custom.ResourceConflictException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.shifttemplate.ShiftTemplateRepository;
 import com.pat.crewhive.common.StringUtils;
@@ -117,7 +118,7 @@ public class CompanyService {
      *
      * @param companyId The ID of the company to retrieve.
      * @return The Company object if found.
-     * @throws ResourceAlreadyExistsException if the company does not exist.
+     * @throws ResourceNotFoundException if the company does not exist.
      */
     public Company getCompanyById(UUID companyId) {
         return companyAccessService.getCompanyById(companyId);
@@ -238,7 +239,7 @@ public class CompanyService {
      * @param request The request containing user ID and company name.
      * @param companyId The ID of the company
      * @param managerId The ID of the manager to check if he's part of the company.
-     * @throws ResourceAlreadyExistsException if the company does not exist.
+     * @throws ResourceNotFoundException if the company does not exist.
      */
     @Transactional
     @Caching(evict = {
@@ -254,7 +255,7 @@ public class CompanyService {
         String normalizedCompanyName = stringUtils.normalizeString(request.companyName());
 
         Company company = companyRepository.findByName(normalizedCompanyName)
-                .orElseThrow(() ->new ResourceAlreadyExistsException("Company with name " + request.companyName() + " does not exist."));
+                .orElseThrow(() -> new ResourceNotFoundException("Company with name " + request.companyName() + " does not exist."));
 
         if (!company.getCompanyId().equals(companyId)) {
             log.warn("setCompany: manager {} tried to enroll user {} into company {}", managerId, request.userId(), company.getCompanyId());
@@ -299,7 +300,7 @@ public class CompanyService {
         if (shiftTemplateRepository.existsByCompanyCompanyId(companyId)) {
 
             log.error("deleteCompany: Company {} still has active shift templates", companyId);
-            throw new IllegalStateException("Cannot delete company because it still has active shift templates");
+            throw new ResourceConflictException("Cannot delete company because it still has active shift templates");
         }
 
         User manager = userService.getUserById(managerId);

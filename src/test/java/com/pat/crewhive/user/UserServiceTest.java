@@ -4,8 +4,10 @@ import com.pat.crewhive.authuser.AuthResponseDTO;
 import com.pat.crewhive.authuser.RefreshTokenService;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.manager.RoleAssignmentService;
+import com.pat.crewhive.manager.UpdateUserWorkInfoDTO;
 import com.pat.crewhive.security.JwtService;
 import com.pat.crewhive.security.TokenBlackListService;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.common.PasswordUtil;
 import com.pat.crewhive.common.StringUtils;
@@ -16,8 +18,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -258,7 +265,7 @@ class UserServiceTest {
     }
 
     @Test
-    void updatePassword_doesNotRevokeAnything_whenNewPasswordIsWeak() {
+    void updatePassword_weakNewPassword_throwsInvalidRequestAndRevokesNothing() {
         User user = buildUser(USER_ID, null);
 
         when(stringUtils.normalizeString(anyString())).thenReturn("mario.rossi@example.com");
@@ -266,8 +273,148 @@ class UserServiceTest {
         when(passwordUtil.isStrong("weak")).thenReturn(false);
 
         assertThatThrownBy(() -> userService.updatePassword("weak", "old", "mario.rossi@example.com"))
-                .isInstanceOf(BadCredentialsException.class);
+                .isInstanceOf(InvalidRequestException.class);
 
         verifyNoInteractions(tokenBlackListService);
+    }
+
+    // ---------------------------------------------------------------------
+    // lookups
+    // ---------------------------------------------------------------------
+
+    @Test
+    void getUserById_returnsTheUser() {
+        User user = buildUser(USER_ID, null);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+
+        assertThat(userService.getUserById(USER_ID)).isSameAs(user);
+    }
+
+    @Test
+    void getUserById_unknown_throwsResourceNotFound() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.getUserById(USER_ID)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getUserByEmail_normalizesTheEmailBeforeTheLookup() {
+        User user = buildUser(USER_ID, null);
+        when(stringUtils.normalizeString("  Mario.Rossi@Example.com ")).thenReturn("mario.rossi@example.com");
+        when(userRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.of(user));
+
+        assertThat(userService.getUserByEmail("  Mario.Rossi@Example.com ")).isSameAs(user);
+    }
+
+    @Test
+    void getUserByEmail_unknown_throwsResourceNotFound() {
+        when(stringUtils.normalizeString("x@example.com")).thenReturn("x@example.com");
+        when(userRepository.findByEmail("x@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.getUserByEmail("x@example.com")).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getUsersByIds_nullOrEmpty_returnsEmptyListWithoutQuerying() {
+        assertThat(userService.getUsersByIds(null)).isEmpty();
+        assertThat(userService.getUsersByIds(Set.of())).isEmpty();
+
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void getUsersByIds_allFound_returnsThem() {
+        User a = buildUser(UUID.randomUUID(), null);
+        User b = buildUser(UUID.randomUUID(), null);
+        Set<UUID> ids = Set.of(a.getUserId(), b.getUserId());
+        when(userRepository.findAllByIds(ids)).thenReturn(List.of(a, b));
+
+        assertThat(userService.getUsersByIds(ids)).containsExactlyInAnyOrder(a, b);
+    }
+
+    @Test
+    void getUsersByIds_someMissing_throwsResourceNotFound() {
+        User a = buildUser(UUID.randomUUID(), null);
+        Set<UUID> ids = Set.of(a.getUserId(), UUID.randomUUID());
+        when(userRepository.findAllByIds(ids)).thenReturn(List.of(a));
+
+        assertThatThrownBy(() -> userService.getUsersByIds(ids)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getAllUsersInCompany_delegatesToTheRepository() {
+        User a = buildUser(UUID.randomUUID(), null);
+        when(userRepository.findAllByCompany_CompanyId(COMPANY_ID)).thenReturn(List.of(a));
+
+        assertThat(userService.getAllUsersInCompany(COMPANY_ID)).containsExactly(a);
+    }
+
+    @Test
+    void getUserWithTimeParamsByUsername_mapsTheUserIncludingCompanyName() {
+        Company company = buildCompany(COMPANY_ID);
+        company.setName("acme");
+        User user = buildUser(USER_ID, company);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+
+        UserWithTimeParamsDTO dto = userService.getUserWithTimeParamsByUsername(USER_ID);
+
+        assertThat(dto.companyName()).isEqualTo("acme");
+        assertThat(dto.email()).isEqualTo("mario.rossi@example.com");
+        assertThat(dto.firstName()).isEqualTo("Mario");
+        assertThat(dto.lastName()).isEqualTo("Rossi");
+    }
+
+    @Test
+    void getUserWithTimeParamsByUsername_withoutCompany_hasNullCompanyName() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(buildUser(USER_ID, null)));
+
+        assertThat(userService.getUserWithTimeParamsByUsername(USER_ID).companyName()).isNull();
+    }
+
+    // ---------------------------------------------------------------------
+    // updateUser() / updateUserTimeParams()
+    // ---------------------------------------------------------------------
+
+    @Test
+    void updateUser_savesTheUser() {
+        User user = buildUser(USER_ID, null);
+
+        userService.updateUser(user);
+
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateUserTimeParams_updatesEveryTimeField() {
+        Company company = buildCompany(COMPANY_ID);
+        User user = buildUser(USER_ID, company);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+        UpdateUserWorkInfoDTO dto = new UpdateUserWorkInfoDTO(
+                USER_ID, ContractType.FULL_TIME, 40, new BigDecimal("2.50"),
+                new BigDecimal("10.00"), new BigDecimal("3.00"), new BigDecimal("4.00"), new BigDecimal("1.00"));
+
+        userService.updateUserTimeParams(dto, COMPANY_ID);
+
+        assertThat(user.getContractType()).isEqualTo(ContractType.FULL_TIME);
+        assertThat(user.getWorkableHoursPerWeek()).isEqualTo(40);
+        assertThat(user.getOvertimeHours()).isEqualByComparingTo("2.50");
+        assertThat(user.getVacationDaysAccumulated()).isEqualByComparingTo("10.00");
+        assertThat(user.getVacationDaysTaken()).isEqualByComparingTo("3.00");
+        assertThat(user.getLeaveDaysAccumulated()).isEqualByComparingTo("4.00");
+        assertThat(user.getLeaveDaysTaken()).isEqualByComparingTo("1.00");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateUserTimeParams_userOfAnotherCompany_throwsResourceNotFoundAndSavesNothing() {
+        User foreign = buildUser(USER_ID, buildCompany(UUID.randomUUID()));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(foreign));
+        UpdateUserWorkInfoDTO dto = new UpdateUserWorkInfoDTO(
+                USER_ID, ContractType.FULL_TIME, 40, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+
+        assertThatThrownBy(() -> userService.updateUserTimeParams(dto, COMPANY_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(userRepository, never()).save(any());
     }
 }
