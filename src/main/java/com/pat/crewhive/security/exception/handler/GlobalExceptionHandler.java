@@ -1,5 +1,6 @@
 package com.pat.crewhive.security.exception.handler;
 
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.security.exception.custom.InvalidTokenException;
 import com.pat.crewhive.security.exception.custom.JwtAuthenticationException;
 import com.pat.crewhive.security.exception.custom.ResourceAlreadyExistsException;
@@ -123,11 +124,18 @@ public class GlobalExceptionHandler {
         return base(HttpStatus.UNAUTHORIZED, "Unauthorized", "JWT authentication failed", "AUTH_401_JWT");
     }
 
-    // 400 - Argomenti non validi
+    // 400 - Richiesta non valida (il messaggio e' scritto per il client)
+    @ExceptionHandler(InvalidRequestException.class)
+    public ProblemDetail handleInvalidRequestException(InvalidRequestException ex) {
+        log.warn("Invalid request: {}", ex.getMessage());
+        return base(HttpStatus.BAD_REQUEST, "Bad request", ex.getMessage(), "REQ_400");
+    }
+
+    // 400 - Argomenti non validi (anche da librerie): il messaggio puo' contenere dettagli interni, non va al client
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
         log.error("Illegal argument: {}", ex.getMessage(), ex);
-        return base(HttpStatus.BAD_REQUEST, "Bad request", ex.getMessage(), "GEN_400_ILLARG");
+        return base(HttpStatus.BAD_REQUEST, "Bad request", "Invalid request", "GEN_400_ILLARG");
     }
 
     // 500 - Stati illegali

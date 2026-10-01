@@ -6,6 +6,7 @@ import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.security.TokenBlackListService;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.user.UserService;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -121,13 +122,13 @@ class RoleServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"user", "dev", "manager", "ROLE_DEV", "ROLE_MANAGER", "ROLE_USER"})
-    void createRole_reservedName_throwsIllegalArgumentAndSavesNothing(String name) {
+    void createRole_reservedName_throwsInvalidRequestAndSavesNothing(String name) {
         // StringUtils è un mock: replico normalizeRole
         String normalized = name.toUpperCase().startsWith("ROLE_") ? name.toUpperCase() : "ROLE_" + name.toUpperCase();
         when(stringUtils.normalizeRole(name)).thenReturn(normalized);
 
         assertThatThrownBy(() -> roleService.createRole(name, UUID.randomUUID()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidRequestException.class);
 
         verify(roleRepository, never()).save(any());
         verifyNoInteractions(companyService);

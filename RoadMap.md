@@ -220,13 +220,13 @@ world-readable in ogni profilo (L3)~~ **risolto**: `/docs`, `/docs/**` ora richi
 autenticazione JWT + ruolo `DEV` (`SecurityConfig`/`JwtAuthenticationFilter`); CORS
 `allowCredentials(true)` senza `allowedOrigins` +
 metodo fittizio `"QUERY"` (L4); credenziali DB `crewhive/crewhive` in `docker-compose.yml` con
-Postgres/Redis esposti sull'host, Redis senza auth (L5); `GlobalExceptionHandler` rimanda
-`ex.getMessage()` degli `IllegalArgumentException` al client, a volte con identificatori (L6);
+Postgres/Redis esposti sull'host, Redis senza auth (L5); ~~`GlobalExceptionHandler` rimanda
+`ex.getMessage()` degli `IllegalArgumentException` al client, a volte con identificatori (L6)~~ **risolto** (`InvalidRequestException` con messaggio sicuro; l'handler IAE risponde "Invalid request"; accesso negato alla company → `AuthorizationDeniedException` 403);
 ~~`ShiftTemplateController` ritorna l'entity invece di un DTO (L7)~~ **risolto** (`ShiftTemplateOutputDTO`); policy password incoerente
 (`RegistrationDTO` 12–32 vs `PasswordUtil` 8–20 → effettivo 12–20) (L8); `.env` in chiaro sul disco
-con AWS key + RSA private key, anche se il profilo attivo è `onpremise` (L9); `/api/auth/rotate`
-va in NPE su `cud` null *dopo* aver già ruotato il refresh (L10); outage Redis = outage auth
-(fail-closed, ma single point of failure) (L11).
+con AWS key + RSA private key, anche se il profilo attivo è `onpremise` (L9); ~~`/api/auth/rotate`
+va in NPE su `cud` null *dopo* aver già ruotato il refresh (L10)~~ **risolto**; outage Redis = outage auth
+(fail-closed, ma single point of failure) (L11) — **mitigato**: il filtro JWT risponde 503 (`AUTH_503_UNAVAILABLE`) invece di 401 quando Redis non risponde; il SPOF resta.
 
 ---
 

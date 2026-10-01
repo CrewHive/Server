@@ -1,6 +1,7 @@
 package com.pat.crewhive.manager;
 
 import com.pat.crewhive.common.audit.SoftDeleteSupport;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.security.TokenBlackListService;
 import com.pat.crewhive.user.User;
@@ -60,7 +61,7 @@ public class RoleService {
         if (RESERVED_ROLES.contains(normalizedRole)) {
 
             log.warn("createRole: attempt to create reserved role {} in company {}", normalizedRole, companyId);
-            throw new IllegalArgumentException("Role name is reserved");
+            throw new InvalidRequestException("Role name is reserved");
         }
 
         Company company = companyService.getCompanyById(companyId);

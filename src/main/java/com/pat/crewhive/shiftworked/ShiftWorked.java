@@ -1,6 +1,7 @@
 package com.pat.crewhive.shiftworked;
 
 import com.pat.crewhive.common.shift.Shift;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
 import com.pat.crewhive.company.Company;
 import com.pat.crewhive.user.User;
 import jakarta.persistence.*;
@@ -115,7 +116,7 @@ public class ShiftWorked extends Shift {
         if (start == null || end == null) return BigDecimal.ZERO;
 
         if (!end.isAfter(start)) {
-            throw new IllegalArgumentException("L'ora di fine turno deve essere successiva all'ora di inizio turno");
+            throw new InvalidRequestException("L'ora di fine turno deve essere successiva all'ora di inizio turno");
         }
 
         long totalMinutes = Duration.between(start, end).toMinutes();

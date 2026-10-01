@@ -2,6 +2,8 @@ package com.pat.crewhive.shiftprogrammed;
 
 
 import com.pat.crewhive.company.Company;
+import com.pat.crewhive.security.exception.custom.InvalidRequestException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import com.pat.crewhive.company.CompanyAccessService;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.common.Period;
@@ -85,7 +87,7 @@ public class ShiftProgrammedService {
         String normalizedShiftName = stringUtils.normalizeString(dto.name());
 
         if (dto.start().isAfter(dto.end())) {
-            throw new IllegalArgumentException("Shift start time cannot be after end time");
+            throw new InvalidRequestException("Shift start time cannot be after end time");
         }
 
         User creator = userService.getUserById(creatorUserId);
@@ -199,8 +201,7 @@ public class ShiftProgrammedService {
 
         if (companyAccessService.isNotPartOfCompany(requesterUserId, companyId)) {
             log.error("Company {} access has been denied to user {}", companyId, requesterUserId);
-            //TODO: L'ID dev'essere lasciato solo nel log
-            throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
+            throw new AuthorizationDeniedException("Company access denied");
         }
 
         log.info("Fetching shifts for company ID: {}", companyId);
@@ -236,7 +237,6 @@ public class ShiftProgrammedService {
         if (!shiftProgrammedRepository.existsById(shiftId)) {
 
             log.error("getUsersInShift: Shift with id {} does not exist", shiftId);
-            //TODO: L'ID dev'essere lasciato solo nel log
             throw new ResourceNotFoundException("Shift not found with ID: " + shiftId);
         }
 
@@ -283,14 +283,13 @@ public class ShiftProgrammedService {
 
         if (companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())) {
             log.error("Company access has been denied to user {}", requesterUserId);
-            //TODO: L'ID dev'essere lasciato solo nel log
-            throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
+            throw new AuthorizationDeniedException("Company access denied");
         }
 
         shift.setShiftName(stringUtils.normalizeString(dto.name()));
 
         if (dto.start().isAfter(dto.end())) {
-            throw new IllegalArgumentException("Shift start time cannot be after end time");
+            throw new InvalidRequestException("Shift start time cannot be after end time");
         }
 
         shift.setStart(dto.start());
@@ -375,8 +374,7 @@ public class ShiftProgrammedService {
 
         if (companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())) {
             log.error("Company access has been denied to user {}", requesterUserId);
-            //TODO: L'ID dev'essere lasciato solo nel log
-            throw new IllegalArgumentException("Company access has been denied to user " + requesterUserId);
+            throw new AuthorizationDeniedException("Company access denied");
         }
 
         User actor = userService.getUserById(requesterUserId);

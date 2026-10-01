@@ -7,6 +7,7 @@ import com.pat.crewhive.company.Company;
 import com.pat.crewhive.company.CompanyAccessService;
 import com.pat.crewhive.company.CompanyService;
 import com.pat.crewhive.security.exception.custom.ResourceNotFoundException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import com.pat.crewhive.user.User;
 import com.pat.crewhive.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -246,7 +247,7 @@ class ShiftProgrammedServiceTest {
     }
 
     @Test
-    void patchShift_requesterNotPartOfShiftCompany_throwsIllegalArgumentException() {
+    void patchShift_requesterNotPartOfShiftCompany_throwsAuthorizationDenied() {
         UUID shiftId = UUID.randomUUID();
         UUID requesterUserId = UUID.randomUUID();
 
@@ -269,11 +270,11 @@ class ShiftProgrammedServiceTest {
         when(companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())).thenReturn(true);
 
         assertThatThrownBy(() -> shiftProgrammedService.patchShift(requesterUserId, dto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(AuthorizationDeniedException.class);
     }
 
     @Test
-    void deleteShift_requesterNotPartOfShiftCompany_throwsIllegalArgumentException() {
+    void deleteShift_requesterNotPartOfShiftCompany_throwsAuthorizationDenied() {
         UUID shiftId = UUID.randomUUID();
         UUID requesterUserId = UUID.randomUUID();
 
@@ -285,7 +286,7 @@ class ShiftProgrammedServiceTest {
         when(companyAccessService.isNotPartOfCompany(requesterUserId, shift.getCompany().getCompanyId())).thenReturn(true);
 
         assertThatThrownBy(() -> shiftProgrammedService.deleteShift(requesterUserId, shiftId))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(AuthorizationDeniedException.class);
 
         verify(userService, never()).getUserById(requesterUserId);
     }

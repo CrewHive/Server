@@ -9,11 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -47,7 +50,7 @@ class JwtAuthenticationFilterTest {
         generator.initialize(2048);
         KeyPair keyPair = generator.generateKeyPair();
         jwtService = new JwtService(keyPair.getPrivate(), keyPair.getPublic());
-        filter = new JwtAuthenticationFilter(jwtService, tokenBlackListService);
+        filter = new JwtAuthenticationFilter(jwtService, tokenBlackListService, new ObjectMapper());
         SecurityContextHolder.clearContext();
     }
 
@@ -56,14 +59,19 @@ class JwtAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
     }
 
+    private MockHttpServletResponse response;
+    private MockFilterChain chain;
+
     private Authentication runFilterWithFreshToken() throws Exception {
         String token = jwtService.generateToken(
                 USER_ID, "mario.rossi@example.com", "Mario", "Rossi", Set.of("ROLE_USER"), COMPANY_ID);
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/user/me");
         request.addHeader("Authorization", "Bearer " + token);
+        response = new MockHttpServletResponse();
+        chain = new MockFilterChain();
 
-        filter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+        filter.doFilter(request, response, chain);
 
         return SecurityContextHolder.getContext().getAuthentication();
     }
@@ -92,5 +100,18 @@ class JwtAuthenticationFilterTest {
         when(tokenBlackListService.isRevoked(any())).thenReturn(true);
 
         assertThat(runFilterWithFreshToken()).isNull();
+    }
+
+    @Test
+    void redisUnavailable_answers503AndDoesNotContinueTheChain() throws Exception {
+        when(tokenBlackListService.isRevoked(any())).thenThrow(new QueryTimeoutException("redis down"));
+
+        Authentication auth = runFilterWithFreshToken();
+
+        assertThat(auth).isNull();
+        assertThat(response.getStatus()).isEqualTo(503);
+        assertThat(response.getHeader("Retry-After")).isNotNull();
+        assertThat(response.getContentAsString()).contains("AUTH_503_UNAVAILABLE");
+        assertThat(chain.getRequest()).isNull();
     }
 }
